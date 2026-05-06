@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UpSet.js — pop-out</title>
+    <script src="https://cdn.jsdelivr.net/npm/@upsetjs/bundle@1.11.0/dist/upsetjs.umd.production.min.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; }
+        #banner {
+            padding: 10px 16px;
+            background: #667eea;
+            color: #fff;
+            font-size: 13px;
+        }
+        #root { padding: 12px 16px 24px; min-height: calc(100vh - 48px); }
+        #err { padding: 24px; color: #b00; max-width: 720px; line-height: 1.45; }
+        #root .small { font-size: 13px; line-height: 1.45; }
+        #popoutChartHost { min-height: 320px; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script>
+        (function () {
+            var QC_SOURCE = 'DataMatrixQC';
+            var QC_TYPE = 'upset_popout_payload';
+            var STORAGE_KEY = 'qc_upset_popout';
+
+            var root = document.getElementById('root');
+            var dataAccepted = false;
+
+            var DEFAULT_COMB = {
+                order: ['cardinality:desc', 'name'],
+                type: 'intersection',
+                min: 1,
+                max: 5,
+                limit: 100,
+                empty: false
+            };
+
+            var popout = {
+                elems: null,
+                plot: 'upset',
+                selectionName: null,
+                linkRaf: null,
+                chartHost: null,
+                combOptions: null
+            };
+
+            function normalizeCombOptions(c) {
+                var order = DEFAULT_COMB.order.slice();
+                var type = DEFAULT_COMB.type;
+                var min = DEFAULT_COMB.min;
+                var max = DEFAULT_COMB.max;
+                var limit = DEFAULT_COMB.limit;
+                var empty = DEFAULT_COMB.empty;
+                if (c && typeof c === 'object') {
+                    if (Array.isArray(c.order) && c.order.length) {
+                        order = c.order.slice();
+                    }
+                    if (c.type === 'intersection' || c.type === 'union' || c.type === 'distinctIntersection') {
+                        type = c.type;
+                    }
+                    if (typeof c.min === 'number' && c.min >= 0) min = c.min;
+                    if (typeof c.max === 'number' && c.max >= 1) max = c.max;
+                    if (max < min) max = min;
+                    if (typeof c.limit === 'number' && c.limit >= 1) limit = c.limit;
+                    if (c.empty === true) empty = true;
+                }
+                return { type: type, min: min, max: max, limit: limit, empty: empty, order: order };
+            }
+
+            function sortComb(combinations) {
+                if (!combinations || !combinations.length) return combinations;
+                return combinations.slice().sort(function (a, b) {
+                    var ca = typeof a.cardinality === 'number' ? a.cardinality : 0;
+                    var cb = typeof b.cardinality === 'number' ? b.cardinality : 0;
+                    if (cb !== ca) return cb - ca;
+                    var da = typeof a.degree === 'number' ? a.degree : 0;
+                    var db = typeof b.degree === 'number' ? b.degree : 0;
+                    if (db !== da) return db - da;
+                    return String(a.name || '').localeCompare(String(b.name || ''));
+                });
+            }
+
+            function findSetLikeByName(list, name) {
+                if (!name || !list || !list.length) return null;
+                for (var i = 0; i < list.length; i++) {
+                    var x = list[i];
+                    if (x && x.name === name) return x;
+                }
+                return null;
+            }
+
+            function showWaiting() {
+                root.innerHTML = '<p class="small" style="color:#555;padding:8px 0 0 0;">Receiving plot from the main window… If this message stays for more than a few seconds, use a <strong>Pop out</strong> button next to a chart title in <code>index.html</code> (do not open this file by double-click alone). Allow pop-ups so the parent page can send data.</p>';
+            }
+
+            function showErr(html) {
+                if (dataAccepted) return;
+                root.innerHTML = '<p id="err">' + html + '</p>';
+            }
+
+            function getPlotSize() {
+                return {
+                    w: Math.max(400, window.innerWidth - 32),
+                    h: Math.max(320, window.innerHeight - 100)
+                };
+            }
+
+            function onPopoutHover(sel) {
+                popout.selectionName = sel && sel.name != null ? String(sel.name) : null;
+                if (popout.linkRaf) cancelAnimationFrame(popout.linkRaf);
+                popout.linkRaf = requestAnimationFrame(function () {
+                    popout.linkRaf = null;
+                    paintPopoutChart();
+                });
+            }
+
+            function paintPopoutChart() {
+                if (!popout.chartHost || !popout.elems || !popout.elems.length) return;
+
+                var sz = getPlotSize();
+                var w = sz.w;
+                var h = sz.h;
+
+                var ex = UpSetJS.extractCombinations(popout.elems);
+                var sets = ex.sets;
+                var combinationsVenn = UpSetJS.generateCombinations(sets);
+                var combinations = null;
+                if (popout.plot === 'upset') {
+                    var combOpts = normalizeCombOptions(popout.combOptions);
+                    var genArg = { elems: popout.elems, type: combOpts.type, min: combOpts.min, max: combOpts.max, empty: combOpts.empty, order: combOpts.order };
+                    if (typeof combOpts.limit === 'number' && combOpts.limit >= 1) genArg.limit = combOpts.limit;
+                    try {
+                        combinations = UpSetJS.generateCombinations(sets, genArg);
+                    } catch (err) {
+                        console.warn('Popout generateCombinations fallback:', err);
+                        combinations = sortComb(ex.combinations);
+                    }
+                }
+
+                var name = popout.selectionName;
+                var selUpSet = findSetLikeByName(combinations, name) || findSetLikeByName(sets, name);
+                var selVennK = findSetLikeByName(combinationsVenn, name) || findSetLikeByName(sets, name);
+
+                popout.chartHost.innerHTML = '';
+                var inner = document.createElement('div');
+                popout.chartHost.appendChild(inner);
+
+                var base = {
+                    width: w,
+                    height: h,
+                    onHover: onPopoutHover,
+                    exportButtons: { share: false }
+                };
+
+                if (popout.plot === 'venn') {
+                    UpSetJS.renderVennDiagram(inner, Object.assign({}, base, {
+                        sets: sets,
+                        combinations: combinationsVenn,
+                        selection: selVennK
+                    }));
+                } else if (popout.plot === 'karnaugh') {
+                    UpSetJS.renderKarnaughMap(inner, Object.assign({}, base, {
+                        sets: sets,
+                        combinations: combinationsVenn,
+                        selection: selVennK
+                    }));
+                } else {
+                    UpSetJS.renderUpSet(inner, Object.assign({}, base, {
+                        sets: sets,
+                        combinations: combinations,
+                        selection: selUpSet
+                    }));
+                }
+            }
+
+            var resizeTimer = null;
+            function onResize() {
+                if (!dataAccepted || !popout.chartHost) return;
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(function () {
+                    paintPopoutChart();
+                }, 120);
+            }
+
+            function renderPopout(payload) {
+                if (dataAccepted) return;
+                var elems = payload.elems;
+                var plot = payload.plot || 'upset';
+                if (!elems || !elems.length) {
+                    showErr('Empty element list.');
+                    return;
+                }
+
+                try {
+                    document.title = 'UpSet.js — ' + (plot === 'venn' ? 'Venn' : plot === 'karnaugh' ? 'Karnaugh' : 'UpSet');
+
+                    popout.elems = elems;
+                    popout.plot = plot;
+                    popout.selectionName = null;
+                    popout.combOptions = payload.combOptions ? normalizeCombOptions(payload.combOptions) : normalizeCombOptions(null);
+
+                    root.innerHTML = '';
+                    popout.chartHost = document.createElement('div');
+                    popout.chartHost.id = 'popoutChartHost';
+                    root.appendChild(popout.chartHost);
+
+                    paintPopoutChart();
+                    dataAccepted = true;
+
+                    window.addEventListener('resize', onResize);
+
+                    try {
+                        if (window.opener) window.opener = null;
+                    } catch (x) { /* ignore */ }
+                } catch (err) {
+                    console.error(err);
+                    showErr('Render error: ' + String(err.message || err));
+                }
+            }
+
+            if (typeof UpSetJS === 'undefined') {
+                root.innerHTML = '<p id="err">Failed to load UpSet.js bundle.</p>';
+                return;
+            }
+
+            window.addEventListener('message', function onMsg(e) {
+                var d = e.data;
+                if (!d || d.source !== QC_SOURCE || d.type !== QC_TYPE || !d.payload) return;
+                if (!d.payload.elems || !d.payload.elems.length) return;
+                renderPopout(d.payload);
+                window.removeEventListener('message', onMsg);
+            });
+
+            var raw;
+            try {
+                raw = sessionStorage.getItem(STORAGE_KEY);
+            } catch (e) {
+                raw = null;
+            }
+
+            if (raw) {
+                try {
+                    var payload = JSON.parse(raw);
+                    if (payload && payload.elems && payload.elems.length) {
+                        renderPopout(payload);
+                        return;
+                    }
+                } catch (e) {
+                    showErr('Invalid stored data.');
+                    return;
+                }
+            }
+
+            showWaiting();
+            setTimeout(function () {
+                if (dataAccepted) return;
+                showErr('No plot data received. In the main app, open the <strong>UpSet / Venn / K-map</strong> tab and click <strong>Pop out</strong> next to the chart you want. Browsers often give <code>index.html</code> and <code>popout/upset_popout.html</code> separate storage under <code>file://</code>, so the parent must send the data (allow pop-ups). Serving the folder over <code>http://localhost</code> also works.');
+            }, 8000);
+        })();
+    </script>
+</body>
+</html>
