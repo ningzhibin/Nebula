@@ -1,0 +1,15 @@
+{
+  "sections": [
+    { "id": "overview", "title": "1. Overview", "file": "overview.md" },
+    { "id": "input", "title": "2. Input Data", "file": "input.md" },
+    { "id": "diann", "title": "3. DIANN Upload Rules", "file": "diann.md" },
+    { "id": "namemapping", "title": "3b. Name mapping (MyGene)", "file": "namemapping.md" },
+    { "id": "replicate", "title": "4. Replicate Parsing", "file": "replicate.md" },
+    { "id": "techfilter", "title": "5. Group completeness filter", "file": "techfilter.md" },
+    { "id": "postfilter", "title": "6. Post-filter Behavior", "file": "postfilter.md" },
+    { "id": "upsetvenn", "title": "7. UpSet / Venn / Karnaugh", "file": "upsetvenn.md" },
+    { "id": "columnprofile", "title": "8. Column profile", "file": "columnprofile.md" },
+    { "id": "columncorrelation", "title": "9. Column correlation", "file": "columncorrelation.md" },
+    { "id": "differential", "title": "10. Differential analysis", "file": "differential.md" }
+  ]
+}

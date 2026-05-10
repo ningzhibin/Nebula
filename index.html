@@ -10,7 +10,7 @@
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/ml-matrix@6.10.4/lib/ml-matrix.min.js"></script>
-    <!-- Clustergrammer deps (incl. Bootstrap 3) are lazy-loaded; html font-size is pinned in CSS so rem-based tabs stay sized correctly -->
+    <!-- Clustergrammer deps (incl. Bootstrap 3) are lazy-loaded; see css/clustergrammer_bootstrap_restore.css appended after those sheets -->
     <link rel="stylesheet" href="css/main.css">
     <!-- Worker source files — loaded as regular scripts (file:// compatible) -->
     <script src="js/clustering.worker.js"></script>
@@ -56,7 +56,7 @@
                     <button class="tab" onclick="switchTab('document')">Document</button>
                 </div>
                 <div class="header-right">
-                    <span class="app-version" id="appVersion">v4.51</span>
+                    <span class="app-version" id="appVersion">v4.64</span>
                     <button type="button" id="analysisToggleBtn" class="analysis-toggle-btn" onclick="toggleAnalysisStatusPanel()">Show more analysis status</button>
                     <div id="analysisLogPanel" class="analysis-log-panel">
                         <div class="analysis-log-title">Analysis Status</div>
@@ -107,14 +107,14 @@
                                 <option value="First.Protein.Description">First.Protein.Description</option>
                                 <option value="Protein.Group">Protein.Group</option>
                             </select>
-                            <div class="small">Expected format: DIANN `results.pg*_matrix.tsv` (first six columns kept as row annotations for search; intensity columns from column 7 onward).</div>
+                            <div class="small">Expected format: DIANN `results.pg*_matrix.tsv`</div>
                             <div id="diannFileStatus" class="status"></div>
                         </div>
 
                         <div class="upload-option upload-kind-diann-gg">
                             <h3>DIANN Gene Group Matrix</h3>
                             <input type="file" id="diannGeneFileInput" accept=".tsv,.txt,.csv" onchange="loadDIANNGeneGroupFileData(event)">
-                            <div class="small">Expected format: DIANN `results.gg*_matrix.tsv` (first column `Genes` as row ID; intensity columns from column 4 onward, parsed with the same DIANN header rules).</div>
+                            <div class="small">Expected format: DIANN `results.gg*_matrix.tsv`</div>
                             <div id="diannGeneFileStatus" class="status"></div>
                         </div>
                             </div>
@@ -122,7 +122,7 @@
                         <p><strong>Data Format:</strong> TSV or CSV</p>
                         <p><strong>First row:</strong> Column headers</p>
                         <p><strong>First column:</strong> Row IDs</p>
-                        <p><strong>DIANN mode:</strong> Use "DIANN Protein Group Matrix" uploader for `results.pg*_matrix.tsv` (intensity starts at column 7; row IDs from your selected DIANN ID column, default `Protein.Names`; first six columns are stored for Row Profile search). Use "DIANN Gene Group Matrix" uploader for `results.gg*_matrix.tsv` (intensity starts at column 4; row IDs always use the first column `Genes`).</p>
+                        <p><strong>DIANN mode:</strong> Nebular has built-in parser for `results.pg*_matrix.tsv` and `results.gg*_matrix.tsv` </p>
                             </div>
                         </section>
                         </div>
@@ -197,56 +197,68 @@
                         <div class="table-data-workspace">
                             <aside id="dataFilterRowSidebar" class="table-data-sidebar" aria-label="Row filter tools">
                                 <h2>Row Filter</h2>
-                                <div class="sidebar-section">
-                                    <h3>Filter Rows by Valid values</h3>
-                                    <label for="rowValidScope">Scope</label>
-                                    <select id="rowValidScope" style="width:100%;margin-bottom:8px;" onchange="onRowValidScopeChange()">
-                                        <option value="total">In total (includes all columns)</option>
-                                        <option value="eachGroup">In each group</option>
-                                        <option value="atLeastOneGroup">In at least one group</option>
-                                    </select>
-                                    <div id="rowValidGroupControls" style="display:none;">
-                                        <label for="rowValidCol1">Group by (meta column)</label>
-                                        <select id="rowValidCol1" style="width:100%;margin-bottom:8px;" onchange="refreshRowValidCol2Options()"></select>
-                                        <label for="rowValidCol2">Then by (optional)</label>
-                                        <select id="rowValidCol2" style="width:100%;margin-bottom:8px;"></select>
-                                        <label style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
-                                            <input type="checkbox" id="rowValidMinGroup2" checked> Ignore groups with fewer than 2 samples
-                                        </label>
+                                <div class="row-filter-left-column" aria-label="Row filter valid values and sampling">
+                                    <div class="sidebar-section">
+                                        <h3>Filter Rows by Valid values</h3>
+                                        <label for="rowValidScope">Scope</label>
+                                        <select id="rowValidScope" style="width:100%;margin-bottom:8px;" onchange="onRowValidScopeChange()">
+                                            <option value="total">In total (includes all columns)</option>
+                                            <option value="eachGroup">In each group</option>
+                                            <option value="atLeastOneGroup">In at least one group</option>
+                                        </select>
+                                        <div id="rowValidGroupControls" style="display:none;">
+                                            <label for="rowValidCol1">Group by (meta column)</label>
+                                            <select id="rowValidCol1" style="width:100%;margin-bottom:8px;" onchange="refreshRowValidCol2Options()"></select>
+                                            <label for="rowValidCol2">Then by (optional)</label>
+                                            <select id="rowValidCol2" style="width:100%;margin-bottom:8px;"></select>
+                                            <label style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+                                                <input type="checkbox" id="rowValidMinGroup2" checked> Ignore groups with fewer than 2 samples
+                                            </label>
+                                        </div>
+                                        <div style="margin-bottom:8px;">
+                                            <label style="display:block;"><input type="radio" name="rowValidThresholdType" value="count" checked> Minimum count of valid values</label>
+                                            <label style="display:block;"><input type="radio" name="rowValidThresholdType" value="percent"> Minimum percentage of valid values</label>
+                                        </div>
+                                        <label for="rowValidThreshold">Threshold</label>
+                                        <input type="number" id="rowValidThreshold" min="1" step="1" value="1" style="width:100%;margin-bottom:8px;">
+                                        <button type="button" onclick="runRowValidValuesFilter()" style="width:100%;">Apply</button>
                                     </div>
-                                    <div style="margin-bottom:8px;">
-                                        <label style="display:block;"><input type="radio" name="rowValidThresholdType" value="count" checked> Minimum count of valid values</label>
-                                        <label style="display:block;"><input type="radio" name="rowValidThresholdType" value="percent"> Minimum percentage of valid values</label>
+                                    <div class="sidebar-section">
+                                        <h3>Random sampling</h3>
+                                        <label for="rowRandomSampleN">Keep random N rows</label>
+                                        <input type="number" id="rowRandomSampleN" min="1" step="1" value="100" style="width:100%;margin-bottom:8px;">
+                                        <button type="button" onclick="runRowRandomSampleFilter()" style="width:100%;">Apply</button>
                                     </div>
-                                    <label for="rowValidThreshold">Threshold</label>
-                                    <input type="number" id="rowValidThreshold" min="1" step="1" value="1" style="width:100%;margin-bottom:8px;">
-                                    <button type="button" onclick="runRowValidValuesFilter()" style="width:100%;">Apply valid-values row filter</button>
                                 </div>
-                                <div class="sidebar-section">
-                                    <h3>Random sampling</h3>
-                                    <label for="rowRandomSampleN">Keep random N rows</label>
-                                    <input type="number" id="rowRandomSampleN" min="1" step="1" value="100" style="width:100%;margin-bottom:8px;">
-                                    <button type="button" onclick="runRowRandomSampleFilter()" style="width:100%;">Apply random row sampling</button>
-                                </div>
-                                <div class="sidebar-section">
-                                    <h3 title="CV filter removes rows with low relative variability across positive values. CV = SD / mean, computed per row using finite values > 0 only.">CV filter</h3>
-                                    <label for="rowSdThreshold" title="Rows with CV lower than this threshold are filtered out. Example: 0.2 means remove rows with CV < 0.2 (20% relative variability).">Filter out rows with CV &lt; threshold</label>
-                                    <input type="number" id="rowSdThreshold" min="0" step="0.01" value="0.2" style="width:100%;margin-bottom:8px;" title="Default 0.2 (20% relative variability).">
-                                    <button type="button" onclick="runRowSdFilter()" style="width:100%;" title="Apply CV-based row filtering to the current Data Filter run (starting from original loaded data each apply).">Apply CV row filter</button>
-                                </div>
-                                <div class="sidebar-section">
-                                    <h3>Row ID filter</h3>
-                                    <label for="rowAnnotationKeyword">Row ID keyword / pattern</label>
-                                    <input type="text" id="rowAnnotationKeyword" placeholder="e.g. ATPase|P53" style="width:100%;margin-bottom:8px;">
-                                    <div style="margin-bottom:8px;">
-                                        <label style="display:block;"><input type="radio" name="rowAnnotationMatchMode" value="contains" checked> Contains</label>
-                                        <label style="display:block;"><input type="radio" name="rowAnnotationMatchMode" value="regex"> Regex</label>
+                                <div class="row-filter-right-column" aria-label="Row filter CV, ID, and pipeline">
+                                    <div class="sidebar-section">
+                                        <h3 title="CV filter removes rows with low relative variability across positive values. CV = SD / mean, computed per row using finite values > 0 only.">CV filter</h3>
+                                        <label for="rowSdThreshold" title="Rows with CV lower than this threshold are filtered out. Example: 0.2 means remove rows with CV < 0.2 (20% relative variability).">Filter out rows with CV &lt; threshold</label>
+                                        <input type="number" id="rowSdThreshold" min="0" step="0.01" value="0.2" style="width:100%;margin-bottom:8px;" title="Default 0.2 (20% relative variability).">
+                                        <button type="button" onclick="runRowSdFilter()" style="width:100%;" title="Apply CV-based row filtering to the current Data Filter run (starting from original loaded data each apply).">Apply</button>
                                     </div>
-                                    <button type="button" onclick="runRowAnnotationKeywordFilter()" style="width:100%;">Apply Row ID filter</button>
-                                </div>
-                                <div class="sidebar-section">
-                                    <button type="button" onclick="clearFilterPipeline()" style="width:100%;background:#6c757d;">Clear all Data Filter steps</button>
-                                    <div id="rowFilterStatus" class="status" style="margin-top:8px;"></div>
+                                    <div class="sidebar-section">
+                                        <h3 title="Within each technical-replicate bundle, if any replicate is missing or non-positive for a feature, all replicates in that bundle are set to 0 for that feature; then rows that are all-zero across all samples are removed.">Technical Reproducibility Filter</h3>
+                                        <label for="rowTechReproBundleMeta">Choose group with technical replicates</label>
+                                        <select id="rowTechReproBundleMeta" style="width:100%;margin-bottom:8px;" title="Leave on (auto) to infer bundles from T1/T2… in names or from Technical_Replicate + Biological_Replicate (+ Group) in meta. Otherwise choose a column where identical values mark columns that are technical replicates of each other (≥2 columns per value).">
+                                            <option value="">(auto — names / meta T&amp;R)</option>
+                                        </select>
+                                        <button type="button" onclick="runRowTechReproducibilityFilter()" style="width:100%;" title="Apply once from the original loaded matrix for this Data Filter run (same as other row tools).">Apply</button>
+                                    </div>
+                                    <div class="sidebar-section">
+                                        <h3>Row ID filter</h3>
+                                        <label for="rowAnnotationKeyword">Row ID keyword / pattern</label>
+                                        <input type="text" id="rowAnnotationKeyword" placeholder="e.g. ATPase|P53" style="width:100%;margin-bottom:8px;">
+                                        <div style="margin-bottom:8px;">
+                                            <label style="display:block;"><input type="radio" name="rowAnnotationMatchMode" value="contains" checked> Contains</label>
+                                            <label style="display:block;"><input type="radio" name="rowAnnotationMatchMode" value="regex"> Regex</label>
+                                        </div>
+                                        <button type="button" onclick="runRowAnnotationKeywordFilter()" style="width:100%;">Apply</button>
+                                    </div>
+                                    <div class="sidebar-section">
+                                        <button type="button" onclick="clearFilterPipeline()" style="width:100%;">Clear all Data Filter steps</button>
+                                        <div id="rowFilterStatus" class="status" style="margin-top:8px;"></div>
+                                    </div>
                                 </div>
                             </aside>
                             <aside id="dataFilterColumnSidebar" class="table-data-sidebar" style="display:none;" aria-label="Column filter tools">
@@ -315,11 +327,9 @@
                                         </div>
                                         <label for="colValidThreshold">Threshold</label>
                                         <input type="number" id="colValidThreshold" min="1" step="1" value="1" style="width:100%;margin-bottom:8px;">
-                                        <button type="button" onclick="runColumnValidValuesFilter()" style="width:100%;">Apply valid-values column filter</button>
+                                        <button type="button" onclick="runColumnValidValuesFilter()" style="width:100%;">Apply</button>
                                     </div>
-                                    <div class="sidebar-section">
-                                        <div id="columnFilterStatus" class="status" style="margin-top:8px;"></div>
-                                    </div>
+
                                 </div>
                             </aside>
                             <div class="table-data-main">
@@ -380,7 +390,7 @@
                                     </div>
                                 </aside>
                                 <div class="tab-main-content">
-                                    <p class="small" style="margin: 0 0 8px 0;">Annotation table: <strong>row order, sort, and pagination</strong> follow the <strong>Data Filter</strong> sub-tab for <strong>Passed</strong>. Use <strong>Filtered out</strong> to review rows dropped by the last <strong>Apply to matrix</strong> from this sidebar.</p>
+                                    
                                     <div class="data-filter-inner-tabs-row" role="tablist" aria-label="DIANN annotation result panels">
                                         <button type="button" class="data-filter-inner-tab active" data-diann-ann-tab="passed" onclick="switchDiannAnnResultTab('passed')">Passed</button>
                                         <button type="button" class="data-filter-inner-tab" data-diann-ann-tab="filtered" onclick="switchDiannAnnResultTab('filtered')">Filtered out</button>
@@ -484,9 +494,10 @@
                                     <h3 title="Same options as Column correlation (Plotly). Uses all sample columns.">Per-column summary (Plotly)</h3>
                                     <label for="colCorrSummaryWhat" class="small" style="display:block; margin-bottom:4px; color:#444;">Bar metric</label>
                                     <select id="colCorrSummaryWhat" onchange="refreshDataQcOverallDashboard()" style="width: 100%; box-sizing: border-box; padding: 4px 6px; font-size: 12px; margin-bottom: 6px;"
-                                        title="Mean/detection uses Column correlation transform and &quot;Treat 0 as missing&quot; when those controls are set (Data QC → Column correlation)">
-                                        <option value="mean_t" selected>Mean (transformed scale)</option>
+                                        title="Mean, count, and detection use Column correlation &quot;Treat 0 as missing&quot; only where that rule applies; feature count and detection are based on intensity &gt; 0 in finite cells.">
+                                        <option value="mean_t">Mean (transformed scale)</option>
                                         <option value="mean_raw">Mean (raw)</option>
+                                        <option value="count_nz" selected>Feature count (intensity &gt; 0)</option>
                                         <option value="detection">Detection rate (fraction &gt; 0)</option>
                                     </select>
                                     <p class="small heatmap-field-hint" style="margin:0;">Uses <strong>all</strong> columns. Transform / treat-zero follow the <strong>Column correlation</strong> sidebar (shared controls).</p>
@@ -1349,123 +1360,151 @@
 
             <!-- Differential analysis tab -->
             <div id="diffTab" class="tab-content">
-                <div class="tab-sidebar">
-                    <h2>Differential analysis</h2>
-                    <p class="small" style="margin: 0 0 10px 0; color: #555;">Compare groups using a <strong>meta table</strong> column (join matrix columns to <code>Sample_ID</code>). <strong>Two groups</strong>: Welch / Student <em>t</em>-test; optional <strong>fudge factor volcano</strong> (SAM-style <em>s</em>₀, curved cutoff). <strong>Multiple groups</strong>: one-way ANOVA or Kruskal–Wallis. Requires matrix + meta (edit under <strong>Data PreProcess</strong> → Meta Table).</p>
-                    <div class="sidebar-section">
-                        <label for="diffAnalysisMode">Comparison mode</label>
-                        <select id="diffAnalysisMode" onchange="onDiffAnalysisModeChange()" style="width: 100%; margin-bottom: 8px;">
-                            <option value="two_group">Two groups (t-test)</option>
-                            <option value="anova">Multiple groups (ANOVA / Kruskal–Wallis)</option>
-                        </select>
-                        <label for="diffMetaColumnSelect">Group by (meta column)</label>
-                        <select id="diffMetaColumnSelect" onchange="onDiffMetaColumnChange()" style="width: 100%; margin-bottom: 8px;"></select>
-                        <div id="diffTwoGroupWrap">
-                            <label for="diffGroupASelect">Group A</label>
-                            <select id="diffGroupASelect" style="width: 100%; margin-bottom: 8px;"></select>
-                            <label for="diffGroupBSelect">Group B</label>
-                            <select id="diffGroupBSelect" style="width: 100%; margin-bottom: 8px;"></select>
-                        </div>
-                        <div id="diffAnovaWrap" style="display: none;">
-                            <label>Groups to include <span class="small" style="color:#666;">(≥2 groups, each n≥2)</span></label>
-                            <div id="diffAnovaGroupCheckboxes" class="diff-anova-group-list"></div>
-                            <label for="diffMultiTestType">Multi-group test</label>
-                            <select id="diffMultiTestType" onchange="if(diffAnalysisLastResult && diffAnalysisLastResult.mode === 'anova') diffRerenderAllPlots()" style="width: 100%; margin-bottom: 8px;">
-                                <option value="anova">One-way ANOVA (equal variance)</option>
-                                <option value="kruskal">Kruskal–Wallis (rank-based)</option>
+                <div class="tab-sidebar diff-sidebar">
+                    <h2 class="diff-sidebar-title">Differential analysis</h2>
+
+                    <div class="diff-sidebar-split">
+                        <div class="sidebar-section diff-sidebar-card">
+                            <h3 class="diff-sidebar-card-title">Comparison</h3>
+                            <label for="diffAnalysisMode">Comparison mode</label>
+                            <select id="diffAnalysisMode" class="diff-sidebar-control" onchange="onDiffAnalysisModeChange()">
+                                <option value="two_group">Two groups (t-test)</option>
+                                <option value="anova">Multiple groups (ANOVA / Kruskal–Wallis)</option>
                             </select>
+                            <label for="diffMetaColumnSelect">Group by (meta column)</label>
+                            <select id="diffMetaColumnSelect" class="diff-sidebar-control" onchange="onDiffMetaColumnChange()"></select>
+                            <div id="diffTwoGroupWrap">
+                                <label for="diffGroupASelect">Group A (Usually "Baseline" group)</label>
+                                <select id="diffGroupASelect" class="diff-sidebar-control"></select>
+                                <label for="diffGroupBSelect">Group B (Usually "Treatment" group)</label>
+                                <select id="diffGroupBSelect" class="diff-sidebar-control"></select>
+                            </div>
+                            <div id="diffAnovaWrap" style="display: none;">
+                                <label>Groups to include <span class="small" style="color:#666;">(≥2 groups, each n≥2)</span></label>
+                                <div id="diffAnovaGroupCheckboxes" class="diff-anova-group-list"></div>
+                                <label for="diffMultiTestType">Multi-group test</label>
+                                <select id="diffMultiTestType" class="diff-sidebar-control" onchange="if(diffAnalysisLastResult && diffAnalysisLastResult.mode === 'anova') diffRerenderAllPlots()">
+                                    <option value="anova">One-way ANOVA (equal variance)</option>
+                                    <option value="kruskal">Kruskal–Wallis (rank-based)</option>
+                                </select>
+                            </div>
+                            <div id="diffGroupCounts" class="small diff-sidebar-meta"></div>
                         </div>
-                        <div id="diffGroupCounts" class="small" style="color: #444; margin-bottom: 8px;"></div>
+                        <div class="sidebar-section diff-sidebar-card diff-cutoff-column">
+                            <h3 class="diff-sidebar-card-title">Significance cutoffs</h3>
+                            <div id="diffTwoGroupEffectWrap">
+                                <div class="diff-inline-2">
+                                    <div>
+                                        <label for="diffFcThreshold">|log2FC|</label>
+                                        <input type="number" id="diffFcThreshold" class="diff-sidebar-control" value="1" min="0" step="0.1" onchange="onDiffLog2CutoffInputChange()" title="Absolute log2 fold-change cutoff used for two-group coloring when fold-change override is off.">
+                                    </div>
+                                    <div>
+                                        <label for="diffFoldChangeThreshold">Fold change</label>
+                                        <input type="number" id="diffFoldChangeThreshold" class="diff-sidebar-control" value="1.5" min="1" step="0.01" onchange="onDiffFoldCutoffInputChange()" title="Linear fold-change value synchronized with |log2FC| cutoff via FC = 2^|log2FC|.">
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="diffPThresholdWrap">
+                                <label for="diffPThreshold">p-value cutoff</label>
+                                <input type="number" id="diffPThreshold" class="diff-sidebar-control" value="0.05" min="0" max="1" step="0.001" onchange="if(diffAnalysisLastResult) diffRerenderAllPlots()">
+                            </div>
+                            <label for="diffQThreshold">FDR cutoff (when BH)</label>
+                            <input type="number" id="diffQThreshold" class="diff-sidebar-control" value="0.05" min="0" max="1" step="0.001" onchange="if(diffAnalysisLastResult) diffRerenderAllPlots()">
+                        </div>
                     </div>
+
                     <div class="sidebar-section diff-run-section">
-                        <button type="button" id="diffRunBtn" onclick="runDifferentialAnalysis()" style="width: 100%; padding: 10px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
-                            Run differential analysis
-                        </button>
-                        <div id="diffRunStatus" class="status" style="margin-top: 8px; font-size: 12px;"></div>
-                        <div id="diffSummaryBox" class="info-box" style="display: none; margin-top: 10px; font-size: 12px; padding: 10px;"></div>
+                        <button type="button" id="diffRunBtn" class="diff-run-btn" onclick="runDifferentialAnalysis()">Run differential analysis</button>
+                        <div id="diffRunStatus" class="status diff-run-status"></div>
+                        <div id="diffSummaryBox" class="info-box diff-summary-box" style="display: none;"></div>
                     </div>
-                    <div class="sidebar-section">
-                        <label for="diffFeatureLabelSelect">Feature label (table &amp; hover)</label>
-                        <select id="diffFeatureLabelSelect" style="width: 100%; margin-bottom: 8px;">
-                            <option value="rowId">Matrix row ID</option>
-                            <option value="Protein.Names">Protein.Names</option>
-                            <option value="Genes">Genes</option>
-                            <option value="Protein.Group">Protein.Group</option>
-                            <option value="First.Protein.Description">First.Protein.Description</option>
-                        </select>
-                    </div>
-                    <div class="sidebar-section">
-                        <label style="display: flex; align-items: center; gap: 8px;">
-                            <input type="checkbox" id="diffLog2Transform" checked>
-                            Log2(x + 1) before testing
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 8px; margin-top: 6px;">
-                            <input type="checkbox" id="diffTreatZeroAsMissing" checked>
-                            Treat 0 / invalid as missing
-                        </label>
-                        <label for="diffMinPerGroup">Min valid values per group</label>
-                        <input type="number" id="diffMinPerGroup" value="1" min="1" max="99" step="1" style="width: 100%; margin-bottom: 8px;">
-                        <label for="diffPseudocount">log2FC pseudocount (linear scale)</label>
-                        <input type="number" id="diffPseudocount" value="1" min="0" step="0.1" style="width: 100%;" title="Used as log2((meanB+pc)/(meanA+pc)) on linear means after optional inverse from log space">
-                    </div>
-                    <div class="sidebar-section" id="diffTwoGroupTestWrap">
-                        <label for="diffTestType">Test (two groups)</label>
-                        <select id="diffTestType" style="width: 100%; margin-bottom: 8px;">
-                            <option value="welch" selected>Welch (unequal variance)</option>
-                            <option value="student">Student (pooled variance)</option>
-                        </select>
-                        <label for="diffMtcMethod">Multiple testing</label>
-                        <select id="diffMtcMethod" onchange="onDiffMtcMethodChange()" style="width: 100%; margin-bottom: 8px;">
-                            <option value="none">None</option>
-                            <option value="bh" selected>Benjamini–Hochberg FDR</option>
-                            <option value="bonferroni">Bonferroni</option>
-                        </select>
-                    </div>
-                    <div class="sidebar-section">
-                        <label for="diffVolcanoYAxis">Volcano Y-axis</label>
-                        <select id="diffVolcanoYAxis" onchange="if(diffAnalysisLastResult) diffRerenderAllPlots()" style="width: 100%; margin-bottom: 8px;">
-                            <option value="p">−log10(p)</option>
-                            <option value="q" selected>−log10(FDR)</option>
-                        </select>
-                        <div id="diffFudgeVolcanoWrap" style="display: none;">
-                            <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; margin-bottom: 6px;">
-                                <input type="checkbox" id="diffVolcanoFudgeFactor" onchange="onDiffFudgeFactorToggle()" style="margin-top: 3px;">
-                                <span><strong>Fudge factor volcano</strong> (SAM-style curved cutoff; two-group only)</span>
-                            </label>
-                            <label for="diffFudgeS0">Fudge <em>s</em>₀ (adds to SE of log2FC; same units)</label>
-                            <input type="number" id="diffFudgeS0" value="0.05" min="0" step="any" onchange="if(diffAnalysisLastResult) diffRerenderAllPlots()" style="width: 100%; margin-bottom: 6px;" title="SE ≈ |log2FC/t|. Joint rule: usual p/FDR cutoff and |log2FC|/(SE+s₀) ≥ t★ for the same α (per-feature df).">
-                            <p class="small" style="margin: 0 0 8px 0; color: #666;">Green curve uses median SE and median df across features (visual guide). Point coloring uses each feature’s own SE and df.</p>
-                        </div>
-                        <div id="diffAnovaEffectWrap" style="display: none;">
-                            <label for="diffVolcanoXAxisAnova">Volcano x-axis</label>
-                            <select id="diffVolcanoXAxisAnova" onchange="if(diffAnalysisLastResult) diffRerenderAllPlots()" style="width: 100%; margin-bottom: 8px;">
-                                <option value="eta">η² (effect size)</option>
-                                <option value="f">Test statistic (F or H)</option>
+
+                    <div class="diff-sidebar-split">
+                        <div class="sidebar-section diff-sidebar-card">
+                            <h3 class="diff-sidebar-card-title">Data &amp; test</h3>
+                            <label for="diffFeatureLabelSelect">Feature label (table &amp; hover)</label>
+                            <select id="diffFeatureLabelSelect" class="diff-sidebar-control">
+                                <option value="rowId">Matrix row ID</option>
+                                <option value="Protein.Names">Protein.Names</option>
+                                <option value="Genes">Genes</option>
+                                <option value="Protein.Group">Protein.Group</option>
+                                <option value="First.Protein.Description">First.Protein.Description</option>
                             </select>
-                            <label for="diffEtaSqThreshold">η² cutoff (multi-group)</label>
-                            <input type="number" id="diffEtaSqThreshold" value="0.02" min="0" max="1" step="0.005" onchange="if(diffAnalysisLastResult) diffRerenderAllPlots()" style="width: 100%; margin-bottom: 8px;" title="For Kruskal–Wallis, η² is omitted; coloring uses p/FDR only">
-                            <label for="diffStatThreshold">Test statistic min (optional)</label>
-                            <input type="number" id="diffStatThreshold" value="0" min="0" step="0.1" onchange="if(diffAnalysisLastResult) diffRerenderAllPlots()" style="width: 100%; margin-bottom: 8px;" title="0 = ignore. Requires F or H ≥ this value for “significant” color when x-axis is F/H">
+                            <div class="diff-check-row">
+                                <label title="Apply log2(x+1) to the matrix before testing.">
+                                    <input type="checkbox" id="diffLog2Transform" checked> Log2(x+1)
+                                </label>
+                                <label title="Treat zero and non-finite values as missing.">
+                                    <input type="checkbox" id="diffTreatZeroAsMissing" checked> 0 / invalid = missing
+                                </label>
+                            </div>
+                            <div class="diff-inline-2">
+                                <div>
+                                    <label for="diffMinPerGroup">Min valid / group</label>
+                                    <input type="number" id="diffMinPerGroup" class="diff-sidebar-control" value="1" min="1" max="99" step="1">
+                                </div>
+                                <div>
+                                    <label for="diffPseudocount">FC pseudocount</label>
+                                    <input type="number" id="diffPseudocount" class="diff-sidebar-control" value="1" min="0" step="0.1" title="Used as log2((meanB+pc)/(meanA+pc)) on linear means after optional inverse from log space">
+                                </div>
+                            </div>
+                            <div id="diffTwoGroupTestWrap">
+                                <label for="diffTestType">Test (two groups)</label>
+                                <select id="diffTestType" class="diff-sidebar-control">
+                                    <option value="welch" selected>Welch (unequal variance)</option>
+                                    <option value="student">Student (pooled variance)</option>
+                                </select>
+                                <label for="diffMtcMethod">Multiple testing</label>
+                                <select id="diffMtcMethod" class="diff-sidebar-control" onchange="onDiffMtcMethodChange()">
+                                    <option value="none">None</option>
+                                    <option value="bh" selected>Benjamini–Hochberg FDR</option>
+                                    <option value="bonferroni">Bonferroni</option>
+                                </select>
+                            </div>
                         </div>
-                        <div id="diffHeatmapOptsWrap" style="display: none;">
-                            <label for="diffHeatmapTopN">Group heatmap: top N features (by p)</label>
-                            <input type="number" id="diffHeatmapTopN" value="40" min="5" max="100" step="1" onchange="if(diffAnalysisLastResult) renderDiffGroupHeatmapPlot()" style="width: 100%; margin-bottom: 6px;">
-                            <label style="display: flex; align-items: center; gap: 8px;"><input type="checkbox" id="diffHeatmapZscoreRows" checked onchange="if(diffAnalysisLastResult) renderDiffGroupHeatmapPlot()"> Z-score each row (heatmap)</label>
+                        <div class="sidebar-section diff-sidebar-card">
+                            <h3 class="diff-sidebar-card-title">Plots &amp; display</h3>
+                            <label for="diffVolcanoYAxis">Volcano Y-axis</label>
+                            <select id="diffVolcanoYAxis" class="diff-sidebar-control" onchange="if(diffAnalysisLastResult) diffRerenderAllPlots()">
+                                <option value="p">−log10(p)</option>
+                                <option value="q" selected>−log10(FDR)</option>
+                            </select>
+                            <label class="diff-check-block" title="Labels only for points colored significant (not NS). Two-group: label budget is split between up (log2FC&gt;0) and down (log2FC&lt;0) so down-regulated hits are not crowded out. At most ~35–120 names per view (more when zoomed); within each side, higher −log10(FDR/p) and larger |log2FC| win. ScatterLabelOptimize reduces overlap; updates on zoom/pan.">
+                                <input type="checkbox" id="diffVolcanoSigLabels" checked onchange="if(diffAnalysisLastResult) diffUpdateVolcanoSigLabels()">
+                                <span>Show labels for significantly changed</span>
+                            </label>
+                            <div id="diffFudgeVolcanoWrap" style="display: none;">
+                                <label class="diff-check-block">
+                                    <input type="checkbox" id="diffVolcanoFudgeFactor" onchange="onDiffFudgeFactorToggle()">
+                                    <span><strong>Fudge factor volcano</strong> (SAM-style; two-group)</span>
+                                </label>
+                                <label for="diffFudgeS0">Fudge <em>s</em>₀ (SE + s₀)</label>
+                                <input type="number" id="diffFudgeS0" class="diff-sidebar-control" value="0.05" min="0" step="any" onchange="if(diffAnalysisLastResult) diffRerenderAllPlots()" title="SE ≈ |log2FC/t|. Joint rule: usual p/FDR cutoff and |log2FC|/(SE+s₀) ≥ t★ for the same α (per-feature df).">
+                                <p class="small diff-sidebar-note">Green curve: median SE/df guide. Coloring uses per-feature SE and df.</p>
+                            </div>
+                            <div id="diffAnovaEffectWrap" style="display: none;">
+                                <label for="diffVolcanoXAxisAnova">Volcano x-axis</label>
+                                <select id="diffVolcanoXAxisAnova" class="diff-sidebar-control" onchange="if(diffAnalysisLastResult) diffRerenderAllPlots()">
+                                    <option value="eta">η² (effect size)</option>
+                                    <option value="f">Test statistic (F or H)</option>
+                                </select>
+                                <div class="diff-inline-2">
+                                    <div>
+                                        <label for="diffEtaSqThreshold">η² min</label>
+                                        <input type="number" id="diffEtaSqThreshold" class="diff-sidebar-control" value="0.02" min="0" max="1" step="0.005" onchange="if(diffAnalysisLastResult) diffRerenderAllPlots()" title="For Kruskal–Wallis, η² is omitted; coloring uses p/FDR only">
+                                    </div>
+                                    <div>
+                                        <label for="diffStatThreshold">F/H min</label>
+                                        <input type="number" id="diffStatThreshold" class="diff-sidebar-control" value="0" min="0" step="0.1" onchange="if(diffAnalysisLastResult) diffRerenderAllPlots()" title="0 = ignore. Requires F or H ≥ this value for “significant” color when x-axis is F/H">
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="diffHeatmapOptsWrap" style="display: none;">
+                                <label for="diffHeatmapTopN">Group heatmap: top N (by p)</label>
+                                <input type="number" id="diffHeatmapTopN" class="diff-sidebar-control" value="40" min="5" max="100" step="1" onchange="if(diffAnalysisLastResult) renderDiffGroupHeatmapPlot()">
+                                <label class="diff-check-block"><input type="checkbox" id="diffHeatmapZscoreRows" checked onchange="if(diffAnalysisLastResult) renderDiffGroupHeatmapPlot()"> Z-score rows (heatmap)</label>
+                            </div>
                         </div>
-                    </div>
-                    <div class="sidebar-section diff-cutoff-column">
-                        <div id="diffTwoGroupEffectWrap">
-                            <label for="diffFcThreshold">|log2FC| cutoff</label>
-                            <input type="number" id="diffFcThreshold" value="1" min="0" step="0.1" onchange="onDiffLog2CutoffInputChange()" style="width: 100%; margin-bottom: 8px;" title="Absolute log2 fold-change cutoff used for two-group coloring when fold-change override is off.">
-                            <label for="diffFoldChangeThreshold">Fold change cutoff</label>
-                            <input type="number" id="diffFoldChangeThreshold" value="1.5" min="1" step="0.01" onchange="onDiffFoldCutoffInputChange()" style="width: 100%; margin-bottom: 8px;" title="Linear fold-change value synchronized with |log2FC| cutoff via FC = 2^|log2FC|.">
-                        </div>
-                        <div id="diffPThresholdWrap">
-                            <label for="diffPThreshold">p-value cutoff</label>
-                            <input type="number" id="diffPThreshold" value="0.05" min="0" max="1" step="0.001" onchange="if(diffAnalysisLastResult) diffRerenderAllPlots()" style="width: 100%; margin-bottom: 8px;">
-                        </div>
-                        <label for="diffQThreshold">FDR cutoff (for coloring when BH on)</label>
-                        <input type="number" id="diffQThreshold" value="0.05" min="0" max="1" step="0.001" onchange="if(diffAnalysisLastResult) diffRerenderAllPlots()" style="width: 100%; margin-bottom: 8px;">
                     </div>
                 </div>
                 <div class="tab-main-content diff-main-stack">
@@ -1898,127 +1937,23 @@
                 </div>
             </div>
 
-            <!-- Document Tab -->
+            <!-- Document Tab: outline + Markdown from doc/ (see doc/manifest.json) -->
             <div id="documentTab" class="tab-content">
                 <div class="tab-sidebar">
                     <h2>Document</h2>
                     <div class="sidebar-section">
                         <h3>Outline</h3>
-                        <div class="doc-outline" id="docOutline">
-                            <button type="button" class="doc-outline-btn active" data-doc="overview" onclick="switchDocumentSection('overview')">1. Overview</button>
-                            <button type="button" class="doc-outline-btn" data-doc="input" onclick="switchDocumentSection('input')">2. Input Data</button>
-                            <button type="button" class="doc-outline-btn" data-doc="diann" onclick="switchDocumentSection('diann')">3. DIANN Upload Rules</button>
-                            <button type="button" class="doc-outline-btn" data-doc="namemapping" onclick="switchDocumentSection('namemapping')">3b. Name mapping (MyGene)</button>
-                            <button type="button" class="doc-outline-btn" data-doc="replicate" onclick="switchDocumentSection('replicate')">4. Replicate Parsing</button>
-                            <button type="button" class="doc-outline-btn" data-doc="techfilter" onclick="switchDocumentSection('techfilter')">5. Group completeness filter</button>
-                            <button type="button" class="doc-outline-btn" data-doc="postfilter" onclick="switchDocumentSection('postfilter')">6. Post-filter Behavior</button>
-                            <button type="button" class="doc-outline-btn" data-doc="upsetvenn" onclick="switchDocumentSection('upsetvenn')">7. UpSet / Venn / Karnaugh</button>
-                            <button type="button" class="doc-outline-btn" data-doc="columnprofile" onclick="switchDocumentSection('columnprofile')">8. Column profile</button>
-                            <button type="button" class="doc-outline-btn" data-doc="columncorrelation" onclick="switchDocumentSection('columncorrelation')">9. Column correlation</button>
-                            <button type="button" class="doc-outline-btn" data-doc="differential" onclick="switchDocumentSection('differential')">10. Differential analysis</button>
-                        </div>
+                        <p class="small doc-markdown-hint" style="color:#666;margin:0 0 8px 0;">Help pages load from the <code>doc/</code> folder. Serve the app over HTTP (not <code>file://</code>) so documentation can load.</p>
+                        <div class="doc-outline" id="docOutline" aria-live="polite"></div>
                     </div>
                 </div>
                 <div class="tab-main-content">
-                    <div class="visualization-container" style="padding: 18px; overflow-y: auto;">
-                        <div class="info-box doc-section active" data-doc="overview" style="max-width: 1200px; line-height: 1.45;">
-                            <h3 style="margin-top: 0;">Overview</h3>
-                            <p><strong>Nebula</strong> is the application name for this single-page intensity-matrix QC and visualization tool (browser-based). This tab documents the key hard-coded behaviors in the app for data import, replicate parsing, and group completeness filtering (plus the technical-replicate algorithm where it still applies in code).</p>
-                            <p><strong>SAINT</strong> and <strong>Enrichr</strong> (v2.29): load matrix and meta in <strong>Data Preparation</strong>, then use <strong>SAINT</strong> to map control/treatment and bait columns, run analysis, and open <strong>Network</strong> / <strong>Scatter Plot</strong> sub-tabs. <strong>Enrichr</strong> accepts pasted genes, current matrix row labels, or SAINT prey names after a run. D3 v7 for SAINT is loaded on demand and does not replace Clustergrammer’s D3 v3.</p>
-                            <p><strong>Enrichr enrichment plots</strong> (v2.69+): After enrichment returns the term table, open the <strong>Enrichment plots</strong> sub-tab (next to <strong>Results table</strong>) for <strong>Plotly</strong> charts built from the <em>full</em> API result (not only the paginated table). The main panel uses tabs for the horizontal <strong>bar</strong> chart (rank by adjusted P, P-value, or combined score), the <strong>bubble</strong> plot (overlap count or odds ratio vs term; color −log10(adjusted P) or adjusted P), and the <strong>Jaccard</strong> heatmap between top terms using overlapping genes from each row. Plot options sit in the left sidebar; use <strong>Export results TSV</strong> for a tab-separated download of parsed columns (includes one TSV column per <strong>data matrix</strong> sample when row count matches and gene mapping is available).</p>
-                            <p><strong>Enrichr → Heatmap</strong> (v3.01+): Third sub-tab draws a <strong>Plotly heatmap of per-sample matrix intensities</strong> only (columns = samples). <strong>Adjusted P, P-value, combined score, odds ratio,</strong> and <strong>overlap</strong> are <strong>row filters</strong> in the sidebar; <strong>max adj. P</strong> defaults to <strong>0.05</strong> (clear to disable). Terms are ranked and capped by max rows. For hierarchical clustering of the full <strong>protein × sample</strong> matrix, use the top-level <strong>Heatmap</strong> tab.</p>
-                            <p><strong>Heatmap pop-out</strong> (v2.82+): After generating a heatmap, use <strong>Pop out</strong> in the left sidebar (to the right of <strong>Generate heatmap</strong>) to open <code>popout/heatmap_popout.html</code> in a new window with the same Plotly figure (full-window <code>autosize</code>), using <code>postMessage</code> and <code>sessionStorage</code> like the UpSet/Venn pop-out. The button appears only after a heatmap exists.</p>
-                            <p><strong>Data QC → Overall</strong> (v4.18+): Matrix-wide QC on the <strong>current</strong> matrix (v4.19+: <strong>Plotly</strong> per-column summary bars for <strong>all</strong> samples — mean raw/transformed or detection rate — plus D3 box plots and total Σ log10(1+I); transform / treat-zero follow <strong>Data QC → Column correlation</strong> shared controls). Use <strong>Refresh dashboard</strong> after loading or filtering; auto-refresh when Data Filter updates while Overall is active.</p>
-                            <p><strong>Data QC → Column correlation</strong> (v4.19+): Inner tabs <strong>Overall correlations</strong> (subset heatmaps) and <strong>Paired correlation</strong> (scatter, QQ, Bland–Altman, r vs X) use the same <code>data-filter-inner-tabs-row</code> / <code>data-filter-inner-tab</code> markup and styling as <strong>Data PreProcess → Data Filter</strong> nested tabs (e.g. Row Filter → Passed). Shared <strong>Transform</strong> / <strong>Treat 0 as missing</strong> at the top of the sidebar.</p>
-                            <p>Use the outline on the left to jump to specific sections (including <strong>Column profile</strong> and <strong>Column correlation</strong> under Data PreProcess, sections 8–9).</p>
+                    <div class="visualization-container doc-markdown-main" style="padding: 18px; overflow-y: auto;">
+                        <div id="docMarkdownStatus" class="doc-markdown-status" style="display:none;" role="status"></div>
+                        <div id="docMarkdownRetryWrap" style="display:none;margin-bottom:10px;">
+                            <button type="button" id="docMarkdownRetryBtn" class="example-btn">Retry load</button>
                         </div>
-                        <div class="info-box doc-section" data-doc="input" style="max-width: 1200px; line-height: 1.45;">
-                            <h3 style="margin-top: 0;">Input Data</h3>
-                            <p>- Accepts clean matrix files (TSV/CSV/XLSX) and DIANN protein-group matrices.<br>
-                            - First row is treated as sample columns; first column is row ID.<br>
-                            - After loading a DIANN protein group matrix, use <strong>Data PreProcess</strong> → <strong>DIANN annotations</strong> for a read-only table of the first file columns; sort order and pagination match the <strong>Data Filter</strong> sub-tab.</p>
-                        </div>
-                        <div class="info-box doc-section" data-doc="diann" style="max-width: 1200px; line-height: 1.45;">
-                            <h3 style="margin-top: 0;">DIANN Upload Rules</h3>
-                            <p>- For DIANN `results.pg*_matrix.tsv`, intensity values are read from column 7 onward; the first six columns are stored as per-row annotation (same file).<br>
-                            - **Data PreProcess → DIANN annotations** lists those columns in a read-only table (same row order, sort, and pagination as <strong>Data Filter</strong>).<br>
-                            - Default row-ID column is `Protein.Names` (plots and tables use this ID); you can choose `Genes`, `First.Protein.Description`, or `Protein.Group` instead.<br>
-                            - **Data PreProcess → Row Profile** search matches the primary ID plus all stored annotation fields (e.g. gene, protein names, descriptions). **Row label** dropdown chooses which DIANN annotation column labels the checklist and plot legend (`Protein.Group`, `Protein.Names`, `Genes`, `First.Protein.Description`); without DIANN pg annotations, matrix row IDs are used. Sidebar width is enlarged for the checklist. Quick selection: **Select all rows**, **Select top N** by row intensity sum (numeric input, default 5), **Clear selection**.<br>
-                            - If the selected ID column is missing from the header, fallback order is `Protein.Names` → `Genes` → `First.Protein.Description` → `Protein.Group` → first column.<br>
-                            - If selected ID is not `Protein.Group`, rows with blank selected IDs are removed.<br>
-                            - For DIANN `results.gg*_matrix.tsv`, intensity values are read from column 4 onward and row IDs always come from the first column (`Genes`).<br>
-                            - Sample names are simplified from raw file paths to concise informative names.</p>
-                        </div>
-                        <div class="info-box doc-section" data-doc="namemapping" style="max-width: 1200px; line-height: 1.45;">
-                            <h3 style="margin-top: 0;">Name mapping (Data PreProcess)</h3>
-                            <p><strong>Data PreProcess</strong> → <strong>Name mapping</strong> calls the free <a href="https://mygene.info/" target="_blank" rel="noopener">MyGene.info</a> API (no key) to map matrix row IDs to <strong>gene_symbol</strong>, <strong>protein_name</strong>, <strong>uniprotkb_ac</strong>, and related fields. Choose species (human / mouse / rat / custom NCBI taxid), whether IDs are gene symbols, UniProt accessions, or <strong>auto</strong> (accession regex vs symbol), then <strong>Run mapping</strong>. Large tables are queried in batches; <strong>Stop</strong> keeps partial results.</p>
-                            <p>Results are stored in the session as <code>featureNameMapHeaders</code> / <code>featureNameMapRows</code> and appear in <strong>feature label</strong> dropdowns (heatmap, Clustergrammer, Differential, column profile, column correlation, Row Profile) and in <strong>Row Profile</strong> search — similar to DIANN row annotations. Mapping is <strong>best-effort</strong>; ambiguous or missing hits are noted in <code>mapping_note</code>.</p>
-                            <p>If the browser blocks cross-origin requests (e.g. opening the app as <code>file://</code>), serve the folder over <code>http://localhost</code> or another HTTP server so <code>fetch</code> to MyGene can succeed.</p>
-                        </div>
-                        <div class="info-box doc-section" data-doc="replicate" style="max-width: 1200px; line-height: 1.45;">
-                            <h3 style="margin-top: 0;">Replicate Parsing</h3>
-                            <p>- Parser detects replicate tags from sample names.<br>
-                            - Supports full `R#_T#`, or only complete `R1..RN`, or only complete `T1..TN`.<br>
-                            - A replicate axis is accepted only when all samples contain that axis and indices are contiguous from `1` to `N`.</p>
-                        </div>
-                        <div class="info-box doc-section" data-doc="techfilter" style="max-width: 1200px; line-height: 1.45;">
-                            <h3 style="margin-top: 0;">Group completeness filter (Data Filter → Row Filter)</h3>
-                            <p>- <strong>Apply group completeness filter</strong> (Data PreProcess → <strong>Data Filter</strong> → <strong>Row Filter</strong>): choose one or two metadata columns to define <strong>groups</strong> (same combination of meta values ⇒ one group).<br>
-                            - A matrix cell counts as <strong>valid</strong> if it is finite and <strong>&gt; 0</strong>.<br>
-                            - <strong>Threshold</strong>: minimum <strong>count</strong> of valid columns in the group, or minimum <strong>percentage</strong> — required valid count = ⌈groupSize × P / 100⌉.<br>
-                            - For each row, if a group fails its threshold, <strong>all</strong> columns in that group for that row are set to `0`. Rows that are then all non-positive across every sample are removed; heatmap/PCA/t-SNE/Clustergrammer caches are reset.<br>
-                            - <strong>Filtered out</strong> (Data PreProcess, sub-tab next to <strong>Data Filter</strong>; <strong>v3.12</strong>: the tab appears only after at least one row has been dropped): lists row IDs removed for that reason, with intensities at the moment of removal and a short note of the last filter run. The list is cleared when you load new data or a session snapshot. <strong>Technical replicate</strong> filter (console) updates the same list when it drops all-zero rows.<br>
-                            - If <code>Biological_Replicate</code> / <code>Technical_Replicate</code> cells are empty in the meta table but the matrix column id still contains <code>R#</code> / <code>T#</code> tokens (e.g. DIANN paths), those tags are read from the column id for grouping so replicate triplets are not merged into one huge group.<br>
-                            - The legacy <strong>T1..TN technical replicate</strong> rule is still implemented in code as <code>applyTechnicalReplicateFiltering()</code> (strict complete technical sets on <code>Group</code> + <code>Biological_Replicate</code>) but is <strong>not</strong> exposed as a sidebar button.</p>
-                            <h4 style="margin: 14px 0 6px 0;">“Ignore groups with fewer than 2 samples”</h4>
-                            <p>Each unique key from your one (or two) grouping column(s) defines a <strong>group</strong>: the matrix columns whose metadata match that key. The checkbox controls whether <strong>single-sample</strong> groups — only <strong>one</strong> sample column shares that key — participate in the filter.</p>
-                            <p><strong>When the option is on (default):</strong> only groups with <strong>at least two</strong> columns are kept. Single-sample groups are <strong>excluded</strong> from <code>validGroups</code> in the implementation: the completeness rule (min count or min percentage of valid <code>&gt;0</code> values) is <strong>not</strong> evaluated for those columns. Their intensities are <strong>left as they were</strong> before you click <em>Apply</em> (they are not zeroed by this rule, and they are not part of any other group’s column set). Use this when you only want to enforce completeness on replicate groups (e.g. R1–R3) and to avoid orphan conditions or odd one-off samples being forced through a rule that expects several values per group. It also avoids pathological cases with mixed designs: if you required e.g. “min count 3” and the smallest group had only one column, the tool would report an error; dropping singletons from the group list can make the remaining “valid” groups all large enough for your threshold.</p>
-                            <p><strong>When the option is off:</strong> every meta key counts as a group, including singletons (group size = 1). Then a <strong>count</strong> threshold greater than 1 cannot be met for that “group”, and the filter will reject the run if the smallest group size is below your threshold. <strong>Percent</strong> mode still runs, but for a single column the required count of valid values is ⌈1 × P/100⌉, which is <code>1</code> for any P from 1–100, so a singleton always “passes” unless the value is invalid (not <code>&gt;0</code>).</p>
-                            <p><strong>Edge case:</strong> if <em>all</em> groups are singletons (e.g. every sample has a unique combination in the chosen meta column(s)), with the option on there are no groups of size ≥ 2 and the filter shows an error like <em>No groups match the chosen columns and minimum group size</em>. Uncheck the option or change the grouping so at least one key has two or more samples.</p>
-                        </div>
-                        <div class="info-box doc-section" data-doc="postfilter" style="max-width: 1200px; line-height: 1.45;">
-                            <h3 style="margin-top: 0;">Post-filter Behavior</h3>
-                            <p>- Table and row profile selectors are refreshed.<br>
-                            - Heatmap/PCA/t-SNE/Clustergrammer caches are reset to avoid stale results.</p>
-                            <p>- <strong>Data PreProcess → Data Filter</strong>: shared matrix preview (Row Filter and Column Filter) uses a scroll area with <strong>sticky column headers</strong>. <strong>ID</strong> cells show a native tooltip with DIANN annotation fields (when loaded from a protein group matrix). <strong>Column Filter</strong> keeps or removes sample columns (per-column checkboxes, optional <strong>Choose by group</strong> using one or two meta columns—same rules as group completeness—with <strong>Check</strong> / <strong>Uncheck</strong> per group); <strong>Row Filter</strong> includes group completeness, global min-valid, and row ID include actions.</p>
-                        </div>
-                        <div class="info-box doc-section" data-doc="upsetvenn" style="max-width: 1200px; line-height: 1.45;">
-                            <h3 style="margin-top: 0;">UpSet / Venn / Karnaugh</h3>
-                            <p>- Top-level tab <strong>UpSet / Venn / K-map</strong> uses <a href="https://upset.js.org/" target="_blank" rel="noopener">UpSet.js</a> (lazy-loaded from jsDelivr), following the linked <a href="https://upset.js.org/docs/components" target="_blank" rel="noopener">components</a> pattern. The library is licensed under <strong>GNU AGPL-3.0</strong>; consider license terms if you redistribute or use the app commercially.<br>
-                            - Each <strong>set</strong> is one matrix sample column. Each <strong>row</strong> (feature ID) is an element; membership uses the sidebar <em>Presence rule</em>: <strong>0 is always treated as missing/NA.</strong> Either any finite non-zero value, or <strong>intensity &gt; threshold</strong> (user-set cutoff, default threshold 0 ⇒ &gt;0; values ≤ threshold treated as absent).<br>
-                            - <strong>Set chooser</strong>: checkboxes for columns (default: first five selected), filter box, Select all / Clear, and <em>Refresh plots</em>.<br>
-                            - <strong>Set combinations (UpSet plot)</strong> (collapsible sidebar block, aligned with <a href="https://upset.js.org/app/" target="_blank" rel="noopener">UpSet.js App</a>): ordering, mode (intersections / unions / distinct intersections), min and max set-members (degree), max number of combinations after sort, and whether to include empty combinations — implemented with <code>UpSetJS.generateCombinations</code> (<a href="https://upset.js.org/docs/data/" target="_blank" rel="noopener">docs</a>). <strong>Venn</strong> and <strong>Karnaugh</strong> still use the full generated combination lattice for layout.<br>
-                            - Main area (scrollable): <strong>UpSet</strong> full width on top; <strong>Venn</strong> and <strong>Karnaugh map</strong> side by side below (stacks vertically on narrow viewports). Each section title row includes a <strong>Pop out</strong> button that opens <code>popout/upset_popout.html</code> for that view; membership and UpSet combination options are delivered by <code>postMessage</code> (and <code>sessionStorage</code> when shared, e.g. HTTP). <strong>Hover</strong> in any view updates linked highlighting in the others (by intersection/set name). The pop-out plot uses the same <code>onHover</code> / <code>selection</code> behavior for that single view and reflows on window resize. The built-in plot <strong>share</strong> control is hidden so PNG/SVG/dump/VEGA toolbar buttons work reliably. With many sets selected, Venn/Karnaugh can be crowded; a note appears when more than six sets are selected.</p>
-                        </div>
-                        <div class="info-box doc-section" data-doc="columnprofile" style="max-width: 1200px; line-height: 1.45;">
-                            <h3 style="margin-top: 0;">Column profile</h3>
-                            <p>- <strong>Data PreProcess</strong> sub-tab <strong>Column profile</strong> (after <strong>Row Profile</strong>): one <strong>button per sample column</strong> above the plots.<br>
-                            - For the selected column, finite numeric values are sorted <strong>high → low</strong>. Interactive <strong>Plotly</strong> views: ranked <strong>bars + line</strong> (linear intensity y-axis: scientific notation, e.g. <code>1.2e+6</code>), <strong>cumulative % of total</strong>, <strong>treemap</strong>, and <strong>pie</strong> (top <em>N</em> features + <strong>Other</strong>; sidebar <em>Max features</em>). Optional <strong>log10(1 + intensity)</strong> for the bar/line panel uses fixed-decimal y ticks on the transformed scale.<br>
-                            - A full-width panel plots a <strong>histogram</strong> (probability density) and <strong>Gaussian KDE</strong> curve of <strong>log10(1 + intensity)</strong> for <strong>every</strong> feature in that column (not limited by <em>Max features</em>); KDE uses a Silverman bandwidth and subsamples very large matrices for speed.<br>
-                            - <strong>Row Profile</strong> bar/line chart: linear <strong>Value</strong> y-axis uses the same scientific tick style; <strong>log Y</strong> and <strong>Z-score</strong> modes keep their own tick formats. The plot uses the <strong>full width and height</strong> of the Row Profile plot column inside a framed container; sample names get extra bottom space and smaller tick fonts when there are many columns.</p>
-                        </div>
-                        <div class="info-box doc-section" data-doc="columncorrelation" style="max-width: 1200px; line-height: 1.45;">
-                            <h3 style="margin-top: 0;">Column correlation</h3>
-                            <p><strong>Data PreProcess</strong> sub-tab <strong>Column Correlation</strong> (after <strong>Column profile</strong>) explores <strong>sample–sample</strong> relationships: matrix <strong>columns</strong> are treated as vectors over rows (features). This is <strong>QC / replicate agreement</strong>, not differential expression.</p>
-                            <p><strong>Transforms and missing values:</strong> Choose <strong>none</strong>, <strong>log10(1 + x)</strong>, or <strong>log2(1 + x)</strong>. Optional <strong>Treat 0 as missing</strong> (default on) matches DIANN-style intensity QC. Pair plots and correlations use <strong>pairwise-complete</strong> rows only (finite values after transform and missing rules).</p>
-                            <p><strong>Nested tab strip:</strong> Uses the same <code>data-filter-inner-tabs-row</code> / <code>data-filter-inner-tab</code> styling as <strong>Data PreProcess → Data Filter</strong> (e.g. Row Filter → Passed). <strong>Overall correlations</strong> shows subset heatmaps plus a mixed matrix plot: <strong>lower triangle</strong> = pairwise scatter plots; <strong>upper triangle</strong> = color-coded correlation cells. <strong>Paired correlation</strong> shows scatter, QQ, Bland–Altman, and the bar chart of <strong>r(column X, j)</strong> for each column <em>j</em> in the heatmap subset.</p>
-                            <p><strong>Pair plots:</strong> Pick <strong>Column X</strong> and <strong>Column Y</strong> (sidebar on the Paired tab); scatter includes an identity line when scales match. <strong>QQ</strong> compares sorted quantiles. <strong>Bland–Altman</strong>: difference vs mean, or <strong>log2(Y/X)</strong> vs geometric mean when both raw values are strictly positive.</p>
-                            <p><strong>Correlation and distance matrices:</strong> <strong>Pearson</strong> or <strong>Spearman</strong> (ranks with average ties, then Pearson on ranks). Matrices use the <strong>first N</strong> columns in file/matrix order (<em>Max columns in heatmaps</em>, default 40, cap 80). <strong>Distance</strong>: <strong>1 − r</strong>, <strong>√(2(1 − r))</strong>, or <strong>Euclidean</strong> on <strong>z-scored</strong> column vectors (pairwise-complete rows).</p>
-                            <p><strong>Per-column summary (Plotly):</strong> Moved to <strong>Data QC → Overall</strong> — bars for <strong>every</strong> sample column (mean raw, mean transformed, or detection rate). Uses the same transform and zero-as-missing rules as this tab’s <strong>Shared scale</strong> block.</p>
-                            <p><strong>Session JSON</strong> saves the sidebar control values (<code>colCorr*</code> ids) so imports restore your settings; reopen the sub-tab or use <strong>Refresh plots</strong> to redraw.</p>
-                        </div>
-                        <div class="info-box doc-section" data-doc="differential" style="max-width: 1200px; line-height: 1.45;">
-                            <h3 style="margin-top: 0;">Differential analysis</h3>
-                            <p>The top-level <strong>Differential</strong> tab compares groups on the loaded intensity matrix using a <strong>metadata column</strong> (all columns except <code>Sample_ID</code>). Matrix column headers are matched to meta rows by <code>Sample_ID</code> (same join as technical-replicate filtering).</p>
-                            <p><strong>Two groups (default):</strong> Choose <strong>Group A</strong> and <strong>Group B</strong>. Per-feature <strong>Welch</strong> (default) or <strong>Student</strong> <em>t</em>-tests. Optional <strong>Log2(x + 1)</strong> before testing; with it on, <strong>log2FC</strong> is the difference of group means on that scale. Without log transform, <strong>log2FC</strong> is <code>log2((meanB + pseudocount)/(meanA + pseudocount))</code> on linear means. <strong>Treat 0 / invalid as missing</strong> and <strong>Min valid values per group</strong> apply per group. Two-sided <em>p</em>-values use the Student <em>t</em> CDF (incomplete beta). Each group needs at least <strong>two samples</strong>.</p>
-                            <p><strong>Multiple groups:</strong> Mode <strong>Multiple groups (ANOVA / Kruskal–Wallis)</strong> shows a checklist of meta levels (all checked by default). Each <strong>included</strong> group must have at least two samples after the meta join. Tests run on the same transformed scale as two-group mode. <strong>One-way ANOVA</strong> uses the classical <em>F</em>-test (equal variances between groups). <strong>Kruskal–Wallis</strong> is rank-based; raw-<em>p</em> uses a χ² approximation (Wilson–Hilferty) on <em>H</em> with <em>k</em>−1 df. Effect summaries include partial η² (ANOVA: SSB/SST; KW: (H−df)/(N−1) as a simple effect-size style quantity).</p>
-                            <p><strong>Multi-group plots:</strong> <strong>Volcano</strong> uses <strong>η²</strong> or the test statistic (<em>F</em> or <em>H</em>) on the x-axis vs −log10(<em>p</em>) or −log10(FDR). Cutoffs in the sidebar (η², optional minimum statistic) combine with <em>p</em>/FDR for point coloring. <strong>Mean range</strong> (formerly MA for two groups) plots grand mean of group means vs (max − min) group mean. <strong>Group heatmap</strong> shows the top <em>N</em> features by raw <em>p</em> with optional row z-score. <strong>P-value histogram</strong> is unchanged.</p>
-                            <p><strong>Multiple testing:</strong> <strong>None</strong>, <strong>Benjamini–Hochberg FDR</strong>, or <strong>Bonferroni</strong> on the vector of raw <em>p</em>-values across tested features (same for <em>t</em>-test, ANOVA, and Kruskal–Wallis).</p>
-                            <p><strong>Results table (two-group) — <code>t</code> and <code>df</code>:</strong> <code>t</code> is the two-sample <em>t</em>-statistic (difference in group means relative to its standard error). Larger <code>|t|</code> means stronger separation relative to noise. <code>df</code> is the degrees of freedom used by the <em>t</em>-distribution to compute the raw <em>p</em>-value. With <strong>Student</strong> test (pooled variance), <code>df ≈ n<sub>A</sub> + n<sub>B</sub> − 2</code>. With <strong>Welch</strong> test (unequal variance), <code>df</code> uses the Welch–Satterthwaite approximation and may be non-integer.</p>
-                            <p><strong>Fudge factor volcano (two-group only):</strong> Optional <strong>SAM-style</strong> joint rule inspired by Giai Gianetto <em>et al.</em>, <em>Proteomics</em> 2016 (uses and misuses of the fudge factor). On the tested scale, <strong>SE</strong> of the mean difference is approximated as <strong>|log2FC / t|</strong> (when <em>t</em> ≈ 0, the median SE across features is used). User <strong>s₀</strong> adds to SE in the denominator: <strong>d = |log2FC| / (SE + s₀)</strong>. The <strong>green guide</strong> uses <strong>median SE</strong> and <strong>median df</strong>: two line traces (negative and positive log2FC, small gap at 0). For |log2FC| ≥ <strong>need = t<sub>★</sub>(median SE + s₀)</strong>, <strong>y = y₀ = −log10(α)</strong> (flat tails). For |log2FC| &lt; need, height rises in a <strong>1/|x|</strong> (hyperbolic) way from <strong>y₀</strong> at |x| = need to <strong>y<sub>cap</sub></strong> at the inner edge of the drawn branch, so the silhouette is flat at the sides and curved “wings” toward the center — not a smooth dome. <strong>Point colors</strong> (volcano, MA, results table) use the <strong>same median-based boundary</strong>: a feature is red/blue if its plotted y (−log10 <em>p</em> or FDR, same cap as the plot) lies <strong>on or above</strong> that curve at its log2FC and the fold direction matches the sign of log2FC. <strong>p<sub>mod</sub></strong> in the tooltip still uses each feature’s own SE and df (<strong>diffStudentTTwoTailP(d, df)</strong>) as a <em>t</em>-distribution shorthand — <strong>not</strong> full SAM permutation. Multi-group ANOVA/Kruskal–Wallis keeps the rectangular volcano; fudge controls are hidden in that mode.</p>
-                            <p><strong>Session JSON:</strong> Saves <code>diffAnalysisMode</code>, multi-group test, volcano x-axis and effect cutoffs, heatmap options, <code>diffVolcanoFudgeFactor</code>, <code>diffFudgeS0</code>, and the list of checked ANOVA levels (<code>diffAnovaIncludedLevels</code>) so imports can rebuild the checklist after the meta column is repopulated. <strong>formatVersion 3+</strong> also stores the full <code>diffAnalysisLastResult</code> and table sort state so volcano / MA / heatmap / table restore without recomputation.</p>
-                            <p><strong>Not in scope (browser-only tool):</strong> Paired tests and full <strong>limma</strong> empirical Bayes or <strong>SAM</strong> permutation calibration. <strong>DESeq2 / edgeR / limma-voom</strong> require count matrices, normalization/dispersion, and an R/Bioconductor runtime — they are <strong>not</strong> implemented here. For RNA-seq–style DE, export intensities and design to R or a dedicated pipeline.</p>
-                        </div>
+                        <div id="docMarkdownHost" class="doc-markdown-host"></div>
                     </div>
                 </div>
             </div>
@@ -2083,7 +2018,8 @@
             const styles = [
                 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css',
                 'https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css',
-                'https://cdn.jsdelivr.net/gh/MaayanLab/clustergrammer@master/css/custom.css'
+                'https://cdn.jsdelivr.net/gh/MaayanLab/clustergrammer@master/css/custom.css',
+                'css/clustergrammer_bootstrap_restore.css'
             ];
             const scripts = [
                 'https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js',
@@ -3696,6 +3632,7 @@
         }
 
         /**
+         * Per-column summary for Data QC → Overall. `sumWhat`: `mean_t` | `mean_raw` | `count_nz` | `detection`.
          * @returns {{ shortLabs: string[], summVals: number[], sumYTitle: string }}
          */
         function colCorrComputePerColumnSummaryValues(M, columnIndices, sumWhat, transform, zeroMissing, headers) {
@@ -3707,13 +3644,16 @@
                 let cnt = 0;
                 let det = 0;
                 let fin = 0;
+                let nzFeatures = 0;
                 for (let r = 0; r < M.length; r++) {
                     const row = M[r];
                     if (!row || jc >= row.length) continue;
                     const raw = Number(row[jc]);
                     if (!Number.isFinite(raw)) continue;
                     fin++;
-                    if (sumWhat === 'detection') {
+                    if (sumWhat === 'count_nz') {
+                        if (raw > 0) nzFeatures++;
+                    } else if (sumWhat === 'detection') {
                         if (raw > 0) det++;
                     } else if (sumWhat === 'mean_raw') {
                         if (zeroMissing && raw === 0) continue;
@@ -3727,12 +3667,19 @@
                     }
                 }
                 let v;
-                if (sumWhat === 'detection') v = fin > 0 ? det / fin : 0;
+                if (sumWhat === 'count_nz') v = nzFeatures;
+                else if (sumWhat === 'detection') v = fin > 0 ? det / fin : 0;
                 else if (cnt > 0) v = tot / cnt;
                 else v = NaN;
                 summVals.push(Number.isFinite(v) ? v : 0);
             }
-            const sumYTitle = sumWhat === 'detection' ? 'Fraction > 0 (finite rows)' : sumWhat === 'mean_raw' ? 'Mean raw' : 'Mean transformed';
+            const sumYTitle = sumWhat === 'detection'
+                ? 'Fraction > 0 (finite rows)'
+                : sumWhat === 'count_nz'
+                    ? 'Non-zero feature count'
+                    : sumWhat === 'mean_raw'
+                        ? 'Mean raw intensity'
+                        : 'Mean transformed intensity';
             return { shortLabs, summVals, sumYTitle };
         }
 
@@ -3749,9 +3696,11 @@
             const transformEl = document.getElementById('colCorrTransform');
             const transform = transformEl && transformEl.value === 'none' ? 'none' : transformEl && transformEl.value === 'log2' ? 'log2' : 'log10';
             const zeroMissing = !!(document.getElementById('colCorrZeroMissing') && document.getElementById('colCorrZeroMissing').checked);
-            const sumWhat = document.getElementById('colCorrSummaryWhat') ? document.getElementById('colCorrSummaryWhat').value : 'mean_t';
+            const sumWhat = document.getElementById('colCorrSummaryWhat') ? document.getElementById('colCorrSummaryWhat').value : 'count_nz';
             const indices = colCorrAllColumnIndices();
             const { shortLabs, summVals, sumYTitle } = colCorrComputePerColumnSummaryValues(M, indices, sumWhat, transform, zeroMissing, headers);
+            const yaxisOpts = { title: sumYTitle };
+            if (sumWhat === 'count_nz') yaxisOpts.rangemode = 'tozero';
             colCorrPlotlyDraw('dataQcOverallSummaryPlot', [{
                 type: 'bar',
                 x: shortLabs,
@@ -3760,7 +3709,7 @@
             }], {
                 title: { text: `Per-column summary (all ${indices.length} column(s))`, font: { size: 13 } },
                 xaxis: { title: 'Column', tickangle: -40 },
-                yaxis: { title: sumYTitle },
+                yaxis: yaxisOpts,
                 margin: { l: 52, r: 16, t: 40, b: 120 },
                 showlegend: false
             });
@@ -4496,11 +4445,14 @@
 
         function switchDocumentSection(sectionName) {
             currentDocumentSection = sectionName || 'overview';
+            if (window.nebulaDocViewer && typeof window.nebulaDocViewer.showDocumentSection === 'function') {
+                window.nebulaDocViewer.showDocumentSection(currentDocumentSection)
+                    .then(function (resolvedId) { if (resolvedId) currentDocumentSection = resolvedId; })
+                    .catch(() => {});
+                return;
+            }
             document.querySelectorAll('#docOutline .doc-outline-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.getAttribute('data-doc') === currentDocumentSection);
-            });
-            document.querySelectorAll('#documentTab .doc-section').forEach(panel => {
-                panel.classList.toggle('active', panel.getAttribute('data-doc') === currentDocumentSection);
             });
         }
 
@@ -4687,7 +4639,7 @@
             const tabRow = document.getElementById('dataFilterInnerTabRow');
             const tabCol = document.getElementById('dataFilterInnerTabCol');
             const isRow = currentDataFilterPanel === 'row';
-            if (rowSb) rowSb.style.display = isRow ? 'flex' : 'none';
+            if (rowSb) rowSb.style.display = isRow ? 'grid' : 'none';
             if (colSb) colSb.style.display = isRow ? 'none' : 'grid';
             if (tabRow) {
                 tabRow.classList.toggle('active', isRow);
@@ -6448,9 +6400,244 @@
             return 2;
         }
 
+        /** Shorten long meta labels for Plotly axis titles (keeps layout readable). */
+        function diffFormatGroupNameForAxis(name, maxLen) {
+            const m = maxLen == null ? 48 : maxLen;
+            const s = String(name == null ? '' : name).replace(/\s+/g, ' ').trim();
+            if (!s) return '—';
+            if (s.length <= m) return s;
+            return s.slice(0, Math.max(3, m - 2)) + '…';
+        }
+
+        /** Two-group labels for differential plot axes (from `diffAnalysisLastResult`). */
+        function diffTwoGroupPlotLabels() {
+            const R = diffAnalysisLastResult;
+            if (R && R.mode === 'two_group') {
+                return {
+                    groupA: diffFormatGroupNameForAxis(R.groupA, 48),
+                    groupB: diffFormatGroupNameForAxis(R.groupB, 48)
+                };
+            }
+            return { groupA: 'A', groupB: 'B' };
+        }
+
+        function diffLog2FoldChangeAxisTitle() {
+            const { groupA, groupB } = diffTwoGroupPlotLabels();
+            return `log2 fold change (${groupB} vs ${groupA})`;
+        }
+
+        let _diffVolcanoSigLabelDebounce = null;
+
+        function diffDetachVolcanoSigLabelRelayout(el) {
+            if (!el || typeof el.removeAllListeners !== 'function') return;
+            try { el.removeAllListeners('plotly_relayout'); } catch (_) { /* ignore */ }
+        }
+
+        function diffAttachVolcanoSigLabelRelayout(el) {
+            if (!el || typeof el.on !== 'function' || typeof el.removeAllListeners !== 'function') return;
+            el.removeAllListeners('plotly_relayout');
+            el.on('plotly_relayout', function (ev) {
+                if (!ev || typeof ev !== 'object') return;
+                if (ev['xaxis.range'] !== undefined || ev['yaxis.range'] !== undefined ||
+                    ev['xaxis.range[0]'] !== undefined || ev['yaxis.range[0]'] !== undefined ||
+                    ev['xaxis.autorange'] !== undefined || ev['yaxis.autorange'] !== undefined) {
+                    if (_diffVolcanoSigLabelDebounce) clearTimeout(_diffVolcanoSigLabelDebounce);
+                    _diffVolcanoSigLabelDebounce = setTimeout(function () {
+                        _diffVolcanoSigLabelDebounce = null;
+                        diffUpdateVolcanoSigLabels();
+                    }, 80);
+                }
+            });
+        }
+
+        function diffVolcanoPlotInnerSize(gd) {
+            const fl = gd && gd._fullLayout;
+            if (!fl || !Number.isFinite(fl.width) || !Number.isFinite(fl.height)) {
+                return { w: 600, h: 360 };
+            }
+            const m = fl.margin || {};
+            const w = Math.max(1, fl.width - (m.l || 0) - (m.r || 0));
+            const h = Math.max(1, fl.height - (m.t || 0) - (m.b || 0));
+            return { w, h };
+        }
+
+        /** When more significant points exist than the label budget, keep those with highest y (−log10 p/FDR) then largest |x| (effect). */
+        function diffPrioritizedVolcanoLabelSubset(points, maxItems) {
+            if (!points || !points.length || maxItems <= 0) return [];
+            if (points.length <= maxItems) return points.slice();
+            const sorted = points.slice().sort(function (a, b) {
+                const dy = b.y - a.y;
+                if (Math.abs(dy) > 1e-12) return dy;
+                return Math.abs(b.x) - Math.abs(a.x);
+            });
+            return sorted.slice(0, maxItems);
+        }
+
+        /**
+         * Two-group volcano: split label budget between log2FC &gt; 0 and &lt; 0 so a wall of up-regulated points
+         * does not consume every slot and hide down-regulated labels. Leftover slots go to whichever side still has candidates.
+         */
+        function diffPrioritizedVolcanoLabelSubsetTwoGroup(points, maxItems) {
+            if (!points || maxItems <= 0) return [];
+            const pos = [];
+            const neg = [];
+            const zero = [];
+            for (let i = 0; i < points.length; i++) {
+                const p = points[i];
+                if (p.x > 0) pos.push(p);
+                else if (p.x < 0) neg.push(p);
+                else zero.push(p);
+            }
+            const sortSide = function (arr) {
+                return arr.slice().sort(function (a, b) {
+                    const dy = b.y - a.y;
+                    if (Math.abs(dy) > 1e-12) return dy;
+                    return Math.abs(b.x) - Math.abs(a.x);
+                });
+            };
+            const sp = sortSide(pos);
+            const sn = sortSide(neg);
+            const sz = sortSide(zero);
+            if (sn.length === 0) return diffPrioritizedVolcanoLabelSubset(sp.concat(sz), maxItems);
+            if (sp.length === 0) return diffPrioritizedVolcanoLabelSubset(sn.concat(sz), maxItems);
+            let capP = Math.min(sp.length, Math.ceil(maxItems / 2));
+            let capN = Math.min(sn.length, Math.floor(maxItems / 2));
+            let rem = maxItems - capP - capN;
+            while (rem > 0) {
+                let moved = false;
+                if (capP < sp.length) {
+                    capP++;
+                    rem--;
+                    moved = true;
+                    continue;
+                }
+                if (capN < sn.length) {
+                    capN++;
+                    rem--;
+                    moved = true;
+                    continue;
+                }
+                if (!moved) break;
+            }
+            const out = sp.slice(0, capP).concat(sn.slice(0, capN));
+            const zNeed = Math.max(0, maxItems - out.length);
+            if (zNeed > 0 && sz.length) {
+                out.push.apply(out, sz.slice(0, Math.min(sz.length, zNeed)));
+            }
+            return out;
+        }
+
+        /** Volcano: label only non-`ns` points (same rule as point colors), via `ScatterLabelOptimize.repelLabelsCompat`. */
+        function diffUpdateVolcanoSigLabels() {
+            const el = document.getElementById('diffVolcanoPlot');
+            const cb = document.getElementById('diffVolcanoSigLabels');
+            const want = !!(cb && cb.checked);
+            if (!el || !el._fullLayout || typeof Plotly === 'undefined' || typeof Plotly.relayout !== 'function') return;
+            if (!want || !diffAnalysisLastResult) {
+                Plotly.relayout(el, { annotations: [] }).catch(function () { /* ignore */ });
+                return;
+            }
+            const R = diffAnalysisLastResult;
+            const yMode = document.getElementById('diffVolcanoYAxis') && document.getElementById('diffVolcanoYAxis').value === 'q' ? 'q' : 'p';
+            const th = diffGetThresholds();
+            const { fc, pth, qth } = th;
+            const capY = function (v) { return Number.isFinite(v) ? Math.min(320, v) : 0; };
+            const n = R.labels.length;
+            const rawPts = [];
+            if (R.mode === 'anova') {
+                const xModeEl = document.getElementById('diffVolcanoXAxisAnova');
+                const xMode = xModeEl && xModeEl.value === 'f' ? 'f' : 'eta';
+                for (let i = 0; i < n; i++) {
+                    const cls = diffClassifyAnovaPoint(i, yMode, pth, qth);
+                    if (cls === 'ns') continue;
+                    const p = R.p[i];
+                    const q = R.padj[i];
+                    const yv = yMode === 'q'
+                        ? (Number.isFinite(q) && q > 0 ? capY(-Math.log10(q)) : 0)
+                        : (Number.isFinite(p) && p > 0 ? capY(-Math.log10(p)) : 0);
+                    const xv = xMode === 'eta'
+                        ? (Number.isFinite(R.etaSq[i]) ? R.etaSq[i] : 0)
+                        : (Number.isFinite(R.fStat[i]) ? R.fStat[i] : 0);
+                    if (!Number.isFinite(xv) || !Number.isFinite(yv)) continue;
+                    rawPts.push({ x: xv, y: yv, text: String(R.labels[i] || '') });
+                }
+            } else {
+                for (let i = 0; i < n; i++) {
+                    const cls = diffClassifyTwoGroup(i, yMode, fc, pth, qth);
+                    if (cls === 'ns') continue;
+                    const lfc = R.log2fc[i];
+                    const p = R.p[i];
+                    const q = R.padj[i];
+                    const yv = yMode === 'q'
+                        ? (Number.isFinite(q) && q > 0 ? capY(-Math.log10(q)) : 0)
+                        : (Number.isFinite(p) && p > 0 ? capY(-Math.log10(p)) : 0);
+                    if (!Number.isFinite(lfc) || !Number.isFinite(yv)) continue;
+                    rawPts.push({ x: lfc, y: yv, text: String(R.labels[i] || '') });
+                }
+            }
+            if (!rawPts.length) {
+                Plotly.relayout(el, { annotations: [] }).catch(function () { /* ignore */ });
+                return;
+            }
+            const xa = el._fullLayout.xaxis;
+            const ya = el._fullLayout.yaxis;
+            if (!xa || !ya || !Array.isArray(xa.range) || !Array.isArray(ya.range) || xa.range.length < 2 || ya.range.length < 2) {
+                Plotly.relayout(el, { annotations: [] }).catch(function () { /* ignore */ });
+                return;
+            }
+            const xr = xa.range.slice();
+            const yr = ya.range.slice();
+            const xLo = Math.min(xr[0], xr[1]);
+            const xHi = Math.max(xr[0], xr[1]);
+            const yLo = Math.min(yr[0], yr[1]);
+            const yHi = Math.max(yr[0], yr[1]);
+            const xSpan = xHi - xLo;
+            const ySpan = yHi - yLo;
+            const pad = 0.02;
+            const bounds = {
+                xMin: xLo - xSpan * pad,
+                xMax: xHi + xSpan * pad,
+                yMin: yLo - ySpan * pad,
+                yMax: yHi + ySpan * pad
+            };
+            let visible = rawPts.filter(function (p) {
+                return p.x >= bounds.xMin && p.x <= bounds.xMax && p.y >= bounds.yMin && p.y <= bounds.yMax;
+            });
+            if (!visible.length) {
+                Plotly.relayout(el, { annotations: [] }).catch(function () { /* ignore */ });
+                return;
+            }
+            const fullSpanProduct = (window.ScatterLabelOptimize && typeof window.ScatterLabelOptimize.computeFullSpanProduct === 'function')
+                ? window.ScatterLabelOptimize.computeFullSpanProduct(rawPts)
+                : 1e-12;
+            const maxLabelItems = (window.ScatterLabelOptimize && typeof window.ScatterLabelOptimize.computeMaxLabelCount === 'function')
+                ? window.ScatterLabelOptimize.computeMaxLabelCount(visible.length, fullSpanProduct, bounds, { baseline: 35, maxCap: 120 })
+                : Math.min(40, visible.length);
+            visible = R.mode === 'anova'
+                ? diffPrioritizedVolcanoLabelSubset(visible, maxLabelItems)
+                : diffPrioritizedVolcanoLabelSubsetTwoGroup(visible, maxLabelItems);
+            const inner = diffVolcanoPlotInnerSize(el);
+            const markerPx = 10;
+            const fontPx = 10;
+            const repelled = repelLabels(visible, bounds, inner.w, inner.h, markerPx, fontPx);
+            if (!repelled || repelled.length !== visible.length) {
+                Plotly.relayout(el, { annotations: [] }).catch(function () { /* ignore */ });
+                return;
+            }
+            const labelStyle = { size: fontPx, color: '#2e2e2e' };
+            const showArrows = visible.length >= 8;
+            const arrowAnn = showArrows
+                ? buildLabelArrowAnnotations(visible, repelled, bounds, inner.w, inner.h, labelStyle.color)
+                : [];
+            const texts = visible.map(function (p) { return p.text; });
+            const labelAnn = buildSampleColumnLabelAnnotations(repelled, texts, labelStyle);
+            Plotly.relayout(el, { annotations: arrowAnn.concat(labelAnn) }).catch(function () { /* ignore */ });
+        }
+
         function renderDiffVolcanoPlot() {
             const el = document.getElementById('diffVolcanoPlot');
             if (!el || !diffAnalysisLastResult || typeof Plotly === 'undefined') return;
+            diffDetachVolcanoSigLabelRelayout(el);
             const R = diffAnalysisLastResult;
             const yMode = document.getElementById('diffVolcanoYAxis') && document.getElementById('diffVolcanoYAxis').value === 'q' ? 'q' : 'p';
             const th = diffGetThresholds();
@@ -6523,6 +6710,8 @@
                     marker: { size: 5, color: colors, opacity: 0.75 }
                 }], layout, { responsive: true, displayModeBar: true }).then(() => {
                     installDiffVolcanoClickHandler(el);
+                    diffAttachVolcanoSigLabelRelayout(el);
+                    requestAnimationFrame(function () { diffUpdateVolcanoSigLabels(); });
                 });
                 return;
             }
@@ -6645,7 +6834,7 @@
             }
             const layout = {
                 title: plotTitle,
-                xaxis: { title: 'log2 fold change (B vs A)' },
+                xaxis: { title: diffLog2FoldChangeAxisTitle() },
                 yaxis: { title: yTitle },
                 showlegend: false,
                 margin: { l: 55, r: 20, t: 45, b: 50 },
@@ -6653,6 +6842,8 @@
             };
             Plotly.react(el, traces, layout, { responsive: true, displayModeBar: true }).then(() => {
                 installDiffVolcanoClickHandler(el);
+                diffAttachVolcanoSigLabelRelayout(el);
+                requestAnimationFrame(function () { diffUpdateVolcanoSigLabels(); });
             });
         }
 
@@ -6734,11 +6925,14 @@
                 colors.push(cls === 'up' ? cUp : cls === 'down' ? cDown : cNs);
                 texts.push(`${R.labels[i]}<br>A: ${ma.toFixed(4)} B: ${mb.toFixed(4)}<br>M (log2FC): ${lfc.toFixed(4)}`);
             }
-            const xTitle = R.log2Transform ? 'A = ½(mean A + mean B) on log2(x+1) scale' : 'A = ½(mean A + mean B) (tested scale)';
+            const { groupA, groupB } = diffTwoGroupPlotLabels();
+            const xTitle = R.log2Transform
+                ? `A = ½(mean ${groupA} + mean ${groupB}) on log2(x+1) scale`
+                : `A = ½(mean ${groupA} + mean ${groupB}) (tested scale)`;
             const layout = {
                 title: fudgeMa ? 'MA plot (colors = fudge-factor volcano rule)' : 'MA plot (M = log2FC, same scale as test)',
                 xaxis: { title: xTitle },
-                yaxis: { title: 'M = log2FC (B vs A)' },
+                yaxis: { title: `M = log2FC (${groupB} vs ${groupA})` },
                 showlegend: false,
                 margin: { l: 55, r: 20, t: 45, b: 50 },
                 shapes: fudgeMa ? [] : [
@@ -14588,7 +14782,8 @@
                 'diffEtaSqThreshold', 'diffStatThreshold',
                 'diffFoldChangeThreshold', 'diffShowSigOnly',
                 'diffPThreshold', 'diffQThreshold', 'diffHeatmapTopN', 'diffHeatmapZscoreRows',
-                'diffVolcanoFudgeFactor', 'diffFudgeS0'
+                'diffVolcanoFudgeFactor', 'diffFudgeS0', 'diffVolcanoSigLabels',
+                'rowTechReproBundleMeta'
             ];
             const ui = {
                 inputs: {},
@@ -18306,6 +18501,126 @@
             });
             return valid;
         }
+
+        /** Basename of a path-like column id with a trailing technical-replicate token (…_T#) removed. */
+        function stripTrailingTechnicalReplicateTokenFromSampleId(sampleId) {
+            const s = sampleIdFileBaseName(String(sampleId || '')).trim();
+            if (!s) return '';
+            return s.replace(/(?:[_\-.]|^)T\d+$/i, '');
+        }
+
+        /**
+         * Column index bundles for technical-replicate consistency filtering.
+         * @returns {{ bundles: number[][], mode: string }|{ error: string }}
+         */
+        function buildTechReproColumnBundles(dataObj, bundleMetaColumn) {
+            const headers = dataObj && dataObj.columnHeaders;
+            if (!headers || !headers.length) return { error: 'No matrix columns loaded.' };
+            const n = headers.length;
+            const manual = bundleMetaColumn && String(bundleMetaColumn).trim();
+            if (manual) {
+                const colKey = String(bundleMetaColumn).trim();
+                if (!metaData || !Array.isArray(metaData.headers) || !metaData.headers.includes(colKey)) {
+                    return { error: 'Meta column "' + colKey + '" was not found.' };
+                }
+                const metaRows = metaData.rows;
+                const normalizeHeaderKey = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+                const findHeader = (aliases) => {
+                    const aliasKeys = aliases.map(normalizeHeaderKey);
+                    for (const h of (metaData.headers || [])) {
+                        const hk = normalizeHeaderKey(h);
+                        if (aliasKeys.includes(hk)) return h;
+                    }
+                    return null;
+                };
+                const sampleIdHeader = findHeader(['Sample_ID', 'SampleID']) || 'Sample_ID';
+                const metaBySampleId = new Map();
+                (metaRows || []).forEach((r) => {
+                    const sid = String(r && r[sampleIdHeader] != null ? r[sampleIdHeader] : '').trim();
+                    if (sid) metaBySampleId.set(sid, r);
+                });
+                const m = new Map();
+                for (let i = 0; i < n; i++) {
+                    const { row } = resolveMetaRowForMatrixColumn(metaRows, metaBySampleId, sampleIdHeader, i, headers[i]);
+                    const raw = row && row[colKey] != null ? row[colKey] : '';
+                    const k = String(raw).trim();
+                    if (!k || isBlankMetaReplicatePlaceholder(k)) continue;
+                    if (!m.has(k)) m.set(k, []);
+                    m.get(k).push(i);
+                }
+                const bundles = Array.from(m.values()).filter((arr) => arr.length >= 2);
+                if (!bundles.length) {
+                    return { error: 'No replicate bundle: need at least two columns sharing the same value in the chosen meta column.' };
+                }
+                return { bundles, mode: 'manual_meta_column' };
+            }
+
+            const baseHeaders = headers.map((h) => sampleIdFileBaseName(h));
+            const rep = extractReplicateInfoRT(baseHeaders);
+            if (rep.technicalDetected) {
+                const m = new Map();
+                for (let i = 0; i < n; i++) {
+                    let key;
+                    if (rep.biologicalDetected) {
+                        key = [rep.extractedGroups[i] || '', rep.biological[i] || ''].join('|');
+                    } else {
+                        key = stripTrailingTechnicalReplicateTokenFromSampleId(baseHeaders[i]);
+                    }
+                    const ks = String(key).trim() || ('__col_' + i);
+                    if (!m.has(ks)) m.set(ks, []);
+                    m.get(ks).push(i);
+                }
+                const bundles = Array.from(m.values()).filter((arr) => arr.length >= 2);
+                if (bundles.length) {
+                    return { bundles, mode: rep.biologicalDetected ? 'auto_filename_RT_RB' : 'auto_filename_T_only' };
+                }
+            }
+
+            if (metaData && Array.isArray(metaData.rows) && metaData.headers) {
+                const normalizeHeaderKey = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+                const findH = (aliases) => {
+                    const aliasKeys = aliases.map(normalizeHeaderKey);
+                    for (const h of metaData.headers) {
+                        const hk = normalizeHeaderKey(h);
+                        if (aliasKeys.includes(hk)) return h;
+                    }
+                    return null;
+                };
+                const techH = findH(['Technical_Replicate', 'TechnicalReplicate']);
+                const bioH = findH(['Biological_Replicate', 'BiologicalReplicate']);
+                const groupH = findH(['Group']);
+                if (techH && bioH) {
+                    const metaRows = metaData.rows;
+                    const sampleIdHeader = findH(['Sample_ID', 'SampleID']) || 'Sample_ID';
+                    const metaBySampleId = new Map();
+                    metaRows.forEach((r) => {
+                        const sid = String(r && r[sampleIdHeader] != null ? r[sampleIdHeader] : '').trim();
+                        if (sid) metaBySampleId.set(sid, r);
+                    });
+                    const m = new Map();
+                    for (let i = 0; i < n; i++) {
+                        const sid = String(headers[i] == null ? '' : headers[i]).trim();
+                        const { row } = resolveMetaRowForMatrixColumn(metaRows, metaBySampleId, sampleIdHeader, i, headers[i]);
+                        const techStr = metaCellOrReplicateFallbackForGrouping(row, techH, sid);
+                        if (!techStr || isBlankMetaReplicatePlaceholder(techStr)) continue;
+                        const bioStr = metaCellOrReplicateFallbackForGrouping(row, bioH, sid);
+                        const grpPart = groupH && row && row[groupH] != null ? String(row[groupH]).trim() : '';
+                        const bioPart = bioStr && !isBlankMetaReplicatePlaceholder(bioStr)
+                            ? bioStr
+                            : stripTrailingTechnicalReplicateTokenFromSampleId(sid);
+                        const key = [grpPart, bioPart].filter(Boolean).join('|') || bioPart || grpPart || stripTrailingTechnicalReplicateTokenFromSampleId(sid);
+                        if (!key) continue;
+                        if (!m.has(key)) m.set(key, []);
+                        m.get(key).push(i);
+                    }
+                    const bundles = Array.from(m.values()).filter((arr) => arr.length >= 2);
+                    if (bundles.length) return { bundles, mode: 'auto_meta_technical_biological' };
+                }
+            }
+
+            return { error: 'Could not form technical-replicate bundles. Use T1/T2 in file names (see Document → Replicate Parsing), or meta Technical_Replicate + Biological_Replicate (+ Group), or choose a meta column where the same value marks technical replicates.' };
+        }
+
         function applyRowOperationToData(dataObj, op) {
             const rows = dataObj.dataMatrix || [];
             const ids = dataObj.rowIds || [];
@@ -18335,6 +18650,60 @@
                     if (pass) keepIdx.push(r);
                     else { removedRows.push(ids[r]); removedRowIdx.push(r); }
                 }
+            } else if (op.type === 'techReproducibility') {
+                const built = buildTechReproColumnBundles(dataObj, op.bundleMetaColumn || '');
+                if (built.error) {
+                    return {
+                        nextData: dataObj,
+                        removedRows: [],
+                        removedMatrix: [],
+                        removedColumnHeaders: Array.isArray(dataObj.columnHeaders) ? dataObj.columnHeaders.slice() : []
+                    };
+                }
+                const bundles = built.bundles;
+                const nextData = cloneDataForFilterPipeline(dataObj);
+                const mat = nextData.dataMatrix || [];
+                const nR = mat.length;
+                for (let r = 0; r < nR; r++) {
+                    const row = mat[r];
+                    if (!Array.isArray(row)) continue;
+                    for (let bi = 0; bi < bundles.length; bi++) {
+                        const B = bundles[bi];
+                        let bad = false;
+                        for (let k = 0; k < B.length; k++) {
+                            const v = Number(row[B[k]]);
+                            if (!Number.isFinite(v) || v <= 0) { bad = true; break; }
+                        }
+                        if (bad) for (let k = 0; k < B.length; k++) row[B[k]] = 0;
+                    }
+                }
+                for (let r = 0; r < nR; r++) {
+                    const row = mat[r];
+                    let anyPos = false;
+                    if (Array.isArray(row)) {
+                        for (let c = 0; c < row.length; c++) {
+                            const v = Number(row[c]);
+                            if (Number.isFinite(v) && v > 0) { anyPos = true; break; }
+                        }
+                    }
+                    if (anyPos) keepIdx.push(r);
+                    else { removedRows.push(ids[r]); removedRowIdx.push(r); }
+                }
+                nextData.rowIds = keepIdx.map((i) => dataObj.rowIds[i]);
+                nextData.dataMatrix = keepIdx.map((i) => {
+                    const src = mat[i];
+                    return Array.isArray(src) ? src.slice() : src;
+                });
+                if (Array.isArray(dataObj.diannPgAnnotationRows)) nextData.diannPgAnnotationRows = keepIdx.map((i) => dataObj.diannPgAnnotationRows[i]);
+                if (Array.isArray(dataObj.diannPgGenesByRow)) nextData.diannPgGenesByRow = keepIdx.map((i) => dataObj.diannPgGenesByRow[i]);
+                if (Array.isArray(dataObj.featureNameMapRows)) nextData.featureNameMapRows = keepIdx.map((i) => dataObj.featureNameMapRows[i]);
+                const removedMatrixTr = removedRowIdx.map((i) => (Array.isArray(mat[i]) ? mat[i].slice() : []));
+                return {
+                    nextData,
+                    removedRows,
+                    removedMatrix: removedMatrixTr,
+                    removedColumnHeaders: Array.isArray(dataObj.columnHeaders) ? dataObj.columnHeaders.slice() : []
+                };
             } else if (op.type === 'randomSample') {
                 const n = Math.max(1, Math.min(op.n || 1, rows.length));
                 const idx = rows.map((_, i) => i);
@@ -18883,7 +19252,7 @@
             const rowPanel = document.getElementById('rowFilterResultPanel');
             const colPanel = document.getElementById('columnFilterResultPanel');
             const isRow = currentDataFilterPanel === 'row';
-            if (rowSb) rowSb.style.display = isRow ? 'flex' : 'none';
+            if (rowSb) rowSb.style.display = isRow ? 'grid' : 'none';
             if (colSb) colSb.style.display = isRow ? 'none' : 'grid';
             if (rowPanel) rowPanel.style.display = isRow ? 'flex' : 'none';
             if (colPanel) colPanel.style.display = isRow ? 'none' : 'flex';
@@ -18949,6 +19318,19 @@
                 if (prev && cols.includes(prev)) sel1c.value = prev;
                 refreshColValidCol2Options();
             }
+            const bundleSel = document.getElementById('rowTechReproBundleMeta');
+            if (bundleSel) {
+                const prevB = bundleSel.value;
+                bundleSel.innerHTML = '<option value="">(auto — names / meta T&amp;R)</option>';
+                const colsB = (metaData && Array.isArray(metaData.headers)) ? metaData.headers.filter((h) => h && h !== 'Sample_ID') : [];
+                colsB.forEach((h) => {
+                    const o = document.createElement('option');
+                    o.value = h;
+                    o.textContent = h;
+                    bundleSel.appendChild(o);
+                });
+                if (prevB === '' || (prevB && colsB.includes(prevB))) bundleSel.value = prevB || '';
+            }
             onRowValidScopeChange();
             onColValidScopeChange();
         }
@@ -18974,6 +19356,28 @@
             const threshold = Number.isFinite(raw) ? raw : 0.2;
             addFilterOperation({ axis: 'row', type: 'sdThreshold', threshold, summary: `CV threshold ${threshold}` });
             const s = document.getElementById('rowFilterStatus'); if (s) { s.className = 'status success'; s.textContent = `✓ CV row filter applied (threshold ${threshold}).`; }
+        }
+        function runRowTechReproducibilityFilter() {
+            if (!currentData || !Array.isArray(currentData.dataMatrix) || !currentData.columnHeaders) {
+                const s = document.getElementById('rowFilterStatus');
+                if (s) { s.className = 'status error'; s.textContent = 'Load a matrix first.'; }
+                return;
+            }
+            const el = document.getElementById('rowTechReproBundleMeta');
+            const bundleMetaColumn = el && el.value ? String(el.value).trim() : '';
+            const built = buildTechReproColumnBundles(currentData, bundleMetaColumn);
+            if (built.error) {
+                const s = document.getElementById('rowFilterStatus');
+                if (s) { s.className = 'status error'; s.textContent = built.error; }
+                return;
+            }
+            const nb = built.bundles.length;
+            const summ = bundleMetaColumn
+                ? ('Tech repro: meta bundle column "' + bundleMetaColumn + '" (' + nb + ' bundle' + (nb === 1 ? '' : 's') + ')')
+                : ('Tech repro: ' + built.mode + ' (' + nb + ' bundle' + (nb === 1 ? '' : 's') + ')');
+            addFilterOperation({ axis: 'row', type: 'techReproducibility', bundleMetaColumn, summary: summ });
+            const s = document.getElementById('rowFilterStatus');
+            if (s) { s.className = 'status success'; s.textContent = '✓ Technical reproducibility filter applied.'; }
         }
         function runRowAnnotationKeywordFilter() {
             const keyword = document.getElementById('rowAnnotationKeyword') && document.getElementById('rowAnnotationKeyword').value || '';
@@ -19085,6 +19489,10 @@
         initDataFilterV2OnLoad();
         if (typeof onDiffAnalysisModeChange === 'function') onDiffAnalysisModeChange();
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+    <script src="doc/docs_bundle.js"></script>
+    <script src="js/doc_viewer.js"></script>
     <script src="js/heatmap_core.js"></script>
     <script src="js/table_display.js"></script>
     <script src="js/feature_name_mapping.js"></script>

@@ -2,6 +2,12 @@
 
 **Nebula** is the product name for this single-page intensity-matrix QC and visualization app (formerly described as “Data Matrix QC”). Place the app icon at **`image/Nebula_icon.png`** (favicon, touch icon, and header logo).
 
+### Help / Document tab (`doc/`) (v4.64+)
+
+- In-app **Document** tab loads Markdown from the **`doc/`** folder. **`doc/manifest.json`** lists sections (`id`, `title`, `file`). To add a page: create a new `.md` file and append an entry to the manifest.
+- Offline mode now works via **`doc/docs_bundle.js`** (auto-generated bundle loaded by `index.html`). After editing any `doc/*.md` file, rebuild with: `python doc/build_doc_bundle.py`.
+- If you do not use the bundle, serve the project over **`http://localhost`** (or any static HTTP server). Opening **`index.html` as `file://`** usually blocks `fetch()` for local `doc/*.md` files; the same HTTP requirement applies to other `fetch`-based features (e.g. MyGene name mapping).
+
 ### Bundled report session (`data/qc_session.js`) (v2.65–v2.67)
 
 - Export **Session snapshot → Export session as report JS** to download **`qc_session.js`**. Save it as **`data/qc_session.js`** next to **`index.html`**. On the next page load (after **`js/saint_embed.js`**), the app loads that script; it should only contain **`window.__QC_SESSION_SNAPSHOT__ = …`** (JSON) as produced by the exporter. **Do not** replace it with untrusted JavaScript (same-origin script execution). Add **`?noSession=1`** to the URL to skip auto-load while debugging.
@@ -9,8 +15,22 @@
 - **v2.66**: A **loading overlay** (spinner + status text) covers the UI while **`data/qc_session.js`** loads (only after **200 ms** if the request is slow) and during **`applySessionSnapshot`**. If the bundle file is absent, there is usually no flash.
 - **v2.67**: After the bundle restores successfully, the UI switches to the **Heatmap** tab automatically.
 
-### Tab naming (v3.14–v4.50)
+### Tab naming (v3.14–v4.64)
 
+- **v4.64**: Row Filter **Technical Reproducibility** tool (technical-replicate bundles; zero inconsistent; drop all-zero rows).
+- **v4.63**: Data PreProcess Row Filter sidebar **two-column** layout (like Column Filter).
+- **v4.62**: After Clustergrammer loads Bootstrap, **`clustergrammer_bootstrap_restore.css`** reapplies Nebula `html`/`body`; `#cgm-container` gets same viz isolation as heatmap Clustergrammer.
+- **v4.61**: Differential sidebar layout tightened (two-column rows, aligned cards).
+- **v4.60**: Volcano sig labels (two-group): **split budget** between up- and down-regulation so the smaller wing still gets names.
+- **v4.59**: Volcano sig labels: **priority by significance / effect** when label count is capped (was even subsample by row order).
+- **v4.58**: Differential volcano optional **labels for significantly changed** features (ScatterLabelOptimize); session saves `diffVolcanoSigLabels`.
+- **v4.57**: Differential two-group volcano / MA axis titles use **selected Group A / Group B** names instead of generic “A/B”.
+- **v4.56**: Data QC → Overall **Bar metric** defaults to **Feature count (intensity > 0)**.
+- **v4.55**: Data QC → Overall adds **Feature count (intensity > 0)** bar metric (non-zero feature count per column); docs updated.
+- **v4.54**: Document tab — Overview expands **Data QC → Overall** bar-metric definitions; Overall Plotly y-axis labels include **intensity** for mean raw / mean transformed metrics.
+- **v4.53**: Document tab now supports offline `file://` use through bundled docs (`doc/docs_bundle.js`), generated from markdown by `python doc/build_doc_bundle.py`.
+- **v4.52**: Document tab help is externalized to **`doc/*.md`** + **`doc/manifest.json`**, rendered in-app with Marked + DOMPurify (`js/doc_viewer.js`); serve over HTTP so documentation can load.
+- **v4.51**: Enrichr now also auto-switches from **Paste genes** to **SAINT result** when SAINT outputs become newly available (same transition rule as Differential).
 - **v4.50**: Enrichr gene-source radios now gate by data availability (matrix / Differential / SAINT), default source is **Paste genes**, and invalid selections auto-fallback to Paste.
 - **v4.49**: Enrichr adds **Differential results table** as a gene-list source; status text now reports exact source and count sent.
 - **v4.48**: Increased default table viewport height (~20% more row space) across shared DataTables renderers.

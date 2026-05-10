@@ -1,0 +1,22 @@
+/**
+ * Appended last when Clustergrammer lazy-deps load (after Bootstrap 3, Font Awesome, MaayanLab custom.css).
+ * Bootstrap sets html { font-size: 10px } and body { font, color, background: #fff }, which breaks Nebula chrome.
+ * This file re-asserts the shell; :root variables come from main.css (loaded in <head>).
+ */
+html {
+    font-size: 16px !important;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+    font-size: 16px !important;
+    line-height: 1.4 !important;
+    background: var(--md-bg-app) !important;
+    background-color: var(--md-bg-app) !important;
+    color: var(--md-text-primary) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: flex !important;
+    overflow: hidden !important;
+    min-height: 100vh !important;
+}

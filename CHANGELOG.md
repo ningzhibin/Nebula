@@ -3,6 +3,92 @@
 
 ### check point
 
+## [4.64] - 2026-05-10 12:24:31
+
+### Added
+- **Data PreProcess → Data Filter → Row Filter**: **Arbitrary Technical Reproducibility Filter** — groups technical-replicate columns (auto from `T1`/`T2`/`R#` names or meta **Technical_Replicate** + **Biological_Replicate**, or a user-chosen meta **Replicate bundle ID** column). Per feature, if any replicate in a bundle is not a finite value **>** `0`, the whole bundle is zeroed for that feature; rows that are then all-zero across all columns are dropped. Documented in [doc/postfilter.md](doc/postfilter.md) and [doc/replicate.md](doc/replicate.md). Session UI key `rowTechReproBundleMeta` ([index.html](index.html), [css/main.css](css/main.css)).
+
+## [4.63] - 2026-05-10 11:38:03
+
+### Changed
+- **Data PreProcess → Data Filter → Row Filter**: sidebar is now a **two-column** grid (left: valid values + random sampling; right: CV, Row ID, clear/status), aligned with **Column Filter** width and responsive stacking. `switchDataFilterPanel` shows the row sidebar with **`display: grid`** ([index.html](index.html), [css/main.css](css/main.css), [doc/postfilter.md](doc/postfilter.md)).
+
+## [4.62] - 2026-05-10 11:14:42
+
+### Fixed
+- **Clustergrammer lazy-deps**: Bootstrap 3 + MaayanLab `custom.css` load after `main.css` and were overriding **`html` font-size** and **`body`** background/typography (Nebula chrome looked wrong after first Clustergrammer load). **`css/clustergrammer_bootstrap_restore.css`** is now appended **last** in the dependency chain to restore the shell. **Standalone tab** `#cgm-container` now shares the same scoped viz rules as heatmap **`#clustergrammerContainer`** ([index.html](index.html), [css/main.css](css/main.css), [css/clustergrammer_bootstrap_restore.css](css/clustergrammer_bootstrap_restore.css)).
+
+## [4.61] - 2026-05-10 11:08:20
+
+### Changed
+- **Differential tab sidebar**: Reorganized into **two aligned rows** (Comparison | Significance cutoffs; Data and test | Plots and display) with **compact** spacing, **paired numeric fields** on one row, and clearer card titles. Removes the old grid row-pinning that misaligned the cutoff card ([index.html](index.html), [css/main.css](css/main.css)).
+
+## [4.60] - 2026-05-10 10:55:03
+
+### Changed
+- **Differential → Volcano labels (two-group)**: label budget is now **split between up- and down-regulated** (log2FC &gt; 0 vs &lt; 0), with leftover slots given to the side that still has candidates — avoids all labels going to the dominant wing ([index.html](index.html), [doc/differential.md](doc/differential.md)).
+
+## [4.59] - 2026-05-09 14:08:13
+
+### Changed
+- **Differential → Volcano labels**: when the number of significant (non-`NS`) points in view exceeds the label budget, candidates are now chosen by **highest −log10(*p*/FDR)** then **largest |x| (effect)** instead of evenly subsampling by row order — so extreme hits and top significance are labeled first ([index.html](index.html), [doc/differential.md](doc/differential.md)).
+
+## [4.58] - 2026-05-09 13:59:57
+
+### Added
+- **Differential → Volcano**: sidebar checkbox **Show labels for significantly changed** (default on). Labels appear only for points classified like non-`NS` coloring; overlap reduction uses **`ScatterLabelOptimize.repelLabelsCompat`** (`js/scatter_label_optimize.js`) with refresh on zoom/pan. Session UI includes `diffVolcanoSigLabels` ([index.html](index.html), [doc/differential.md](doc/differential.md)).
+
+## [4.57] - 2026-05-09 13:50:13
+
+### Changed
+- **Differential (two-group)**: volcano plot x-axis title now shows **log2 fold change** with the **selected Group B vs Group A** meta labels (long labels truncated for readability). MA plot axis titles updated to use the same group names ([index.html](index.html), [doc/differential.md](doc/differential.md)).
+
+## [4.56] - 2026-05-07 20:17:32
+
+### Changed
+- **Data QC → Overall → Bar metric** default is now **Feature count (intensity > 0)** (non-zero feature count per column) instead of mean transformed ([index.html](index.html), [doc/overview.md](doc/overview.md)).
+
+## [4.55] - 2026-05-07 20:15:22
+
+### Added
+- **Data QC → Overall → Per-column summary**: new **Bar metric** option **Feature count (intensity > 0)** — Plotly bars show the integer **non-zero feature count** per sample column (finite cells with intensity **> 0**); y-axis title **Non-zero feature count** ([index.html](index.html)).
+
+### Changed
+- Document **Overview** and **Column correlation** sections updated to describe the new metric ([doc/overview.md](doc/overview.md), [doc/columncorrelation.md](doc/columncorrelation.md)).
+
+## [4.54] - 2026-05-07 20:08:49
+
+### Added
+- **Document → Overview**: subsection documenting **Data QC → Overall** bar metrics — **Mean (raw)** vs **Mean (transformed scale)** and detection rate ([doc/overview.md](doc/overview.md)); cross-reference in [doc/columncorrelation.md](doc/columncorrelation.md).
+
+### Changed
+- **Data QC → Overall** Plotly per-column summary: y-axis titles now read **Mean raw intensity** and **Mean transformed intensity** when those bar metrics are selected ([index.html](index.html)).
+
+## [4.53] - 2026-05-07 13:55:59
+
+### Added
+- **Offline docs bundle**: added `doc/docs_bundle.js` (generated) and `doc/build_doc_bundle.py` so Document help pages can load under `file://` without hosting. Rebuild with `python doc/build_doc_bundle.py` after editing markdown files.
+
+### Changed
+- `js/doc_viewer.js` now prefers bundled globals (`window.NEBULA_DOC_MANIFEST`, `window.NEBULA_DOC_CONTENT`) before attempting `fetch()`, with updated error guidance for offline use.
+- `index.html` now loads `doc/docs_bundle.js` before `js/doc_viewer.js` so local-file mode has immediate access to documentation content.
+
+## [4.52] - 2026-05-07 13:27:33
+
+### Added
+- **External documentation (`doc/`)**: Document tab content moved to Markdown files under **`doc/`** with **`doc/manifest.json`** defining the outline and filenames. The app loads pages via `fetch`, renders with **Marked** and sanitizes with **DOMPurify** ([`js/doc_viewer.js`](js/doc_viewer.js), [`doc/manifest.json`](doc/manifest.json), [`index.html`](index.html)).
+
+### Changed
+- **Document tab UI**: Inline HTML sections removed; sidebar outline is built from the manifest; main panel shows a loading/error state and **Retry** when fetches fail (typical when opening as `file://` instead of HTTP).
+
+### Notes
+- **Markdown libraries** are loaded from jsDelivr alongside other CDN scripts in `index.html`. Prose styling for rendered docs lives in [`css/main.css`](css/main.css) under `#docMarkdownHost .doc-prose`.
+
+## [4.51] - 2026-05-06 15:54:00
+
+### Changed
+- **Enrichr auto-source activation (SAINT)**: applied the same availability-triggered auto-switch logic to **SAINT result (after SAINT run)**. When SAINT results become available and current source is **Paste genes**, source now auto-switches to SAINT result (matching Differential auto-activation behavior) ([index.html](index.html)).
+
 ## [4.50] - 2026-05-06 15:45:00
 
 ### Changed

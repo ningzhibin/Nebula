@@ -16,7 +16,10 @@
             overflow: hidden;
         }
 
-        /* Bootstrap 3 (lazy-loaded with Clustergrammer) sets html { font-size: 10px }, which shrinks every rem-based rule (e.g. .tabs .tab). Keep a normal root size so app chrome is stable. */
+        /*
+         * Bootstrap 3 loads after this file with Clustergrammer. It sets html { font-size: 10px } and replaces body typography/background.
+         * Pin html here for the pre–Clustergrammer session; when deps load, css/clustergrammer_bootstrap_restore.css is appended last and re-asserts html + body.
+         */
         html {
             font-size: 16px !important;
         }
@@ -1200,60 +1203,71 @@
             border-color: var(--md-accent-dark);
         }
 
-        /* Clustergrammer: use Bootstrap styling (blue flat buttons), exclude from app button overrides */
+        /* Clustergrammer viz roots: heatmap embed (#clustergrammerContainer) and standalone tab (#cgm-container) */
         #clustergrammerContainer button,
-        #clustergrammerContainer .btn {
+        #clustergrammerContainer .btn,
+        #cgm-container button,
+        #cgm-container .btn {
             transform: none !important;
             box-shadow: none !important;
         }
         #clustergrammerContainer button:hover,
-        #clustergrammerContainer .btn:hover {
+        #clustergrammerContainer .btn:hover,
+        #cgm-container button:hover,
+        #cgm-container .btn:hover {
             transform: none !important;
             box-shadow: none !important;
         }
-        #clustergrammerContainer .btn-primary.active {
+        #clustergrammerContainer .btn-primary.active,
+        #cgm-container .btn-primary.active {
             background-image: none;
         }
 
-        /* Clustergrammer: isolate from app styles, fix layout to match official (demo: root has explicit size + overflow) */
-        #clustergrammerContainer {
+        /* Isolate Clustergrammer SVG UI from Nebula sidebar typography; match official demo baseline */
+        #clustergrammerContainer,
+        #cgm-container {
             font-family: "Helvetica Neue", Helvetica, Arial, sans-serif !important;
             font-size: 14px !important;
             line-height: 1.42857143 !important;
             overflow: hidden;
         }
-        /* Let clicks pass through background and border rects so dendro threshold sliders and zoom work */
         #clustergrammerContainer .super_background,
-        #clustergrammerContainer .borders {
+        #clustergrammerContainer .borders,
+        #cgm-container .super_background,
+        #cgm-container .borders {
             pointer-events: none !important;
         }
-        /* Ensure dendro slider groups (triangle threshold controls) can receive clicks/drag */
         #clustergrammerContainer .row_slider_group,
-        #clustergrammerContainer .col_slider_group {
+        #clustergrammerContainer .col_slider_group,
+        #cgm-container .row_slider_group,
+        #cgm-container .col_slider_group {
             pointer-events: all !important;
         }
-        /* Hide about text to prevent overlap with icon bar (official has minimal/no about) */
         #clustergrammerContainer .viz_medium_text,
-        #clustergrammerContainer .viz_large_text {
+        #clustergrammerContainer .viz_large_text,
+        #cgm-container .viz_medium_text,
+        #cgm-container .viz_large_text {
             display: none !important;
         }
-        /* Icon bar: clean row, no overlap */
-        #clustergrammerContainer .clust_icon {
+        #clustergrammerContainer .clust_icon,
+        #cgm-container .clust_icon {
             float: left;
             width: auto;
             padding: 4px 6px;
             margin: 0;
         }
-        #clustergrammerContainer .icon_buttons {
+        #clustergrammerContainer .icon_buttons,
+        #cgm-container .icon_buttons {
             color: #337ab7;
         }
-        /* Sidebar sections: proper spacing */
-        #clustergrammerContainer .sidebar_text {
+        #clustergrammerContainer .sidebar_text,
+        #cgm-container .sidebar_text {
             font-weight: 300;
             font-size: 14px;
             line-height: 1.1;
         }
-        #clustergrammerContainer .form-control {
+        #clustergrammerContainer .form-control,
+        #cgm-container .form-control {
             font-size: 14px;
         }
 
@@ -2159,18 +2173,65 @@
             #dataFilterColumnSidebar > .sidebar-section:nth-child(2),
             #dataFilterColumnSidebar > .column-filter-right-column { grid-column: auto; grid-row: auto; align-self: stretch; }
         }
+        /* Row Filter: two-column layout (mirror Data Filter → Column Filter) */
+        #dataFilterRowSidebar {
+            width: 620px;
+            min-width: 520px;
+            max-width: 760px;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            align-content: start;
+            align-items: start;
+        }
+        #dataFilterRowSidebar h2 {
+            grid-column: 1 / -1;
+            margin-bottom: 0;
+        }
+        #dataFilterRowSidebar .row-filter-left-column {
+            grid-column: 1;
+            grid-row: 2;
+            align-self: start;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        #dataFilterRowSidebar .row-filter-right-column {
+            grid-column: 2;
+            grid-row: 2;
+            align-self: start;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
         #dataFilterRowSidebar .sidebar-section {
             border: 2px solid #d1d5db;
             border-radius: 8px;
             background: #ffffff;
             padding: 10px;
-            margin-bottom: 12px;
+            margin-bottom: 0;
         }
-        #dataFilterRowSidebar .sidebar-section:nth-of-type(1) { border-color: #6366f1; background: #f5f3ff; }
-        #dataFilterRowSidebar .sidebar-section:nth-of-type(2) { border-color: #f59e0b; background: #fffbeb; }
-        #dataFilterRowSidebar .sidebar-section:nth-of-type(3) { border-color: #14b8a6; background: #f0fdfa; }
-        #dataFilterRowSidebar .sidebar-section:nth-of-type(4) { border-color: #8b5cf6; background: #f5f3ff; }
-        #dataFilterRowSidebar .sidebar-section:nth-of-type(5) { border-color: #06b6d4; background: #ecfeff; }
+        #dataFilterRowSidebar .row-filter-left-column > .sidebar-section:nth-of-type(1) { border-color: #6366f1; background: #f5f3ff; }
+        #dataFilterRowSidebar .row-filter-left-column > .sidebar-section:nth-of-type(2) { border-color: #f59e0b; background: #fffbeb; }
+        #dataFilterRowSidebar .row-filter-right-column > .sidebar-section:nth-of-type(1) { border-color: #14b8a6; background: #f0fdfa; }
+        #dataFilterRowSidebar .row-filter-right-column > .sidebar-section:nth-of-type(2) { border-color: #d97706; background: #fffbeb; }
+        #dataFilterRowSidebar .row-filter-right-column > .sidebar-section:nth-of-type(3) { border-color: #8b5cf6; background: #f5f3ff; }
+        #dataFilterRowSidebar .row-filter-right-column > .sidebar-section:nth-of-type(4) { border-color: #06b6d4; background: #ecfeff; }
+        @media (max-width: 1200px) {
+            #dataFilterRowSidebar {
+                width: 520px;
+                min-width: 420px;
+                grid-template-columns: 1fr;
+            }
+            #dataFilterRowSidebar .row-filter-left-column,
+            #dataFilterRowSidebar .row-filter-right-column {
+                grid-column: auto;
+                grid-row: auto;
+                align-self: stretch;
+            }
+        }
         .column-filter-group-list-wrap {
             max-height: 200px;
             overflow: auto;
@@ -2828,6 +2889,106 @@
             display: block;
         }
 
+        /* Document tab: Markdown-rendered help (doc/*.md) */
+        .doc-markdown-main {
+            max-width: 1200px;
+        }
+        .doc-markdown-host {
+            min-height: 120px;
+        }
+        .doc-markdown-status {
+            padding: 10px 12px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            font-size: 13px;
+            line-height: 1.45;
+            background: #f8f9fa;
+            border: 1px solid var(--chrome-tab-border);
+            color: #374151;
+        }
+        .doc-markdown-status--error {
+            background: #fef2f2;
+            border-color: #fecaca;
+            color: #991b1b;
+        }
+        #docMarkdownHost .doc-prose {
+            max-width: 1200px;
+            line-height: 1.55;
+            font-size: 14px;
+            color: #1f2937;
+        }
+        #docMarkdownHost .doc-prose h1,
+        #docMarkdownHost .doc-prose h2,
+        #docMarkdownHost .doc-prose h3,
+        #docMarkdownHost .doc-prose h4 {
+            margin-top: 1.1em;
+            margin-bottom: 0.45em;
+            font-weight: 600;
+            color: #111827;
+            line-height: 1.25;
+        }
+        #docMarkdownHost .doc-prose h1:first-child,
+        #docMarkdownHost .doc-prose h2:first-child,
+        #docMarkdownHost .doc-prose h3:first-child,
+        #docMarkdownHost .doc-prose h4:first-child {
+            margin-top: 0;
+        }
+        #docMarkdownHost .doc-prose p {
+            margin: 0.55em 0;
+        }
+        #docMarkdownHost .doc-prose ul,
+        #docMarkdownHost .doc-prose ol {
+            margin: 0.5em 0 0.6em 1.25em;
+            padding: 0;
+        }
+        #docMarkdownHost .doc-prose li {
+            margin: 0.25em 0;
+        }
+        #docMarkdownHost .doc-prose a {
+            color: var(--chrome-tab-active-bg, #5a7d6a);
+            text-decoration: underline;
+            text-underline-offset: 2px;
+        }
+        #docMarkdownHost .doc-prose a:hover {
+            color: var(--chrome-tab-active-hover, #4a6b5a);
+        }
+        #docMarkdownHost .doc-prose code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 0.9em;
+            background: #f3f4f6;
+            padding: 0.12em 0.35em;
+            border-radius: 4px;
+        }
+        #docMarkdownHost .doc-prose pre {
+            background: #1f2937;
+            color: #e5e7eb;
+            padding: 12px 14px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 12.5px;
+            line-height: 1.45;
+        }
+        #docMarkdownHost .doc-prose pre code {
+            background: transparent;
+            padding: 0;
+            color: inherit;
+        }
+        #docMarkdownHost .doc-prose blockquote {
+            margin: 0.75em 0;
+            padding: 0.35em 0 0.35em 12px;
+            border-left: 3px solid var(--chrome-tab-border, #d6d3c9);
+            color: #4b5563;
+        }
+        #docMarkdownHost .doc-prose hr {
+            border: none;
+            border-top: 1px solid #e5e7eb;
+            margin: 1.25em 0;
+        }
+        #docMarkdownHost .doc-prose strong {
+            font-weight: 600;
+            color: #111827;
+        }
+
         /* Data QC → Overall: matrix-wide D3 dashboard */
         .data-qc-overall-panel {
             flex: 1;
@@ -2960,52 +3121,158 @@
             box-sizing: border-box;
         }
 
-        #diffTab .diff-run-section {
-            padding-top: 10px;
-            margin-top: 2px;
-            border-top: 1px solid #dbe1ef;
-        }
-        #diffTab.tab-content > .tab-sidebar {
-            width: 640px;
-            min-width: 640px;
-            max-width: 640px;
+        /* Differential tab: sidebar = stacked rows; each row is a 2-col grid for alignment */
+        #diffTab.tab-content > .tab-sidebar.diff-sidebar {
+            width: 600px;
+            min-width: 600px;
+            max-width: 600px;
             flex-shrink: 0;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px 14px;
-            align-content: start;
-            align-items: start;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: stretch;
+            box-sizing: border-box;
         }
-        #diffTab.tab-content > .tab-sidebar > h2,
-        #diffTab.tab-content > .tab-sidebar > p,
-        #diffTab.tab-content > .tab-sidebar > .diff-sidebar-span2,
-        #diffTab.tab-content > .tab-sidebar > .diff-run-section {
-            grid-column: 1 / -1;
-        }
-        #diffTab.tab-content > .tab-sidebar > .sidebar-section {
+        #diffTab.tab-content > .tab-sidebar.diff-sidebar > .sidebar-section {
             margin-bottom: 0;
         }
-        #diffTab.tab-content > .tab-sidebar > .diff-cutoff-column {
-            grid-column: 2;
-            grid-row: 3;
+        #diffTab .diff-sidebar-title {
+            margin: 0 0 8px 0;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--md-border-strong);
+            font-size: 1.05em;
+            font-weight: 600;
+        }
+        #diffTab .diff-sidebar-split {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px 12px;
+            align-items: start;
+        }
+        #diffTab .diff-sidebar-card {
+            margin-bottom: 0;
+            padding: 8px 10px;
+        }
+        #diffTab .diff-sidebar-card-title {
+            margin: 0 0 8px 0;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--md-border-subtle);
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: #5c6578;
+        }
+        #diffTab .diff-sidebar-card label[for] {
+            display: block;
+            margin: 6px 0 2px 0;
+            font-size: 0.86em;
+        }
+        #diffTab .diff-sidebar-card h3 + label[for] {
+            margin-top: 0;
+        }
+        #diffTab .diff-sidebar-control {
+            display: block;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 4px;
+        }
+        #diffTab .diff-inline-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px 10px;
+            margin-bottom: 2px;
+            align-items: end;
+        }
+        #diffTab .diff-inline-2 > div > label {
+            display: block;
+            margin: 0 0 2px 0;
+            font-size: 0.8em;
+        }
+        #diffTab .diff-inline-2 .diff-sidebar-control {
+            margin-bottom: 0;
+        }
+        #diffTab .diff-check-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px 14px;
+            align-items: center;
+            margin: 4px 0 2px 0;
+        }
+        #diffTab .diff-check-row label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin: 0;
+            font-size: 0.82em;
+            cursor: pointer;
+        }
+        #diffTab .diff-check-block {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin: 6px 0 4px 0;
+            cursor: pointer;
+            font-size: 0.86em;
+            line-height: 1.35;
+        }
+        #diffTab .diff-check-block input {
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+        #diffTab .diff-sidebar-meta {
+            margin: 6px 0 0 0;
+            color: #444;
+        }
+        #diffTab .diff-sidebar-note {
+            margin: 4px 0 0 0;
+            color: #666;
+            line-height: 1.35;
+        }
+        #diffTab .diff-run-section {
+            padding: 8px 10px;
+            margin: 0;
+            border-top: none;
+        }
+        #diffTab .diff-run-btn {
+            width: 100%;
+            padding: 8px 12px;
+            background: #4caf50;
+            color: #fff;
+            border: none;
+            border-radius: var(--md-radius-md, 4px);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.92em;
+        }
+        #diffTab .diff-run-btn:hover {
+            background: #43a047;
+        }
+        #diffTab .diff-run-status {
+            margin-top: 6px;
+            font-size: 11px;
+        }
+        #diffTab .diff-summary-box {
+            margin-top: 8px;
+            font-size: 12px;
+            padding: 8px;
         }
         @media (max-width: 1500px) {
-            #diffTab.tab-content > .tab-sidebar {
-                width: 540px;
-                min-width: 540px;
-                max-width: 540px;
+            #diffTab.tab-content > .tab-sidebar.diff-sidebar {
+                width: 520px;
+                min-width: 520px;
+                max-width: 520px;
             }
         }
         @media (max-width: 1280px) {
-            #diffTab.tab-content > .tab-sidebar {
-                width: 360px;
-                min-width: 360px;
-                max-width: 360px;
-                grid-template-columns: 1fr;
+            #diffTab.tab-content > .tab-sidebar.diff-sidebar {
+                width: 100%;
+                min-width: 0;
+                max-width: none;
             }
-            #diffTab.tab-content > .tab-sidebar > .diff-cutoff-column {
-                grid-column: 1;
-                grid-row: auto;
+            #diffTab .diff-sidebar-split {
+                grid-template-columns: 1fr;
             }
         }
         #diffTab .diff-main-stack {
