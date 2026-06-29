@@ -158,27 +158,194 @@ window.saintBuildIntegratedFromMainApp = function() {
     return true;
 };
 
+window.saintBuildMetaBySampleId = function() {
+    var map = new Map();
+    var md = window.metaData;
+    if (!md || !md.rows) return map;
+    md.rows.forEach(function(r) {
+        var sid = r.Sample_ID !== undefined ? r.Sample_ID : r.sample_id;
+        if (sid != null && String(sid).trim() !== '') map.set(String(sid).trim(), r);
+    });
+    return map;
+};
+
+window.saintGetGroupLevelsForColumn = function(metaCol) {
+    var cd = window.currentData;
+    if (!metaCol || !cd || !Array.isArray(cd.columnHeaders)) return [];
+    var metaMap = window.saintBuildMetaBySampleId();
+    var asText = function(v) { return String(v == null ? '' : v).trim(); };
+    var valueSet = new Set();
+    cd.columnHeaders.forEach(function(sampleId) {
+        var sid = asText(sampleId);
+        var row = metaMap.get(sid);
+        if (!row) return;
+        var v = asText(row[metaCol]);
+        if (v) valueSet.add(v);
+    });
+    return Array.from(valueSet).sort(function(a, b) {
+        return a.localeCompare(b, undefined, { sensitivity: 'base' });
+    });
+};
+
+window.saintUpdateGroupCounts = function() {
+    var countsEl = document.getElementById('saintGroupCounts');
+    if (!countsEl) return;
+    var useStatus = document.getElementById('saintUseStatusAsIs') && document.getElementById('saintUseStatusAsIs').checked;
+    if (useStatus) {
+        countsEl.textContent = '';
+        return;
+    }
+    var metaCol = document.getElementById('saintMetaGroupColumn') && document.getElementById('saintMetaGroupColumn').value;
+    var ctrlVal = document.getElementById('saintControlValue') && document.getElementById('saintControlValue').value;
+    var treatVal = document.getElementById('saintTreatmentValue') && document.getElementById('saintTreatmentValue').value;
+    if (!metaCol || !ctrlVal || !treatVal) {
+        countsEl.textContent = '';
+        return;
+    }
+    var cd = window.currentData;
+    if (!cd || !Array.isArray(cd.columnHeaders)) {
+        countsEl.textContent = '';
+        return;
+    }
+    var metaMap = window.saintBuildMetaBySampleId();
+    var asText = function(v) { return String(v == null ? '' : v).trim(); };
+    var nC = 0;
+    var nT = 0;
+    cd.columnHeaders.forEach(function(sampleId) {
+        var sid = asText(sampleId);
+        var row = metaMap.get(sid);
+        if (!row) return;
+        var v = asText(row[metaCol]);
+        if (v === ctrlVal) nC++;
+        else if (v === treatVal) nT++;
+    });
+    countsEl.textContent = 'Control (C): n=' + nC + ' · Treatment (T): n=' + nT;
+};
+
+window.saintOnMetaGroupColumnChange = function() {
+    var metaCol = document.getElementById('saintMetaGroupColumn') && document.getElementById('saintMetaGroupColumn').value;
+    var ctrlSel = document.getElementById('saintControlValue');
+    var treatSel = document.getElementById('saintTreatmentValue');
+    if (!ctrlSel || !treatSel) return;
+    var prevC = ctrlSel.value;
+    var prevT = treatSel.value;
+    ctrlSel.innerHTML = '';
+    treatSel.innerHTML = '';
+    if (!metaCol) {
+        window.saintUpdateGroupCounts();
+        return;
+    }
+    var values = window.saintGetGroupLevelsForColumn(metaCol);
+    values.forEach(function(v) {
+        var oc = document.createElement('option');
+        oc.value = v;
+        oc.textContent = v;
+        ctrlSel.appendChild(oc);
+        var ot = document.createElement('option');
+        ot.value = v;
+        ot.textContent = v;
+        treatSel.appendChild(ot);
+    });
+    if (values.length >= 1) {
+        if (prevC && values.indexOf(prevC) >= 0) ctrlSel.value = prevC;
+        else ctrlSel.selectedIndex = 0;
+        if (prevT && values.indexOf(prevT) >= 0) treatSel.value = prevT;
+        else treatSel.selectedIndex = values.length >= 2 ? 1 : 0;
+    }
+    if (ctrlSel.value === treatSel.value && values.length >= 2) {
+        treatSel.selectedIndex = ctrlSel.selectedIndex === 0 ? 1 : 0;
+    }
+    window.saintUpdateGroupCounts();
+    window.saintSyncBaitToGroupColumn();
+};
+
+/** When false, Bait column follows Group by; set true after user picks a different bait column. */
+window.saintBaitManuallyChanged = false;
+
+window.saintOnBaitColumnChange = function() {
+    var groupSel = document.getElementById('saintMetaGroupColumn');
+    var baitSel = document.getElementById('saintBaitColumn');
+    if (!baitSel) return;
+    var useStatus = document.getElementById('saintUseStatusAsIs') && document.getElementById('saintUseStatusAsIs').checked;
+    if (useStatus) {
+        var defBait = Array.from(baitSel.options).some(function(op) { return op.value === 'Bait'; }) ? 'Bait' : '';
+        window.saintBaitManuallyChanged = defBait ? baitSel.value !== defBait : !!baitSel.value;
+        return;
+    }
+    if (!groupSel) return;
+    window.saintBaitManuallyChanged = baitSel.value !== groupSel.value;
+};
+
+window.saintSyncBaitToGroupColumn = function() {
+    if (window.saintBaitManuallyChanged) return;
+    var groupSel = document.getElementById('saintMetaGroupColumn');
+    var baitSel = document.getElementById('saintBaitColumn');
+    if (!baitSel) return;
+    var useStatus = document.getElementById('saintUseStatusAsIs') && document.getElementById('saintUseStatusAsIs').checked;
+    if (useStatus) {
+        if (Array.from(baitSel.options).some(function(op) { return op.value === 'Bait'; })) {
+            baitSel.value = 'Bait';
+        }
+        return;
+    }
+    if (!groupSel) return;
+    var g = groupSel.value;
+    if (!g) return;
+    var has = Array.from(baitSel.options).some(function(op) { return op.value === g; });
+    if (has) baitSel.value = g;
+};
+
+window.saintOnUseStatusAsIsChange = function() {
+    var wrap = document.getElementById('saintGroupMapWrap');
+    var useStatus = document.getElementById('saintUseStatusAsIs') && document.getElementById('saintUseStatusAsIs').checked;
+    if (wrap) wrap.style.display = useStatus ? 'none' : 'block';
+    if (!useStatus) window.saintOnMetaGroupColumnChange();
+    else {
+        window.saintUpdateGroupCounts();
+        window.saintSyncBaitToGroupColumn();
+    }
+};
+
 window.saintRefreshMetaColumnSelects = function() {
     var md = window.metaData;
     if (md && (!md.headers || !md.headers.length) && md.rows && md.rows.length) {
         window.saintEnsureMetaHeaders();
     }
-    var names = md && md.headers ? md.headers.slice() : [];
-    ['saintMetaGroupColumn', 'saintBaitColumn'].forEach(function(selId) {
-        var sel = document.getElementById(selId);
-        if (!sel) return;
-        var cur = sel.value;
-        sel.innerHTML = '<option value="">-- select column --</option>';
-        names.forEach(function(h) {
+    var allNames = md && md.headers ? md.headers.slice() : [];
+    var groupCols = allNames.filter(function(h) {
+        return h && String(h).trim() !== '' && h !== 'Sample_ID';
+    });
+    var groupSel = document.getElementById('saintMetaGroupColumn');
+    if (groupSel) {
+        var curG = groupSel.value;
+        groupSel.innerHTML = '<option value="">-- select column --</option>';
+        groupCols.forEach(function(h) {
             var o = document.createElement('option');
             o.value = h;
             o.textContent = h;
-            sel.appendChild(o);
+            groupSel.appendChild(o);
         });
-        if (names.indexOf(cur) >= 0) sel.value = cur;
-        else if (selId === 'saintMetaGroupColumn' && names.indexOf('Condition') >= 0) sel.value = 'Condition';
-        else if (selId === 'saintBaitColumn' && names.indexOf('Bait') >= 0) sel.value = 'Bait';
-    });
+        if (groupCols.indexOf(curG) >= 0) groupSel.value = curG;
+        else if (groupCols.indexOf('Condition') >= 0) groupSel.value = 'Condition';
+        else if (groupCols.length) groupSel.value = groupCols[0];
+    }
+    var baitSel = document.getElementById('saintBaitColumn');
+    if (baitSel) {
+        var curB = baitSel.value;
+        baitSel.innerHTML = '<option value="">-- select column --</option>';
+        allNames.forEach(function(h) {
+            if (!h || String(h).trim() === '') return;
+            var o = document.createElement('option');
+            o.value = h;
+            o.textContent = h;
+            baitSel.appendChild(o);
+        });
+        if (window.saintBaitManuallyChanged && curB && allNames.indexOf(curB) >= 0) {
+            baitSel.value = curB;
+        }
+    }
+    window.saintOnMetaGroupColumnChange();
+    window.saintOnUseStatusAsIsChange();
 };
 
 window.saintShowError = function(msg) {
@@ -2788,8 +2955,14 @@ window.saintRunAnalysis = async function() {
     var useStatus = document.getElementById('saintUseStatusAsIs') && document.getElementById('saintUseStatusAsIs').checked;
     if (!useStatus) {
         var gc = document.getElementById('saintMetaGroupColumn') && document.getElementById('saintMetaGroupColumn').value;
-        if (!gc) {
-            window.saintShowError('Choose a meta column for grouping (or use Status as-is).');
+        var cv = document.getElementById('saintControlValue') && document.getElementById('saintControlValue').value;
+        var tv = document.getElementById('saintTreatmentValue') && document.getElementById('saintTreatmentValue').value;
+        if (!gc || !cv || !tv) {
+            window.saintShowError('Choose a meta column and two groups for control (C) and treatment (T), or use Status as-is.');
+            return;
+        }
+        if (cv === tv) {
+            window.saintShowError('Control and treatment groups must be distinct.');
             return;
         }
     }

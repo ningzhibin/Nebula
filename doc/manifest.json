@@ -10,6 +10,8 @@
     { "id": "upsetvenn", "title": "7. UpSet / Venn / Karnaugh", "file": "upsetvenn.md" },
     { "id": "columnprofile", "title": "8. Column profile", "file": "columnprofile.md" },
     { "id": "columncorrelation", "title": "9. Column correlation", "file": "columncorrelation.md" },
-    { "id": "differential", "title": "10. Differential analysis", "file": "differential.md" }
+    { "id": "clustering", "title": "10. Clustering (Heatmap · PCA · PCoA · t-SNE)", "file": "clustering.md" },
+    { "id": "differential", "title": "11. Differential analysis", "file": "differential.md" },
+    { "id": "reportexport", "title": "12. Report export (MVP)", "file": "report.md" }
   ]
 }

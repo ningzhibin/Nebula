@@ -10,6 +10,6 @@
 
 **Correlation and distance matrices:** **Pearson** or **Spearman** (ranks with average ties, then Pearson on ranks). Matrices use the **first N** columns in file/matrix order (*Max columns in heatmaps*, default 40, cap 80). **Distance**: **1 − r**, **√(2(1 − r))**, or **Euclidean** on **z-scored** column vectors (pairwise-complete rows).
 
-**Per-column summary (Plotly):** Moved to **Data QC → Overall** — bars for **every** sample column (**Bar metric**: mean raw intensity, mean transformed intensity, **non-zero feature count**, or detection rate). Uses the same **Transform** and **Treat 0 as missing** rules as this tab’s **Shared scale** block where those metrics apply. See **Document → Overview** subsection *Data QC → Overall — Bar metric* for definitions.
+**Per-column summary (Plotly):** Lives on **Data QC → Overall** — **horizontal** bars for **every** sample column (**Bar metric**: mean raw intensity, mean transformed intensity, **non-zero feature count**, or detection rate); chart **height scales** with sample count; **v4.75+** y-axis labels use the **full column header** (duplicate headers get ` [2]`, ` [3]`, …). Uses the same **Transform** and **Treat 0 as missing** rules as this tab’s **Shared scale** block where those metrics apply. See **Document → Overview** subsection *Data QC → Overall — Bar metric* for definitions.
 
 **Session JSON** saves the sidebar control values (`colCorr*` ids) so imports restore your settings; reopen the sub-tab or use **Refresh plots** to redraw.

@@ -3,6 +3,306 @@
 
 ### check point
 
+## [5.22] - 2026-06-29 12:03:36
+
+### Fixed
+- **Differential → Volcano**: the modebar "Download plot as PNG" now saves as **`volcanoplot.png`** instead of Plotly's default `newplot.png` (set `toImageButtonOptions.filename`; applies to both two-group and ANOVA/Kruskal–Wallis volcano renders) ([index.html](index.html)).
+
+## [5.21] - 2026-06-28 18:00:47
+
+### Added
+- **Header**: a **Buy me a coffee** donation button (top-right) linking to PayPal (`ningzhibin@gmail.com`); opens in a new tab. Collapses to a coffee-cup icon on narrow screens ([index.html](index.html), [css/main.css](css/main.css)).
+
+## [5.20] - 2026-06-28 16:39:06
+
+### Added
+- **Clustering → PCA**: new **Details** viz sub-tab (right of 2D / 3D Plot) showing the numeric PCA results: a KPI summary (samples/features used, components, PC1 variance, preprocessing), an interactive **D3 scree plot** (% variance bars + cumulative line), and three **sortable, sticky-header tables** — **variance explained (scree)**, **per-sample PC scores**, and **top feature loadings** (ranked by max |loading|). Each table has a **Download CSV** button (loadings CSV exports all features) ([index.html](index.html), [css/main.css](css/main.css)).
+
+## [5.19] - 2026-06-28 10:15:20
+
+### Changed
+- **Data QC → Row Profile**: **Stacked bar (composition)** is now the **default** plot type (was Line). First-open auto-plot and tab activation set/sync the stacked controls accordingly ([index.html](index.html)).
+
+## [5.18] - 2026-06-28 10:11:01
+
+### Added
+- **Data QC → Row Profile**: new **Stacked bar (composition)** plot type. Selected rows are stacked per sample to show their composition; values are additive (non-finite / non-positive cells count as 0; log / Z-score disabled in this mode). Optional **Show as % composition** normalizes each sample's stack to 100% (0–100 % y-axis) for cross-sample comparison ([index.html](index.html)).
+- Documented the Row Profile plot types and stacked composition in **Document → Column profile** ([doc/columnprofile.md](doc/columnprofile.md), [doc/docs_bundle.js](doc/docs_bundle.js)).
+
+## [5.17] - 2026-06-17 06:32:38
+
+### Added
+- **Document** tab: new **10. Clustering (Heatmap · PCA · PCoA · t-SNE)** section documenting all five Clustering sub-tabs — Heatmap (Plotly clustering/linkage/colors), Clustergrammer, PCA, the new PCoA (distance metrics, double-centering + Jacobi MDS, PERMANOVA note), and t-SNE — plus a "Choosing a view" guide ([doc/clustering.md](doc/clustering.md), [doc/manifest.json](doc/manifest.json), [doc/docs_bundle.js](doc/docs_bundle.js)).
+
+### Changed
+- Document outline renumbered to fit Clustering before Differential: **Differential analysis → 11**, **Report export (MVP) → 12** ([doc/manifest.json](doc/manifest.json), [README.md](README.md)).
+
+## [5.16] - 2026-06-17 06:10:00
+
+### Fixed
+- **Clustering → PCoA**: 2D and 3D plots stacked on one page (3D below the fold, unscrollable). The viz-panel show/hide CSS was scoped to `#pcaTab` only; extended to `#pcoaTab` so the **2D Plot / 3D Plot** inner sub-tabs toggle correctly like PCA ([css/main.css](css/main.css)).
+
+## [5.15] - 2026-06-17 05:55:24
+
+### Added
+- **Clustering → PCoA** sub-tab (Principal Coordinates Analysis / classical MDS). Mirrors the PCA layout: sidebar controls, group-annotation coloring, interactive **D3 2D** (zoom/pan, 95% group ellipses, repelled labels, legend show/hide) and interactive **D3 3D** (drag-rotate, wheel-zoom). Distance metrics: **Bray-Curtis** (default), **Euclidean**, **Manhattan**, **Cosine**, **Correlation**. Coordinates via double-centering + a symmetric **Jacobi eigensolver**; negative-eigenvalue inertia is reported. **Add to Report** supported for PCoA 2D (Plotly embed) and PCoA 3D (interactive D3 replica) ([index.html](index.html), [js/nebula_report.js](js/nebula_report.js)).
+
+### Changed
+- `renderPcaLegend` generalized to accept an arbitrary `viewKey`/`stateBag` and unique clip IDs so PCA and PCoA legends never share state or collide ([index.html](index.html)).
+
+## [5.14] - 2026-06-04 23:00:00
+
+### Removed
+- **Report** tab: **Test PCA 3D interactive** button and PCA 3D harness diagnostic code (no longer needed after direct DOM preview fix) ([index.html](index.html), [js/nebula_report.js](js/nebula_report.js)).
+
+## [5.13] - 2026-06-04 22:30:00
+
+### Changed
+- **Report preview**: replaced blob **iframe** with direct **in-page DOM** mount (`#reportPreviewRoot`). Plotly, PCA 3D, PNG, and SVG sections use the same mount path as Clustering — PCA 3D rotate/zoom works in preview. **Save Report** still exports self-contained HTML with CDN scripts ([js/nebula_report.js](js/nebula_report.js), [index.html](index.html), [css/main.css](css/main.css)).
+
+## [5.12] - 2026-06-04 22:00:00
+
+### Fixed
+- **Report preview iframe height**: PCA 3D live panel no longer consumes all vertical space; iframe keeps **min ~420px / 55vh**; live PCA panel capped and scrollable ([css/main.css](css/main.css)).
+
+## [5.11] - 2026-06-04 21:45:00
+
+### Fixed
+- **Report — PCA 3D preview**: uses the same **parent-page direct mount** as the working harness test (panel above iframe); capture no longer PNG-fallbacks when `NebulaPca3dReportEmbed` is already loaded; status line reports interactive vs static capture ([js/nebula_report.js](js/nebula_report.js), [index.html](index.html)).
+
+## [5.10] - 2026-06-04 21:30:00
+
+### Fixed
+- **PCA 3D harness flash/disappear**: opening Report via `switchTab` auto-refreshed the preview and cleared the direct-mount harness ~100ms after the test button; harness test now skips that refresh and ignores in-flight preview updates ([index.html](index.html)).
+
+## [5.09] - 2026-06-04 21:15:00
+
+### Fixed
+- **PCA 3D harness empty plot**: preview boot script referenced undefined `par` inside `mountAll` (ReferenceError); added self-contained iframe boot fallback; **Test PCA 3D interactive** now mounts directly in the Report panel (bypasses iframe) ([js/nebula_report.js](js/nebula_report.js), [index.html](index.html)).
+
+## [5.08] - 2026-06-04 21:00:00
+
+### Added
+- **Report — PCA 3D harness test**: hardcoded interactive 3D plot injected at top of every report preview; **Test PCA 3D interactive** button loads harness-only page (no matrix/capture) ([js/nebula_report.js](js/nebula_report.js), [index.html](index.html)).
+
+## [5.07] - 2026-06-04 20:45:00
+
+### Fixed
+- **App startup regression**: restored accidentally deleted `queuePcaRerender()` function header (syntax error blocked all inline scripts, including example data load).
+
+## [5.06] - 2026-06-04 20:27:05
+
+### Fixed
+- **Report — PCA 3D static PNG trap**: interactive capture no longer requires embed-script XHR when `NebulaPca3dReportEmbed` is already loaded; preview iframe uses a **parent-window mount boot** (same D3 + same `mount()` as Clustering).
+- **PCA 3D drag/zoom**: document-level drag tracking and non-passive wheel listeners so rotate/zoom work inside report iframe ([js/pca3d_report_embed.js](js/pca3d_report_embed.js)).
+
+## [5.05] - 2026-06-04 20:27:05
+
+### Fixed
+- **PCA 3D — single code path**: Clustering tab and Report now call the **same** `NebulaPca3dReportEmbed.mount()` (data + D3 renderer + `svg.on` drag/wheel); removed duplicate ~180-line `drawPca3dD3` in [index.html](index.html).
+- **Report preview**: PCA 3D mounts from the **parent window** (same D3 as Clustering) after iframe load instead of relying on blob-iframe boot scripts; removed `pointer-events: none` on report SVG that blocked interaction.
+
+## [5.04] - 2026-06-04 17:45:00
+
+### Fixed
+- **Report — PCA 3D**: stopped silent **static SVG fallback** (looked interactive but was not); embed script loads via **sync XHR**; plot uses an **HTML interaction overlay** for drag/wheel; interactive figures show a blue hint line, static PNG shows an orange warning ([js/nebula_report.js](js/nebula_report.js), [js/pca3d_report_embed.js](js/pca3d_report_embed.js)).
+
+## [5.03] - 2026-06-04 17:20:00
+
+### Fixed
+- **Report — PCA 3D interactivity**: drag/zoom now use **document-level mouse tracking** (no pointer-capture, which broke in the report iframe); restore initial `draw3d()`; iframe `tabindex` for wheel focus ([js/pca3d_report_embed.js](js/pca3d_report_embed.js), [index.html](index.html)).
+
+## [5.02] - 2026-06-04 17:05:00
+
+### Fixed
+- **Report — PCA 3D interactivity**: reliable embed-script preload/inlining for blob preview; **pointer + wheel** handlers (non-passive zoom) replace D3 mouse events so drag-rotate and wheel-zoom work in the report iframe ([js/pca3d_report_embed.js](js/pca3d_report_embed.js), [js/nebula_report.js](js/nebula_report.js)).
+
+## [5.01] - 2026-06-04 16:40:00
+
+### Changed
+- **Report — PCA 3D**: exports a **full interactive D3 replica** (rotate, zoom, legend, tooltips, labels) via `js/pca3d_report_embed.js` and serialized plot state; falls back to SVG/PNG if the payload or script load fails ([index.html](index.html), [js/nebula_report.js](js/nebula_report.js), [js/pca3d_report_embed.js](js/pca3d_report_embed.js)).
+
+## [5.00] - 2026-06-04 16:25:00
+
+### Changed
+- **Report — PCA 3D**: exports an **inline SVG clone** of the on-screen D3 plot (same view, legend, labels, and layout) instead of a rebuilt Plotly chart; falls back to **PNG** if the SVG is too large ([js/nebula_report.js](js/nebula_report.js)).
+
+## [4.99] - 2026-06-04 16:12:00
+
+### Fixed
+- **Report — PCA 3D**: Plotly embed now uses the **same normalized PC space**, **rotation**, **zoom**, and **inner plot size** as the on-screen D3 3D view (camera derived from D3 `rotX`/`rotY`/`zoom`; view snapshot on `#pcaPlot3d` at each redraw) ([index.html](index.html)).
+
+## [4.98] - 2026-06-04 15:58:00
+
+### Added
+- **Clustering → PCA 3D**: **Add to Report** on the 3D sub-tab; report exports an **interactive Plotly scatter3d** (groups, hidden legend, PC axes, approximate camera from the D3 view) with **PNG fallback** from the on-screen SVG ([index.html](index.html), [js/nebula_report.js](js/nebula_report.js), [css/main.css](css/main.css)).
+
+## [4.97] - 2026-06-04 15:54:44
+
+### Fixed
+- **PCA 2D layout**: removed auto-height / **ResizeObserver** loop (plot was growing on each redraw). Sidebar **plot height** is fixed again (default 760px); the **Add to Report** title row height is subtracted for the D3 canvas and the plot host gets a matching fixed pixel height ([index.html](index.html), [css/main.css](css/main.css)).
+
+## [4.96] - 2026-06-04 15:19:10
+
+### Fixed
+- **PCA 2D**: plot height now **auto-fills** the panel below the **Add to Report** header (default height input empty like width); explicit height is capped to the host so the D3 figure is not clipped at the bottom. **ResizeObserver** redraws on panel resize ([index.html](index.html), [css/main.css](css/main.css)).
+
+## [4.95] - 2026-06-04 12:31:02
+
+### Changed
+- **Report — PCA 2D**: exports an **interactive Plotly** embed (zoom/pan, legend, hover) like the heatmap, built from the same PCA data and **current D3 view range** (axis limits, hidden legend groups, labels/ellipses). Falls back to PNG if serialization fails ([js/nebula_report.js](js/nebula_report.js), [index.html](index.html)).
+
+## [4.94] - 2026-06-04 10:45:53
+
+### Fixed
+- **Report — PCA 2D**: export now **rasterizes the existing D3 SVG** without calling **`updatePCA`**, so **zoom, pan**, legend-hidden groups, and label layout in the Clustering tab are preserved in the report PNG ([index.html](index.html)).
+
+## [4.93] - 2026-06-04 10:28:01
+
+### Fixed
+- **Report — PCA 2D**: the section now **rasterizes the D3 SVG** in `#pcaPlot` (same path as Data QC → Overall) instead of serializing Plotly, which produced a blank axes-only figure after PCA moved to D3. Capture redraws the 2D plot via **`nebulaPcaPrepareForReportCapture`** when the panel is hidden ([js/nebula_report.js](js/nebula_report.js), [index.html](index.html)).
+
+## [4.92] - 2026-06-04 09:47:12
+
+### Changed
+- **SAINT**: **Bait column** defaults to the same meta column as **Group by** and stays in sync when the group column changes, until the user selects a different bait column ([js/saint_embed.js](js/saint_embed.js)).
+
+## [4.91] - 2026-06-04 09:35:34
+
+### Changed
+- **SAINT → Sample grouping**: when not using **Status as-is**, **control** and **treatment** levels are chosen from **dropdowns** populated from the selected meta column (same `Sample_ID` join as **Differential** two-group mode), with per-group sample counts and validation for distinct groups. The mapping block hides when **Use Status as-is** is checked. Session JSON saves SAINT sidebar grouping controls ([index.html](index.html), [js/saint_embed.js](js/saint_embed.js)).
+
+## [4.90] - 2026-05-14 21:02:25
+
+### Fixed
+- **Report export — Overall D3 chart width**: when the **Overall** panel is hidden (e.g. building the report from the **Report** tab), chart hosts had **`clientWidth` 0**, so D3 drew at **~400px** and PNGs were too narrow. **`resolveOverallChartOuterWidthPx`** now derives width from **`#dataQcOverallChartsCol`**, **`.data-qc-overall-main`**, workspace minus sidebar, a shared persisted **`data-nebula-overall-plot-width`** on the three hosts, or viewport heuristics — so refresh-for-capture matches the last on-screen width ([js/data_qc_overall_dashboard.js](js/data_qc_overall_dashboard.js)).
+
+## [4.89] - 2026-05-14 20:56:57
+
+### Fixed
+- **Report export — graph width**: Plotly embed sizing now prefers **`_fullLayout` width/height** before serialized layout, accepts widths **≥ 40px** (was 160, so narrow panels were reset to 900px). Plotly host gets **`min-width`** matching layout width; the outer **`<figure>`** uses **`plotlyFigureShellStyleFromLayout`** (`display:inline-block`, fixed width). Raster PNG **`<figure>`** uses **`rasterFigureShellStyleFromImageBody`**; **`<img>`** gains **`min-width`**. Preview CSS restores the base **`.nebula-report-figure--preview`** block alongside the new `max-width:none` override ([js/nebula_report.js](js/nebula_report.js)).
+
+## [4.88] - 2026-05-14 20:44:07
+
+### Changed
+- **Report export — visual fidelity**: PNG figures from D3 SVG now carry **`cssWidth` / `cssHeight`** (from the SVG’s declared size) and the HTML uses explicit **`width` / `height`** plus **`max-width:none`** so images are not shrunk by the report stylesheet. **Plotly → PNG** fallback uses the graph’s **`_fullLayout`** (or measured div) size at **scale 1** instead of a fixed 900×scale export. **Plotly embed** hosts use **`max-width:none`**; exported layout fills missing **`paper_bgcolor` / `plot_bgcolor` / font** with the same light defaults as the app. **Figure** chrome: **Plotly** and **raster** figures use a **white, borderless** container instead of the gray padded box ([js/nebula_report.js](js/nebula_report.js)).
+
+## [4.87] - 2026-05-14 20:38:43
+
+### Changed
+- **Data QC → Overall**: **Per-column summary** is now a **D3** horizontal bar chart (same layout style as total log and box plots), using the same metrics as before via `getDataQcOverallPerColumnSummaryPayload` + `colCorrComputePerColumnSummaryValues` ([index.html](index.html), [js/data_qc_overall_dashboard.js](js/data_qc_overall_dashboard.js)).
+- **Report export**: **Per-column summary**, **total log**, and **column boxplots** are captured as **PNG from the on-screen D3 SVG** (refresh-then-rasterize); removed synthetic **Plotly** re-rendering for those sections ([js/nebula_report.js](js/nebula_report.js)).
+
+## [4.86] - 2026-05-14 20:22:29
+
+### Changed
+- **Report export — Plotly figure height**: embedded figures now **lock `layout.height` and `layout.width`** (from the live plot’s layout, `_fullLayout`, or measured div size), set **`autosize: false`**, **`config.responsive: false`**, and apply matching **`height` / `min-height` / `width`** on the report host div so tall charts (e.g. many samples on **Overall**) are not flattened by the old **380px min-height** CSS. Synthetic Overall total-log / box exports use the same path ([js/nebula_report.js](js/nebula_report.js)).
+
+## [4.85] - 2026-05-14 20:18:47
+
+### Fixed
+- **Report module load failure**: restoring the **`captureSvgHost`** function declaration that was dropped when removing the old Overall D3 capture chain left invalid JavaScript, so **`nebula_report.js` failed to parse** and the UI showed **“Report module not loaded.”** ([js/nebula_report.js](js/nebula_report.js)).
+
+## [4.84] - 2026-05-14 20:14:33
+
+### Changed
+- **Report export — Data QC → Overall** (`total_log_signal`, `column_boxplots`): the saved HTML now embeds **interactive Plotly** for **total Σ log10(1+I)** and the **per-column box plot**, built from the same **`DataQcOverallDashboard.computeColumnStats`** pipeline as the on-screen D3 charts (subsampled `logs` per column for the box view). No dependency on the D3 SVG being visible when the report is built. If the serialized payload exceeds the size guard, the section is omitted with a skip reason (same pattern as other Plotly embeds) ([js/nebula_report.js](js/nebula_report.js)).
+
+## [4.83] - 2026-05-14 20:07:43
+
+### Changed
+- **Report export — Plotly figures** (per-column summary, column profile bar/treemap, column correlation matrices, heatmap, PCA): the saved HTML embeds **interactive Plotly** by serializing each graph div’s **`data`**, **`layout`**, and **`config`** (so **zoom, pan, axis ranges, legend toggles**, etc. match the moment the report was built), then loading **Plotly 2.27** from the same CDN as the app and calling **`Plotly.newPlot`**. **PNG** is used only if the graph is empty, JSON serialization fails, or the payload exceeds a size guard. **Data QC → Overall** total-log and box sections use **synthetic Plotly** from column stats (**v4.84+**); on-screen D3 charts are unchanged ([js/nebula_report.js](js/nebula_report.js)).
+
+## [4.82] - 2026-05-14 19:59:29
+
+### Fixed
+- **Report export — Data QC → Overall D3 figures** (`total_log_signal`, `column_boxplots`): rasterization could fail or yield empty images when the **Overall** panel was **not visible** (e.g. preview built from the **Report** tab) or when `getBBox`/`layout` was unreliable. The report pipeline now **refreshes `DataQcOverallDashboard`** before capturing those hosts, **clones the SVG off-screen** when any ancestor is `display:none` or the SVG has no layout box, and **`svgToPngDataUrl`** uses **`bbox.width` / `bbox.height`** for canvas sizing (was incorrectly mixing in `bbox.x` / `bbox.y`) ([js/nebula_report.js](js/nebula_report.js)).
+
+## [4.81] - 2026-05-14 19:45:03
+
+### Changed
+- **Report** sidebar: only **Matrix and meta summary** remains as a fixed checkbox. **Per-column summary**, **Overall D3 figures**, **column profile**, **column correlation**, **heatmap**, and **PCA** rows are **created when you confirm Add to Report** (grouped headings match the analysis areas). Session restore recreates dynamic rows from saved **`reportSec_*`** keys in **`ui.inputs`** ([index.html](index.html)). **`REPORT_SECTIONS_DEFAULT`** in [js/nebula_report.js](js/nebula_report.js) is now **`['matrix_meta']`** only.
+
+## [4.80] - 2026-05-14 15:23:53
+
+### Changed
+- **Report** preview: **figure captions** are edited **inline under each image** inside the preview iframe (not a separate column). Preview HTML is a variant of the export document with `<textarea>` controls wired to `window.nebulaReportPreviewCaptionInput`; **`lastReportHtml`** for **Save Report** is rebuilt from cached PNG blocks on a short debounce and flushed before download ([js/nebula_report.js](js/nebula_report.js)). Preview iframe sandbox includes **`allow-scripts`** for that wiring; parent sidebar copy updated ([index.html](index.html), [css/main.css](css/main.css)).
+
+## [4.79] - 2026-05-14 15:12:24
+
+### Changed
+- **Report** tab: **figure caption** textareas moved from the **left sidebar** into the **main preview column**, in a **scrollable panel beside the HTML preview** (responsive: captions stack under the preview on narrow widths). Same `data-report-caption` fields and export behavior as v4.78 ([index.html](index.html), [css/main.css](css/main.css)).
+
+## [4.78] - 2026-05-14 14:58:26
+
+### Changed
+- **Add to Report**: opens a **modal** with a **preset figure caption** (editable), **Stay on current tab** vs **Open Report tab**, then saves to **`window.nebulaReportFigureCaptions`** and enables the section. **Report** sidebar gains **Figure captions** (per-image textareas) for later edits; captions render as **figcaption** in exported HTML (`white-space:pre-wrap`). Session snapshot stores **`reportFigureCaptions`** ([index.html](index.html), [css/main.css](css/main.css), [js/nebula_report.js](js/nebula_report.js)).
+
+## [4.77] - 2026-05-14 14:37:36
+
+### Added
+- **Add to Report** on every **Report-export** figure card: **Data QC → Overall** (per-column summary, box plot, total log), **Data PreProcess → Column profile** (ranked bar + treemap), **Column correlation** (scatter matrix + distance heatmap), **Clustering → Heatmap**, **Clustering → PCA** (2D panel). Shared **`addFigureToReport(sectionId)`** checks prerequisites, redraws when needed, checks the matching **`reportSec_*`** box, and opens **Report** ([index.html](index.html), [css/main.css](css/main.css)). Report sidebar hint updated.
+
+## [4.76] - 2026-05-14 14:29:35
+
+### Added
+- **Data QC → Overall**: **Add to Report** button beside **Per-column summary** — checks **Per-column summary (bar)** on the Report tab, redraws the Plotly figure, opens **Report**, and shows a short status hint ([index.html](index.html), [css/main.css](css/main.css)).
+
+## [4.75] - 2026-05-14 13:45:45
+
+### Changed
+- **Data QC → Overall → Per-column summary (Plotly)**: y-axis tick labels use **full `columnHeaders` text** (horizontal layout + auto height make this practical). Left margin scales up to **720px**; row height steps up slightly for very long names. **`colCorrUniquePlotlyXLabels`** now keeps the **first** occurrence of a duplicate header unchanged and appends **` [n]`** to later duplicates ([index.html](index.html)). `colCorrComputePerColumnSummaryValues` no longer builds unused 22-char short labels.
+
+## [4.74] - 2026-05-14 13:36:47
+
+### Changed
+- **Data QC → Overall**: all three figures use a **horizontal** layout (samples on the vertical axis, values read left-to-right). **Chart height scales with sample count** (caps apply for very large studies): Plotly per-column summary sets explicit `layout.height` and host min-height; D3 **box plot** and **total log signal** SVGs use the same idea via `overallDashHeightForSamples` ([index.html](index.html), [js/data_qc_overall_dashboard.js](js/data_qc_overall_dashboard.js), [css/main.css](css/main.css)). Captions and docs (**Document → Overview**, `doc/columncorrelation.md`, `doc/report.md`) updated; `doc/docs_bundle.js` regenerated.
+
+## [4.73] - 2026-05-14 13:27:08
+
+### Fixed
+- **Data QC → Overall → Per-column summary (Plotly)**: long DIANN-style column headers were shortened with `colCorrShortLabel` to 22 characters, so many samples shared the same tick text. Plotly treats duplicate `x` categories as one bar (overlapping), which made **fewer bars than columns** while the title still reported the full count. Duplicate short labels are now disambiguated (`#columnIndex`), and hover shows the **full** column name ([index.html](index.html)).
+
+## [4.72] - 2026-05-10 20:01:45
+
+### Fixed
+- **Report preview / export**: `runPool` async collectors used a shared **`var idx`** in `.then` callbacks, so `results[i]` was often never set and sections showed **“No data.”** despite plots working. Use **`let taskIdx`** per iteration (and `.catch` per task) ([js/nebula_report.js](js/nebula_report.js)).
+
+## [4.71] - 2026-05-10 19:57:08
+
+### Fixed
+- **Report → Matrix and meta summary** / preview gate: use **`currentDataMatrix` or `currentData.dataMatrix`** (same fallback as elsewhere in Nebula) so the section is not blank when only `dataMatrix` is populated; clearer empty message; row-count mismatch note; try/catch around HTML build. Report iframe **`sandbox="allow-same-origin"`** for blob preview ([js/nebula_report.js](js/nebula_report.js), [index.html](index.html), [doc/report.md](doc/report.md)).
+
+## [4.70] - 2026-05-10 19:51:18
+
+### Removed
+- **Report** tab: **Overall QC summary strip** checkbox and report section (redundant with matrix summary + Overall figure sections).
+
+## [4.69] - 2026-05-10 19:49:15
+
+### Fixed
+- **Report → Overall QC summary strip**: documents what the strip is (three Overall “pills”); if `#dataQcOverallSummaryStrip` is still empty, the report now **rebuilds the same HTML** via `DataQcOverallDashboard.summaryStripHtmlFromStats` + `computeColumnStats` ([js/data_qc_overall_dashboard.js](js/data_qc_overall_dashboard.js), [js/nebula_report.js](js/nebula_report.js)).
+
+## [4.68] - 2026-05-10 19:24:27
+
+### Changed
+- **Report → Matrix and meta summary**: embeds **Data QC → Overall** statistics via `DataQcOverallDashboard.computeColumnStats` (per-sample quantified counts, log quartiles / whiskers, total Σ log10(1+I), matrix sparsity) plus an expanded **meta table** summary (`Sample_ID` match counts, annotation column coverage). `computeColumnStats` now returns `nQuant` per column in one pass ([js/data_qc_overall_dashboard.js](js/data_qc_overall_dashboard.js), [js/nebula_report.js](js/nebula_report.js), [doc/report.md](doc/report.md)).
+
+## [4.67] - 2026-05-10 18:25:11
+
+### Changed
+- **Report** tab: **Save Report** replaces **Generate Report** — the **preview** refreshes **automatically** when you open the tab or change section checkboxes (debounced); **Save** downloads the cached preview HTML (`NebulaReport.refreshReportPreview`, `NebulaReport.saveReport`). Session restore triggers a preview refresh when applicable ([js/nebula_report.js](js/nebula_report.js), [index.html](index.html), [doc/report.md](doc/report.md)).
+
+## [4.66] - 2026-05-10 18:21:12
+
+### Changed
+- **Report** tab: **Generate Report** moved to the **sidebar** (Actions); the **main panel** is an **iframe preview** of the exported HTML (same blob as download). `NebulaReport.setPreviewIframe` / optional `previewIframe` on `generateHtmlReport` ([js/nebula_report.js](js/nebula_report.js), [index.html](index.html), [css/main.css](css/main.css)).
+
+## [4.65] - 2026-05-10 18:15:33
+
+### Added
+- **Report** tab (before **Document**): checkbox-driven **MVP HTML export** — one downloadable file with embedded Plotly PNGs and D3 SVG rasterization for Overall charts (`js/nebula_report.js`). Session snapshot persists report checkboxes. Documented in [doc/report.md](doc/report.md) and in-app **Document** outline.
+
 ## [4.64] - 2026-05-10 12:24:31
 
 ### Added

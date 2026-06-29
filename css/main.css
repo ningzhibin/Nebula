@@ -469,6 +469,41 @@
             white-space: nowrap;
         }
 
+        .donate-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #ffb347 0%, #ff8c1a 100%);
+            color: #5a3000;
+            font-size: 12px;
+            font-weight: 700;
+            text-decoration: none;
+            white-space: nowrap;
+            border: 1px solid #f0911f;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+            transition: filter 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+        }
+        .donate-btn:hover {
+            filter: brightness(1.05);
+            box-shadow: 0 2px 6px rgba(255, 140, 26, 0.45);
+            transform: translateY(-1px);
+        }
+        .donate-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+        }
+        .donate-btn-icon {
+            width: 15px;
+            height: 15px;
+            flex: 0 0 auto;
+        }
+        @media (max-width: 900px) {
+            .donate-btn span { display: none; }
+            .donate-btn { padding: 6px 9px; }
+        }
+
         .analysis-toggle-btn {
             border: 1px solid var(--md-border);
             background: var(--md-bg-elevated);
@@ -690,6 +725,243 @@
         /* Enrichr results table: bar highlights + sticky header (same style as the legacy standalone SAINT report) */
         #enrichrTab.tab-content { min-height: 0; }
         #enrichrTab .tab-main-content { overflow-y: auto; }
+
+        /* Report tab: sidebar + scrollable in-page preview (direct DOM mount, no iframe) */
+        #reportTab.tab-content { min-height: 0; }
+        #reportTab .report-preview-shell {
+            flex: 1;
+            min-height: 0;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+            overflow: hidden;
+            background: var(--md-bg-surface);
+        }
+        #reportTab .report-preview-iframe-wrap {
+            flex: 1;
+            min-height: 0;
+            min-width: 0;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        #reportTab .report-preview-root {
+            flex: 1;
+            min-height: 0;
+            overflow-x: hidden;
+            overflow-y: auto;
+            padding: 16px 20px 24px;
+            background: #fff;
+        }
+        #reportTab .report-preview-root .nebula-report-preview-title {
+            font-size: 1.35rem;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 8px;
+            margin: 0 0 8px;
+            color: #1f2937;
+        }
+        #reportTab .report-preview-root .nebula-report-preview-section-title {
+            font-size: 1.05rem;
+            margin-top: 28px;
+            margin-bottom: 8px;
+            color: #374151;
+        }
+        #reportTab .report-preview-root .nebula-report-muted {
+            color: #6b7280;
+            font-size: 0.95rem;
+            margin: 0 0 12px;
+        }
+        #reportTab .report-preview-root .nebula-report-fragment {
+            font-size: 0.9rem;
+        }
+        #reportTab .report-preview-root .nebula-report-figure--preview {
+            margin: 12px 0;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            background: #fff;
+        }
+        #reportTab .report-preview-root .nebula-report-pca3d-host {
+            line-height: 0;
+            overflow: hidden;
+            background: #fff;
+            box-sizing: border-box;
+            position: relative;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+        }
+        #reportTab .report-preview-root .nebula-report-pca3d-host svg {
+            display: block;
+            max-width: none;
+        }
+        #reportTab .report-preview-root .nebula-report-pca3d-hint {
+            font-size: 0.82rem;
+            color: #4338ca;
+            margin: 4px 0 0;
+        }
+        #reportTab .report-preview-root .nebula-report-pca3d-static-note {
+            font-size: 0.82rem;
+            color: #b45309;
+            margin: 4px 0 0;
+        }
+        #reportTab .report-preview-root .nebula-report-preview-caption {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #e5e7eb;
+        }
+        #reportTab .report-preview-root .nebula-report-cap-label {
+            display: block;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 4px;
+        }
+        #reportTab .report-preview-root .nebula-report-caption-edit {
+            width: 100%;
+            box-sizing: border-box;
+            font-size: 0.82rem;
+            line-height: 1.4;
+            padding: 8px 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 4.5em;
+        }
+        #reportTab .report-preview-root .nebula-report-svg-host {
+            line-height: 0;
+            overflow: hidden;
+            background: #fff;
+            box-sizing: border-box;
+        }
+        #reportTab .report-preview-root .nebula-report-svg-host svg {
+            display: block;
+            max-width: none;
+        }
+        #reportTab .report-preview-root .nebula-report-plotly-host {
+            max-width: none;
+            box-sizing: border-box;
+        }
+        #reportTab .report-preview-placeholder {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(249, 250, 251, 0.97);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Add to Report modal + toast (global) */
+        .nebula-add-report-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 30000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            box-sizing: border-box;
+        }
+        .nebula-add-report-modal[aria-hidden="false"],
+        .nebula-add-report-modal.nebula-add-report-modal--open {
+            display: flex;
+        }
+        .nebula-add-report-modal-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.45);
+        }
+        .nebula-add-report-modal-dialog {
+            position: relative;
+            z-index: 1;
+            width: min(520px, 100%);
+            max-height: min(90vh, 640px);
+            overflow: auto;
+            background: var(--md-bg-surface, #fff);
+            border: 1px solid var(--md-border, #e5e7eb);
+            border-radius: var(--md-radius-md, 8px);
+            box-shadow: 0 18px 48px rgba(0, 0, 0, 0.18);
+            padding: 16px 18px 14px;
+        }
+        .nebula-add-report-modal-h3 {
+            margin: 0 0 6px 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: #111827;
+        }
+        .nebula-add-report-modal-figure {
+            margin: 0 0 10px 0;
+            color: #4b5563;
+        }
+        .nebula-add-report-caption-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 4px;
+        }
+        .nebula-add-report-caption-textarea {
+            width: 100%;
+            box-sizing: border-box;
+            min-height: 120px;
+            padding: 8px 10px;
+            font-size: 12px;
+            line-height: 1.4;
+            border: 1px solid var(--md-border, #d1d5db);
+            border-radius: 6px;
+            font-family: inherit;
+            resize: vertical;
+        }
+        .nebula-add-report-nav-fieldset {
+            border: 0;
+            margin: 12px 0 0 0;
+            padding: 0;
+        }
+        .nebula-add-report-nav-fieldset legend {
+            padding: 0;
+            margin-bottom: 6px;
+            color: #4b5563;
+        }
+        .nebula-add-report-nav-label {
+            display: block;
+            font-size: 12px;
+            margin: 4px 0;
+            color: #374151;
+            cursor: pointer;
+        }
+        .nebula-add-report-modal-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 14px;
+            justify-content: flex-end;
+        }
+        .nebula-toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(120%);
+            z-index: 30001;
+            max-width: min(480px, calc(100vw - 32px));
+            padding: 10px 16px;
+            background: #1f2937;
+            color: #f9fafb;
+            font-size: 13px;
+            line-height: 1.4;
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            transition: transform 0.25s ease, opacity 0.25s ease;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .nebula-toast.nebula-toast--visible {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
         #enrichrResultsContainer .enrichr-table-wrap {
             overflow: auto;
             -webkit-overflow-scrolling: touch;
@@ -1987,34 +2259,150 @@
             color: var(--angled-tab-text-active-hover);
             filter: none;
         }
-        #pcaTab .pca-viz-tabs-row {
+        #pcaTab .pca-viz-tabs-row,
+        #pcoaTab .pca-viz-tabs-row {
             margin-bottom: 8px;
             padding-left: 0;
             padding-right: 0;
         }
-        #pcaTab .pca-viz-panels {
+        #pcaTab .pca-viz-panels,
+        #pcoaTab .pca-viz-panels {
             flex: 1;
             min-height: 0;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
         }
-        #pcaTab .pca-viz-panel {
+        #pcaTab .pca-viz-panel,
+        #pcoaTab .pca-viz-panel {
             display: none;
             flex: 1;
             min-height: 0;
+            overflow: hidden;
         }
-        #pcaTab .pca-viz-panel.active {
+        #pcaTab .pca-viz-panel.active,
+        #pcoaTab .pca-viz-panel.active {
             display: flex;
             flex-direction: column;
-        }
-        #pcaTab #pcaPlot.plot-container,
-        #pcaTab #pcaPlot3d.plot-container {
             flex: 1;
+            min-height: 0;
+        }
+        #pcaVizPanelDetails .pca-details-content {
+            flex: 1;
+            min-height: 0;
+            overflow: auto;
+            padding: 6px 12px 24px;
+        }
+        .pca-details-summary {
+            margin-bottom: 14px;
+        }
+        .pca-details-summary-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        .pca-details-summary-grid > div {
+            flex: 1 1 120px;
+            background: #f6f8fa;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            padding: 8px 12px;
+            text-align: center;
+        }
+        .pca-details-kpi {
+            display: block;
+            font-size: 20px;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+        .pca-details-kpi-label {
+            display: block;
+            font-size: 11px;
+            color: #6a737d;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        .pca-details-section {
+            margin-bottom: 20px;
+        }
+        .pca-details-section-title {
+            margin: 0;
+            font-size: 14px;
+            color: #2c3e50;
+        }
+        .pca-details-note {
+            font-size: 11.5px;
+            color: #6a737d;
+            line-height: 1.4;
+            margin: 6px 2px 0;
+        }
+        .pca-details-scree-plot {
             width: 100%;
-            min-height: 420px;
+            min-height: 240px;
+            margin: 6px 0;
+        }
+        .pca-details-table-host {
+            max-height: 360px;
+            overflow: auto;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            margin-top: 6px;
+        }
+        table.pca-details-table {
+            border-collapse: collapse;
+            width: 100%;
+            font-size: 12px;
+        }
+        table.pca-details-table th,
+        table.pca-details-table td {
+            padding: 5px 10px;
+            border-bottom: 1px solid #eef0f2;
+            text-align: left;
+            white-space: nowrap;
+        }
+        table.pca-details-table td.num,
+        table.pca-details-table th.num {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+        table.pca-details-table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background: #2c3e50;
+            color: #fff;
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+        }
+        table.pca-details-table thead th[data-sort="asc"]::after { content: " \\25B2"; font-size: 9px; }
+        table.pca-details-table thead th[data-sort="desc"]::after { content: " \\25BC"; font-size: 9px; }
+        table.pca-details-table tbody tr:nth-child(even) { background: #f9fafb; }
+        table.pca-details-table tbody tr:hover { background: #eef6ff; }
+        #pcaTab #pcaVizPanel2d .nebula-graph-headrow,
+        #pcaTab #pcaVizPanel3d .nebula-graph-headrow,
+        #pcaTab #pcaVizPanelDetails > .nebula-graph-headrow {
+            flex: 0 0 auto;
+            flex-shrink: 0;
+            margin-bottom: 6px;
+        }
+        /* 2D/3D: fixed pixel height set in JS (sidebar height minus headrow); do not flex-grow with SVG. */
+        #pcaTab #pcaVizPanel2d #pcaPlot.plot-container,
+        #pcaTab #pcaVizPanel3d #pcaPlot3d.plot-container {
+            flex: 0 0 auto;
+            width: 100%;
+            min-width: 0;
             position: relative;
             overflow: hidden;
             background: #fff;
+            padding: 4px 6px 6px;
+            box-sizing: border-box;
+        }
+        #pcaTab #pcaVizPanel2d #pcaPlot #pcaPlaceholder,
+        #pcaTab #pcaVizPanel3d #pcaPlot3d #pcaPlaceholder3d {
+            min-height: 280px;
+            height: 100%;
         }
         /* D3 PCA plot export: icon pair only (no surrounding bar box) */
         #pcaTab .pca-export-bar {
@@ -2486,10 +2874,47 @@
             min-height: 380px;
         }
 
+        /* Title row + “Add to Report” (Data QC, Column profile, Correlation, Clustering) */
+        .nebula-graph-headrow {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px 12px;
+            margin-bottom: 8px;
+        }
+        .nebula-graph-headrow .nebula-graph-head-title {
+            margin: 0;
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+        .nebula-add-report-btn {
+            flex: 0 0 auto;
+            font-size: 12px;
+            padding: 5px 12px;
+            white-space: nowrap;
+        }
+        #tableColumnProfilePanel .col-profile-plot-card .nebula-graph-headrow .nebula-graph-head-title,
+        #tableColumnCorrelationPanel .col-profile-plot-card .nebula-graph-headrow .nebula-graph-head-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #444;
+        }
+        #heatmapTab .heatmap-plot-card .nebula-graph-headrow .nebula-graph-head-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        #pcaTab .nebula-graph-headrow .nebula-graph-head-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
         .data-qc-overall-summary-plot-host {
             width: 100%;
-            min-height: 360px;
-            height: 400px;
+            min-height: 260px;
+            height: auto;
         }
         #upsetTab .upset-comb-details {
             margin-top: 12px;
@@ -3038,6 +3463,9 @@
             background: var(--md-bg-surface);
             padding: 10px 12px 8px;
             box-shadow: var(--md-elevation-1);
+        }
+        .data-qc-overall-card .nebula-graph-headrow .data-qc-overall-card-title {
+            margin: 0;
         }
         .data-qc-overall-card-title {
             margin: 0 0 6px 0;
