@@ -1,25 +1,50 @@
-### Differential analysis
+### 19. Differential analysis
 
-The sidebar is arranged in **two aligned columns**: **Comparison** next to **Significance cutoffs**, then **Data and test** next to **Plots and display** (narrow screens stack to a single column).
+The **Downstream > Differential** sub-tab tests every feature for differences between sample groups and visualizes the results: volcano plot, MA plot, p-value histogram, an optional group heatmap, and a sortable results table. It runs on the current matrix with the meta table groups.
 
-The top-level **Differential** tab compares groups on the loaded intensity matrix using a **metadata column** (all columns except `Sample_ID`). Matrix column headers are matched to meta rows by `Sample_ID` (same join as technical-replicate filtering).
+#### Setting up the comparison
 
-**Two groups (default):** Choose **Group A** and **Group B**. Per-feature **Welch** (default) or **Student** *t*-tests. Optional **Log2(x + 1)** before testing; with it on, **log2FC** is the difference of group means on that scale. Without log transform, **log2FC** is `log2((meanB + pseudocount)/(meanA + pseudocount))` on linear means. **Treat 0 / invalid as missing** and **Min valid values per group** apply per group. Two-sided *p*-values use the Student *t* CDF (incomplete beta). Each group needs at least **two samples**.
+- **Comparison mode** - `Two groups` (default) or `Multiple groups (ANOVA / Kruskal-Wallis)`. The two-group test is chosen in **Test (two groups)** below (default **Moderated t (limma)**).
+- **Group by (meta column)** - the meta column that defines the groups (e.g. Group or Treatment).
+- Two groups: pick **Group A** (usually the baseline) and **Group B** (usually the treatment).
+- Multiple groups: tick the **Groups to include** checkboxes (at least 2 groups, each with n >= 2) and choose the **Multi-group test**: `One-way ANOVA (equal variance)` or `Kruskal-Wallis (rank-based)`.
+- The group-count line shows how many samples each group has.
 
-**Volcano / MA (two-group):** The volcano plot x-axis title is **log2 fold change (Group B vs Group A)** using the **selected meta labels** for those groups (not the letters “A”/“B”). The MA plot y-axis uses the same **(Group B vs Group A)** wording; the MA x-axis title names both groups in the “½(mean A + mean B)” expression. Very long labels are shortened in axis titles only.
+#### Significance cutoffs
 
-**Volcano labels:** Optional sidebar control **Show labels for significantly changed** (on by default) draws feature names on the volcano **only for points that are not `NS`** — the same classification as point coloring (including fudge-volcano mode). The number of labels per view is **capped** (roughly **35–120**, more when zoomed in) so the plot stays readable. **Two-group** mode **splits** that budget between **up** (log2FC &gt; 0) and **down** (log2FC &lt; 0) so a dense cloud of up-regulated points does not use every slot and hide down-regulated names; any spare capacity after one side runs out goes to the other. Within each side (and for **ANOVA** mode, globally), candidates are ranked by **stronger −log10 *p* or FDR** on the y-axis and then by **larger |x|** (|log2FC| or ANOVA x-metric). Placement uses **`ScatterLabelOptimize`** (`js/scatter_label_optimize.js`) to reduce overlap; labels refresh after **zoom / pan**.
+- **|log2FC|** (default 1) and the synchronized **Fold change** (default 1.5; FC = 2^|log2FC|) - used for two-group significance coloring.
+- **p-value cutoff** (default 0.05) and **FDR cutoff (when BH)** (default 0.05).
 
-**Multiple groups:** Mode **Multiple groups (ANOVA / Kruskal–Wallis)** shows a checklist of meta levels (all checked by default). Each **included** group must have at least two samples after the meta join. Tests run on the same transformed scale as two-group mode. **One-way ANOVA** uses the classical *F*-test (equal variances between groups). **Kruskal–Wallis** is rank-based; raw-*p* uses a χ² approximation (Wilson–Hilferty) on *H* with *k*−1 df. Effect summaries include partial η² (ANOVA: SSB/SST; KW: (H−df)/(N−1) as a simple effect-size style quantity).
+#### Data & test options
 
-**Multi-group plots:** **Volcano** uses **η²** or the test statistic (*F* or *H*) on the x-axis vs −log10(*p*) or −log10(FDR). Cutoffs in the sidebar (η², optional minimum statistic) combine with *p*/FDR for point coloring. **Mean range** (formerly MA for two groups) plots grand mean of group means vs (max − min) group mean. **Group heatmap** shows the top *N* features by raw *p* with optional row z-score. **P-value histogram** is unchanged.
+- **Feature label (table & hover)** - which annotation to show (`Matrix row ID`, `Protein.Names`, `Genes`, `Protein.Group`, `First.Protein.Description`).
+- **Log2(x+1)** - checked by default; log-transform the matrix before testing.
+- **0 / invalid = missing** - checked by default; treat zeros and non-finite values as missing.
+- **Min valid / group** (default 1) - a feature needs at least this many valid values per group to be tested.
+- **FC pseudocount** (default 1) - added to group means before the fold-change ratio.
+- **Test (two groups)** - `Moderated t (limma)` (default, recommended for proteomics with small sample counts and missing values — empirical-Bayes variance moderation), `Welch (unequal variance)`, or `Student (pooled variance)`.
+- **Multiple testing** - `Benjamini-Hochberg FDR` (default), `Bonferroni`, `Storey q-value`, or `None`.
 
-**Multiple testing:** **None**, **Benjamini–Hochberg FDR**, or **Bonferroni** on the vector of raw *p*-values across tested features (same for *t*-test, ANOVA, and Kruskal–Wallis).
+#### Plots & display
 
-**Results table (two-group) — `t` and `df`:** `t` is the two-sample *t*-statistic (difference in group means relative to its standard error). Larger `|t|` means stronger separation relative to noise. `df` is the degrees of freedom used by the *t*-distribution to compute the raw *p*-value. With **Student** test (pooled variance), df ≈ n_A + n_B − 2. With **Welch** test (unequal variance), `df` uses the Welch–Satterthwaite approximation and may be non-integer.
+- **Volcano Y-axis** - `-log10(FDR)` (default) or `-log10(p)`.
+- **Show labels for significantly changed** - checked; labels significant hits (label budget split between up and down so down-regulated hits are not crowded out; overlap-optimized placement updates on zoom/pan).
+- **Fudge factor volcano** (SAM-style, two groups only, hidden until you run a two-group test... toggle it on to enforce a joint p/FDR + fold-change-vs-standard-error rule; **Fudge s0** default 0.05).
+- Multi-group: **Volcano x-axis** - `eta^2 (effect size)` or `Test statistic (F or H)`; **eta^2 min** (default 0.02; omitted for Kruskal-Wallis) and **F/H min** (default 0 = ignore).
+- **Group heatmap: top N (by p)** (default 40) and **Z-score rows (heatmap)** (checked) - for the multi-group heatmap.
 
-**Fudge factor volcano (two-group only):** Optional **SAM-style** joint rule inspired by Giai Gianetto *et al.*, *Proteomics* 2016 (uses and misuses of the fudge factor). On the tested scale, **SE** of the mean difference is approximated as **|log2FC / t|** (when *t* ≈ 0, the median SE across features is used). User **s₀** adds to SE in the denominator: **d = |log2FC| / (SE + s₀)**. The **green guide** uses **median SE** and **median df**: two line traces (negative and positive log2FC, small gap at 0). For |log2FC| ≥ **need = t★(median SE + s₀)**, **y = y₀ = −log10(α)** (flat tails). For |log2FC| < need, height rises in a **1/|x|** (hyperbolic) way from **y₀** at |x| = need to **y_cap** at the inner edge of the drawn branch, so the silhouette is flat at the sides and curved “wings” toward the center — not a smooth dome. **Point colors** (volcano, MA, results table) use the **same median-based boundary**: a feature is red/blue if its plotted y (−log10 *p* or FDR, same cap as the plot) lies **on or above** that curve at its log2FC and the fold direction matches the sign of log2FC. **p_mod** in the tooltip still uses each feature’s own SE and df (`diffStudentTTwoTailP(d, df)`) as a *t*-distribution shorthand — **not** full SAM permutation. Multi-group ANOVA/Kruskal–Wallis keeps the rectangular volcano; fudge controls are hidden in that mode.
+#### Running and results
 
-**Session JSON:** Saves `diffAnalysisMode`, multi-group test, volcano x-axis and effect cutoffs, heatmap options, `diffVolcanoFudgeFactor`, `diffFudgeS0`, `diffVolcanoSigLabels`, and the list of checked ANOVA levels (`diffAnovaIncludedLevels`) so imports can rebuild the checklist after the meta column is repopulated. **formatVersion 3+** also stores the full `diffAnalysisLastResult` and table sort state so volcano / MA / heatmap / table restore without recomputation.
+1. Configure the comparison and cutoffs.
+2. Press **Run differential analysis**; a summary box reports the number of significant hits.
+3. Browse the sub-tabs:
+   - **Volcano** - log2FC vs -log10(p/FDR); significant hits colored (up/down), optional labels.
+   - **MA plot** - mean intensity vs log2FC.
+   - **P-value histogram** - distribution of raw p-values.
+   - **Group heatmap** (multi-group only) - top N features by p; group means on the tested scale with optional row z-score.
+   - **Results table** - sortable table (Feature, mean A, mean B, log2FC, t, df, p, FDR, sig) with **Showing only Significant Changed** filter and **Export CSV**. It also shows the underlying **quantification**:
+     - a **Quant** column with a small **per-sample line chart** for each feature (a sparkline connecting each sample's value, dots colored by group),
+     - a **Show sample quantification columns** checkbox (on by default) that appends one column per sample (grouped by condition, values on the tested scale - log2 if the analysis used log2, else raw), and
+     - a **per-feature detail plot below the table** that appears when you **click a row**, with a **Detail plot: Line / Bar / Boxplot / Violin** selector (default Boxplot): **Line** / **Bar** show every sample (colored by group, with group labels and n), while **Boxplot** / **Violin** summarize each group (jittered points, median). Changing the selector re-plots the selected row.
 
-**Not in scope (browser-only tool):** Paired tests and full **limma** empirical Bayes or **SAM** permutation calibration. **DESeq2 / edgeR / limma-voom** require count matrices, normalization/dispersion, and an R/Bioconductor runtime — they are **not** implemented here. For RNA-seq–style DE, export intensities and design to R or a dedicated pipeline.
+See also: *20. SAINT analysis*, *21. Enrichr enrichment*, *22. Report export*.

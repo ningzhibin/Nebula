@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Figure — pop-out</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        #banner {
+            padding: 8px 16px;
+            background: #667eea;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        #banner .hint { font-weight: 400; font-size: 12px; opacity: 0.9; }
+        #root {
+            flex: 1;
+            min-height: 0;
+            overflow: auto;
+            padding: 14px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+        }
+        #img { display: none; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; }
+        #img.fit { max-width: 100%; height: auto; }
+        #waiting { font-size: 13px; line-height: 1.45; color: #555; }
+        #err { padding: 24px; color: #b00; max-width: 720px; line-height: 1.45; }
+    </style>
+</head>
+<body>
+    <div id="banner">
+        <span id="bannerTitle">Figure pop-out</span>
+        <label class="hint"><input type="checkbox" id="fitToggle" checked> fit width</label>
+        <span class="hint">(static snapshot)</span>
+    </div>
+    <div id="root">
+        <p id="waiting">Receiving figure from the main window…</p>
+        <img id="img" alt="figure snapshot">
+    </div>
+    <script>
+        (function () {
+            var QC_SOURCE = 'DataMatrixQC';
+            var QC_TYPE = 'image_popout_payload';
+            var STORAGE_KEY = 'qc_image_popout';
+            var dataAccepted = false;
+            var waitingEl = document.getElementById('waiting');
+            var imgEl = document.getElementById('img');
+            var bannerTitleEl = document.getElementById('bannerTitle');
+            var fitToggle = document.getElementById('fitToggle');
+
+            function showErr(html) {
+                if (dataAccepted) return;
+                if (waitingEl) waitingEl.style.display = 'none';
+                imgEl.style.display = 'none';
+                var err = document.getElementById('err');
+                if (!err) {
+                    err = document.createElement('p');
+                    err.id = 'err';
+                    document.getElementById('root').appendChild(err);
+                }
+                err.innerHTML = html;
+            }
+
+            function applyFit() { imgEl.classList.toggle('fit', !!fitToggle.checked); }
+
+            function render(payload) {
+                if (dataAccepted) return;
+                if (!payload || !payload.src) {
+                    showErr('Invalid payload (missing image <code>src</code>).');
+                    return;
+                }
+                if (payload.title) {
+                    document.title = payload.title + ' — pop-out';
+                    bannerTitleEl.textContent = payload.title;
+                }
+                if (waitingEl) waitingEl.style.display = 'none';
+                imgEl.style.display = 'inline-block';
+                imgEl.src = payload.src;
+                applyFit();
+                dataAccepted = true;
+            }
+
+            fitToggle.addEventListener('change', applyFit);
+
+            window.addEventListener('message', function onMsg(e) {
+                var d = e.data;
+                if (!d || d.source !== QC_SOURCE || d.type !== QC_TYPE || !d.payload) return;
+                render(d.payload);
+                window.removeEventListener('message', onMsg);
+            });
+
+            var raw = null;
+            try { raw = sessionStorage.getItem(STORAGE_KEY); } catch (e) { raw = null; }
+            if (raw) {
+                try {
+                    var payload = JSON.parse(raw);
+                    if (payload && payload.src) { render(payload); return; }
+                } catch (e2) { showErr('Invalid stored data.'); return; }
+            }
+
+            setTimeout(function () {
+                if (dataAccepted) return;
+                showErr('No figure received. In the app, render the figure, then click <strong>Pop out</strong> (allow pop-ups).');
+            }, 8000);
+        })();
+    </script>
+</body>
+</html>

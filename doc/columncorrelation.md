@@ -1,15 +1,40 @@
-### Column correlation
+### 9. Data QC — Column correlation
 
-**Data PreProcess** sub-tab **Column Correlation** (after **Column profile**) explores **sample–sample** relationships: matrix **columns** are treated as vectors over rows (features). This is **QC / replicate agreement**, not differential expression.
+The **Data QC > Column correlation** sub-tab is sample-vs-sample QC: a **Correlation matrix**, a **Distance matrix**, and pairwise comparisons between two chosen columns. Its shared scale controls also drive the Data QC > Overall per-column summary.
 
-**Transforms and missing values:** Choose **none**, **log10(1 + x)**, or **log2(1 + x)**. Optional **Treat 0 as missing** (default on) matches DIANN-style intensity QC. Pair plots and correlations use **pairwise-complete** rows only (finite values after transform and missing rules).
+#### Shared scale (applies to all three views and Data QC > Overall)
 
-**Nested tab strip:** Uses the same `data-filter-inner-tabs-row` / `data-filter-inner-tab` styling as **Data PreProcess → Data Filter** (e.g. Row Filter → Passed). **Overall correlations** shows subset heatmaps plus a mixed matrix plot: **lower triangle** = pairwise scatter plots; **upper triangle** = color-coded correlation cells. **Paired correlation** shows scatter, QQ, Bland–Altman, and the bar chart of **r(column X, j)** for each column *j* in the heatmap subset.
+- **Transform** - `log10(1 + intensity)` (default), `log2(1 + intensity)`, or `None (raw intensity)`.
+- **Treat 0 as missing** - checked by default; zeros are excluded wherever the metric uses observed values.
+- **Refresh plots** - redraws the visible view (the Overall summary respects the same settings).
 
-**Pair plots:** Pick **Column X** and **Column Y** (sidebar on the Paired tab); scatter includes an identity line when scales match. **QQ** compares sorted quantiles. **Bland–Altman**: difference vs mean, or **log2(Y/X)** vs geometric mean when both raw values are strictly positive.
+#### Correlation matrix (inner tab)
 
-**Correlation and distance matrices:** **Pearson** or **Spearman** (ranks with average ties, then Pearson on ranks). Matrices use the **first N** columns in file/matrix order (*Max columns in heatmaps*, default 40, cap 80). **Distance**: **1 − r**, **√(2(1 − r))**, or **Euclidean** on **z-scored** column vectors (pairwise-complete rows).
+A **scatter-correlation matrix** of the sample columns: lower triangle shows the pairwise scatter plots, upper triangle the correlation cells, colored by the correlation value.
 
-**Per-column summary (Plotly):** Lives on **Data QC → Overall** — **horizontal** bars for **every** sample column (**Bar metric**: mean raw intensity, mean transformed intensity, **non-zero feature count**, or detection rate); chart **height scales** with sample count; **v4.75+** y-axis labels use the **full column header** (duplicate headers get ` [2]`, ` [3]`, …). Uses the same **Transform** and **Treat 0 as missing** rules as this tab’s **Shared scale** block where those metrics apply. See **Document → Overview** subsection *Data QC → Overall — Bar metric* for definitions.
+- **Color theme** - `Default` (RdBu cells + violet scatter dots), `Distinct (Category10)`, `Warm`, `Cool`, `Pastel`, `Dark`, `High contrast` - correlation cells use a diverging colorscale per theme; the choice persists between sessions.
+- **Correlation metric** - `Pearson` (default) or `Spearman`.
+- **Max columns in heatmaps** - default 40 (range 3-80): the first N columns in matrix order are used (O(N^2) work).
 
-**Session JSON** saves the sidebar control values (`colCorr*` ids) so imports restore your settings; reopen the sub-tab or use **Refresh plots** to redraw.
+#### Distance matrix (inner tab)
+
+A heatmap of pairwise distances between sample columns. **Distance from correlation** (visible only on this tab):
+
+- `1 - r` (default)
+- `sqrt(2(1 - r))`
+- `Euclidean (z-scored columns, pairwise rows)`
+
+The distance heatmap stretches to the full panel height and uses the theme's sequential colorscale.
+
+#### Paired correlation (inner tab)
+
+Pick **Column X** and **Column Y**, plus a **Feature label (hover)**, and four figures compare the pair:
+
+- **Pair scatter (Y vs X)** - scatter of the two columns with the correlation coefficient.
+- **QQ plot (sorted quantiles)** - quantile-quantile comparison of the two columns.
+- **Bland-Altman** - agreement plot; mode: `Difference (Y - X) vs mean` (default) or `log2(Y/X) vs geometric mean (raw > 0)`.
+- **Correlation with column X** - every other column's correlation against Column X, highlighting the chosen Y.
+
+Each figure card has **Add to Report** (the capture switches to the Paired correlation view so the embed reflects the current Column X / Column Y selection). The status line under the figures reports the active figure's settings.
+
+See also: *6. Data QC - Overall*, *22. Report export*.

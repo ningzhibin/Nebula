@@ -24,6 +24,14 @@
             font-size: 16px !important;
         }
 
+        /* Shared "small" text (notes, hints, captions, status lines — used on every tab).
+           Never defined after the inline-CSS migration, so it used to render at the 16px
+           base size (bigger than the 12px tab labels). Pin it to the app's standard small
+           size so all tabs' notes/status text matches. */
+        .small {
+            font-size: 12px;
+        }
+
         /* Shared “chrome tab” theme: aligned with flat warm Material-style shell (--md-*) */
         :root {
             /* App-wide flat warm palette (matches top-level tab taupe / cream) */
@@ -68,50 +76,9 @@
             --chrome-tab-text-hover: var(--md-text-primary);
             --chrome-tab-border: var(--md-border);
             --chrome-tab-row-border: var(--md-border-subtle);
-            /* Unified hierarchy gradient (same indigo color system): L1 -> L4 */
-            --subtab-active-bg: #4338ca;        /* Level 2 */
-            --subtab-active-hover: #4f46e5;
-            --subtab-inactive-bg: #eef2ff;
-            --subtab-inactive-hover: #e0e7ff;
-            --subtab-text: #3730a3;
-            --subtab-text-hover: #312e81;
-            --subtab-border: #c7d2fe;
-            --subtab-row-border: #4338ca;
-            --thirdtab-active-bg: #6366f1;      /* Level 3 */
-            --thirdtab-active-hover: #818cf8;
-            --thirdtab-inactive-bg: #eef2ff;
-            --thirdtab-inactive-hover: #e0e7ff;
-            --thirdtab-text: #4338ca;
-            --thirdtab-text-hover: #3730a3;
-            --thirdtab-border: #c7d2fe;
-            --thirdtab-row-border: #6366f1;
-            --fourthtab-active-bg: #818cf8;     /* Level 4 */
-            --fourthtab-active-hover: #a5b4fc;
-            --fourthtab-inactive-bg: #f5f3ff;
-            --fourthtab-inactive-hover: #ede9fe;
-            --fourthtab-text: #4f46e5;
-            --fourthtab-text-hover: #4338ca;
-            --fourthtab-border: #ddd6fe;
-            --fourthtab-row-border: #818cf8;
-            /* Unified angled-tab palette (all levels) */
-            --angled-tab-inactive-start: #9a9686;
-            --angled-tab-inactive-end: #858273;
-            --angled-tab-inactive-hover-start: #a6a18f;
-            --angled-tab-inactive-hover-end: #8f8a79;
-            --angled-tab-active-start: #fffef9;
-            --angled-tab-active-end: #f4efe1;
-            --angled-tab-active-hover-start: #fffefc;
-            --angled-tab-active-hover-end: #f7f1e5;
-            --angled-tab-border: #9b9686;
-            --angled-tab-active-border: #d8d2c2;
-            --angled-tab-text: #f4f7fa;
-            --angled-tab-text-active: #9a957f;
-            --angled-tab-text-active-hover: #b9b39c;
-            /* Top-level tabs only (css_test diagonal style): height + gradient stops so labels sit inside the solid fill */
+            /* (Removed the indigo --subtab/--thirdtab/--fourthtab and warm --angled-tab palettes:
+               all tab levels now share the flat underline style built on the --md-* tokens.) */
             --top-tab-min-h: 35px;
-            /* Smaller top-left transparent wedge: solid fill starts a bit earlier (closer to css_test 29%/30%) */
-            --top-tab-grad-transparent: 10%;
-            --top-tab-grad-solid: 15%;
         }
 
         .main-container {
@@ -304,12 +271,6 @@
             color: #475569;
             margin-bottom: 2px;
         }
-        #heatmapTab .heatmap-field-hint {
-            font-size: 0.75em;
-            color: #64748b;
-            margin: 0;
-            line-height: 1.35;
-        }
         #heatmapTab .heatmap-hint {
             font-weight: 400;
             color: #94a3b8;
@@ -383,6 +344,13 @@
             display: flex;
             flex-direction: column;
         }
+        .data-prep-col-left,
+        .data-prep-col-mid {
+            flex: 0.85;
+        }
+        .data-prep-col-right {
+            flex: 1.3;
+        }
         .data-prep-col .data-prep-section {
             flex: 1;
             margin-bottom: 0;
@@ -407,6 +375,18 @@
             font-size: 1.15em;
             border-bottom: 1px solid var(--md-border-subtle);
             padding-bottom: 8px;
+        }
+
+        /* Data Preparation third column: live previews of the loaded matrix + meta table */
+        .data-prep-col-right .data-prep-preview-section {
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+        .data-prep-col-right .data-prep-view {
+            flex: 1;
+            min-height: 220px;
+            min-width: 0;
         }
 
         .tabs-row {
@@ -445,10 +425,10 @@
             display: flex;
             flex: 1;
             flex-wrap: wrap;
-            gap: 0;
-            padding: 8px 12px 0;
+            gap: 4px;
+            padding: 0 12px;
             margin: 0;
-            align-items: flex-end;
+            align-items: stretch;
         }
 
         .header-right {
@@ -456,9 +436,9 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 0 10px 6px 8px;
+            padding: 0 10px 0 8px;
             position: relative;
-            align-self: flex-end;
+            align-self: center;
         }
 
         .app-version {
@@ -469,60 +449,41 @@
             white-space: nowrap;
         }
 
-        .donate-btn {
+        /* Shared compact round icon buttons in the header — coffee (donate), "?" (docs),
+           and the +/- analysis-status toggle all use this one style (least code). The
+           coffee SVG uses stroke:currentColor, so it inherits the same text/hover color. */
+        .header-icon-btn {
+            flex: 0 0 auto;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            padding: 6px 12px;
-            border-radius: 999px;
-            background: linear-gradient(135deg, #ffb347 0%, #ff8c1a 100%);
-            color: #5a3000;
-            font-size: 12px;
-            font-weight: 700;
-            text-decoration: none;
-            white-space: nowrap;
-            border: 1px solid #f0911f;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
-            transition: filter 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
-        }
-        .donate-btn:hover {
-            filter: brightness(1.05);
-            box-shadow: 0 2px 6px rgba(255, 140, 26, 0.45);
-            transform: translateY(-1px);
-        }
-        .donate-btn:active {
-            transform: translateY(0);
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
-        }
-        .donate-btn-icon {
-            width: 15px;
-            height: 15px;
-            flex: 0 0 auto;
-        }
-        @media (max-width: 900px) {
-            .donate-btn span { display: none; }
-            .donate-btn { padding: 6px 9px; }
-        }
-
-        .analysis-toggle-btn {
+            justify-content: center;
+            width: 26px;
+            height: 26px;
+            padding: 0;
+            margin: 0;
             border: 1px solid var(--md-border);
+            border-radius: 999px;
             background: var(--md-bg-elevated);
             color: var(--md-text-primary);
-            padding: 6px 10px;
-            border-radius: var(--md-radius-sm);
-            font-size: 12px;
-            font-weight: 600;
+            font-size: 16px;
+            font-weight: 700;
+            line-height: 1;
+            text-decoration: none;
             cursor: pointer;
-            margin: 0;
-            white-space: nowrap;
             box-shadow: var(--md-elevation-0);
+            transition: box-shadow 0.15s ease, background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
         }
-
-        .analysis-toggle-btn:hover {
-            transform: none;
+        .header-icon-btn:hover,
+        .header-icon-btn.active {
+            background: var(--md-accent);
+            color: #fff;
+            border-color: var(--md-accent);
             box-shadow: var(--md-elevation-1);
-            background: var(--md-bg-surface-muted);
-            border-color: var(--md-border-strong);
+        }
+        .header-icon-btn .donate-btn-icon {
+            width: 16px;
+            height: 16px;
+            flex: 0 0 auto;
         }
 
         .analysis-log-panel {
@@ -551,76 +512,60 @@
         }
 
         /* Main top navigation — migrated from css_test.html example */
+        /* Flat "underline" top tabs (modern, slim): sentence-case text, no skew/gradient;
+           the active stage is marked by an accent underline instead of a filled block. */
         .tabs .tab {
             position: relative;
             display: inline-flex;
-            align-items: flex-end;
+            align-items: center;
             justify-content: center;
             box-sizing: border-box;
             min-height: var(--top-tab-min-h);
-            padding: 10px 18px 10px 26px;
+            padding: 11px 14px 10px;
             line-height: 1.2;
             cursor: pointer;
-            font-size: 0.84rem;
-            font-weight: 700;
+            font-size: 0.82rem;
+            font-weight: 500;
             letter-spacing: 0.01em;
-            text-transform: uppercase;
-            color: #ffffff;
-            background: linear-gradient(
-                165deg,
-                transparent var(--top-tab-grad-transparent),
-                #98927c var(--top-tab-grad-solid)
-            );
+            text-transform: none;
+            color: var(--md-text-secondary);
+            background: transparent;
             border: none;
+            border-bottom: 2px solid transparent;
             margin: 0;
             box-shadow: none;
-            transition: background 0.16s, color 0.16s;
+            transition: color 0.16s ease, border-color 0.16s ease;
         }
-        .tabs .tab::before {
-            content: "";
-            position: absolute;
-            z-index: 2;
-            left: 100%;
-            top: -100%;
-            width: 0;
-            height: var(--top-tab-min-h);
-            border-bottom: var(--top-tab-min-h) solid rgba(0, 0, 0, 0.1);
-            border-right: 7px solid transparent;
-            pointer-events: none;
-        }
+        .tabs .tab::before,
         .tabs .tab::after {
             content: none;
         }
 
-        .tabs .tab:hover,
-        .tabs .tab.active {
-            background: linear-gradient(
-                165deg,
-                transparent var(--top-tab-grad-transparent),
-                #f2eee2 var(--top-tab-grad-solid)
-            );
-            color: #98927c;
+        .tabs .tab:hover {
+            color: var(--md-text-primary);
+            background: transparent;
         }
-        .tabs .tab.active::before {
-            border-bottom: var(--top-tab-min-h) solid rgba(0, 0, 0, 0.2);
-            border-right: 20px solid transparent;
+        .tabs .tab.active {
+            color: var(--md-accent-dark);
+            font-weight: 600;
+            background: transparent;
+            border-bottom-color: var(--md-accent);
         }
         .tabs .tab.active:hover {
-            color: #98927c;
+            color: var(--md-accent-dark);
         }
 
-        /* Horizontal sub-tab rows (same rounded style as main tabs, different colors) */
+        /* Horizontal sub-tab rows — flat "underline" rail (matches the top tab bar) */
         .heatmap-sub-tabs-row,
         .table-sub-tabs-row,
         #diffTab .diff-sub-tabs-row,
         #saintTab .saint-sub-tabs-row,
-        #enrichrTab .enrichr-sub-tabs-row,
-        #tableColumnProfilePanel .col-profile-subtabs-row {
+        #enrichrTab .enrichr-sub-tabs-row {
             display: flex;
             flex-wrap: wrap;
             gap: 4px;
-            padding: 8px 10px 0;
-            border-bottom: 2px solid var(--angled-tab-active-border);
+            padding: 4px 10px 0;
+            border-bottom: 1px solid var(--md-border);
             flex-shrink: 0;
             background: var(--md-bg-elevated);
         }
@@ -628,78 +573,64 @@
         .table-sub-tabs-row {
             margin-bottom: 8px;
         }
-        #tableColumnProfilePanel .col-profile-subtabs-row {
-            max-height: 160px;
-            overflow-y: auto;
-            background: var(--md-bg-surface-muted);
-            margin-bottom: 0;
-        }
 
+        /* Sub-tabs (L2, and the diff/saint/enrichr L3 tabs sharing this class family)
+           — flat "underline" language matching the top tab bar. */
         .heatmap-sub-tab,
         .table-sub-tab,
         #diffTab .diff-sub-tab,
         #saintTab .saint-sub-tab,
-        #enrichrTab .enrichr-sub-tab,
-        #tableColumnProfilePanel .col-profile-sub-tab {
-            padding: 8px 14px 7px;
+        #enrichrTab .enrichr-sub-tab {
+            padding: 9px 13px 8px;
             font-size: 12px;
-            font-weight: 700;
-            color: var(--subtab-text);
-            background: linear-gradient(to bottom, #ffffff 0%, var(--subtab-inactive-bg) 100%);
-            border: 1px solid var(--subtab-border);
-            border-bottom: none;
-            border-radius: 12px 12px 0 0;
+            font-weight: 500;
+            color: var(--md-text-secondary);
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            border-radius: 0;
             cursor: pointer;
-            margin-top: 0;
-            transform: none;
-            box-shadow: 0 -1px 0 rgba(255,255,255,0.8) inset, 0 1px 2px rgba(2,6,23,0.08);
-            transition: background 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s;
-        }
-        #tableColumnProfilePanel .col-profile-sub-tab {
-            padding: 6px 12px;
-            font-size: 11px;
-            max-width: 220px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            margin: 0;
+            box-shadow: none;
+            transition: color 0.16s ease, border-color 0.16s ease;
         }
 
         .heatmap-sub-tab:hover,
         .table-sub-tab:hover,
         #diffTab .diff-sub-tab:hover,
         #saintTab .saint-sub-tab:hover,
-        #enrichrTab .enrichr-sub-tab:hover,
-        #tableColumnProfilePanel .col-profile-sub-tab:hover {
-            background: linear-gradient(to bottom, #ffffff 0%, var(--subtab-inactive-hover) 100%);
-            color: var(--subtab-text-hover);
-            border-color: #5eead4;
-            transform: none !important;
-            box-shadow: 0 -1px 0 rgba(255,255,255,0.85) inset, 0 2px 4px rgba(2,6,23,0.1) !important;
+        #enrichrTab .enrichr-sub-tab:hover {
+            background: transparent;
+            color: var(--md-text-primary);
         }
 
         .heatmap-sub-tab.active,
         .table-sub-tab.active,
         #diffTab .diff-sub-tab.active,
         #saintTab .saint-sub-tab.active,
-        #enrichrTab .enrichr-sub-tab.active,
-        #tableColumnProfilePanel .col-profile-sub-tab.active {
-            background: linear-gradient(to bottom, var(--subtab-active-bg) 0%, #134e4a 100%);
-            color: #fff;
-            border-color: #134e4a;
-            box-shadow: 0 -1px 0 rgba(255,255,255,0.14) inset, 0 3px 8px rgba(6,78,59,0.28);
+        #enrichrTab .enrichr-sub-tab.active {
+            background: transparent;
+            color: var(--md-accent-dark);
+            font-weight: 600;
+            border-bottom-color: var(--md-accent);
         }
 
         .heatmap-sub-tab.active:hover,
         .table-sub-tab.active:hover,
         #diffTab .diff-sub-tab.active:hover,
         #saintTab .saint-sub-tab.active:hover,
-        #enrichrTab .enrichr-sub-tab.active:hover,
-        #tableColumnProfilePanel .col-profile-sub-tab.active:hover {
-            background: linear-gradient(to bottom, var(--subtab-active-hover) 0%, var(--subtab-active-bg) 100%);
-            color: #fff;
-            border-color: var(--subtab-active-bg);
-            transform: none !important;
-            box-shadow: 0 -1px 0 rgba(255,255,255,0.14) inset, 0 3px 8px rgba(6,78,59,0.33);
+        #enrichrTab .enrichr-sub-tab.active:hover {
+            color: var(--md-accent-dark);
+        }
+
+        /* 3rd-level sub-tabs (Diff/SAINT/Enrichr) — one step below the L2 rail:
+           smaller label text and reduced vertical padding. */
+        #diffTab .diff-sub-tab,
+        #saintTab .saint-sub-tab,
+        #enrichrTab .enrichr-sub-tab {
+            padding: 4px 10px 3px;
+            font-size: 10.5px;
+            line-height: 1.25;
         }
 
         #saintResultsContainer #saintResultsTableWrap {
@@ -738,6 +669,46 @@
             overflow: hidden;
             background: var(--md-bg-surface);
         }
+        /* Quick Report pipeline progress bar (top of the Report tab's right side) */
+        #reportTab .report-pipeline-progress {
+            flex-shrink: 0;
+            margin: 10px 12px 6px 12px;
+            padding: 10px 12px;
+            background: var(--md-bg-elevated, #fff);
+            border: 1px solid var(--md-border, #cfc9bc);
+            border-radius: var(--md-radius-md, 6px);
+        }
+        #reportTab .report-pipeline-progress-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--md-text-primary, #2c2924);
+        }
+        #reportTab .report-pipeline-progress-head #reportPipelineProgressPct {
+            font-variant-numeric: tabular-nums;
+            font-weight: 600;
+            color: var(--md-text-secondary, #5a5650);
+        }
+        #reportTab .report-pipeline-progress-track {
+            height: 6px;
+            border-radius: 3px;
+            background: var(--md-accent-soft-bg, #ebe8df);
+            overflow: hidden;
+        }
+        #reportTab .report-pipeline-progress-fill {
+            height: 100%;
+            width: 0%;
+            border-radius: 3px;
+            background: var(--md-accent, #98927c);
+            transition: width 0.25s ease;
+        }
+        #reportTab #reportPipelineProgressDetail {
+            margin-top: 6px;
+            color: var(--md-text-secondary, #5a5650);
+        }
         #reportTab .report-preview-iframe-wrap {
             flex: 1;
             min-height: 0;
@@ -760,6 +731,38 @@
             padding-bottom: 8px;
             margin: 0 0 8px;
             color: #1f2937;
+        }
+        #reportTab .report-preview-root .nebula-report-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            border-bottom: 1px solid var(--md-border, #e5e7eb);
+            margin: 0 0 4px;
+            padding: 0 2px;
+        }
+        #reportTab .report-preview-root .nebula-report-tab {
+            padding: 8px 13px 7px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--md-text-secondary, #4b5563);
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            border-radius: 0;
+            cursor: pointer;
+            margin: 0;
+            box-shadow: none;
+            transition: color 0.16s ease, border-color 0.16s ease;
+        }
+        #reportTab .report-preview-root .nebula-report-tab:hover {
+            background: transparent;
+            color: var(--md-text-primary, #111827);
+        }
+        #reportTab .report-preview-root .nebula-report-tab.active {
+            background: transparent;
+            color: var(--md-accent-dark, #b45309);
+            font-weight: 600;
+            border-bottom-color: var(--md-accent, #c0582f);
         }
         #reportTab .report-preview-root .nebula-report-preview-section-title {
             font-size: 1.05rem;
@@ -1068,222 +1071,43 @@
             flex-wrap: wrap;
             gap: 4px;
             padding: 4px 0 0;
-            border-bottom: 2px solid var(--angled-tab-active-border);
+            border-bottom: 1px solid var(--md-border);
             flex-shrink: 0;
             margin-bottom: 8px;
             background: var(--md-bg-elevated);
         }
         #enrichrSubPanelPlots .enrichr-plot-viz-tab {
-            padding: 7px 12px 6px;
-            font-size: 12px;
-            font-weight: 700;
-            color: var(--fourthtab-text);
-            background: linear-gradient(to bottom, #ffffff 0%, var(--fourthtab-inactive-bg) 100%);
-            border: 1px solid var(--fourthtab-border);
-            border-bottom: none;
-            border-radius: 10px 10px 0 0;
+            padding: 3px 9px 2px;
+            font-size: 10px;
+            line-height: 1.25;
+            font-weight: 500;
+            color: var(--md-text-secondary);
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            border-radius: 0;
             cursor: pointer;
-            box-shadow: 0 -1px 0 rgba(255,255,255,0.82) inset, 0 1px 2px rgba(2,6,23,0.08);
-            transition: background 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s;
-        }
-        #enrichrSubPanelPlots .enrichr-plot-viz-tab:hover {
-            background: linear-gradient(to bottom, #ffffff 0%, var(--fourthtab-inactive-hover) 100%);
-            color: var(--fourthtab-text-hover);
-            border-color: #c4b5fd;
-            box-shadow: 0 -1px 0 rgba(255,255,255,0.88) inset, 0 2px 4px rgba(2,6,23,0.1);
-        }
-        #enrichrSubPanelPlots .enrichr-plot-viz-tab.active {
-            background: linear-gradient(to bottom, var(--fourthtab-active-bg) 0%, #6366f1 100%);
-            color: #fff;
-            border-color: #6366f1;
-            box-shadow: 0 -1px 0 rgba(255,255,255,0.15) inset, 0 3px 8px rgba(79,70,229,0.34);
-        }
-        #enrichrSubPanelPlots .enrichr-plot-viz-tab.active:hover {
-            background: linear-gradient(to bottom, var(--fourthtab-active-hover) 0%, var(--fourthtab-active-bg) 100%);
-            color: #fff;
-            border-color: var(--fourthtab-active-bg);
-            box-shadow: 0 -1px 0 rgba(255,255,255,0.15) inset, 0 3px 8px rgba(79,70,229,0.4);
-        }
-
-        /* Angled/seamed style for sub-tabs (L2/L3/L4), matching top-level geometry */
-        .heatmap-sub-tab,
-        .table-sub-tab,
-        #diffTab .diff-sub-tab,
-        #saintTab .saint-sub-tab,
-        #enrichrTab .enrichr-sub-tab,
-        #tableColumnProfilePanel .col-profile-sub-tab,
-        .data-filter-inner-tab,
-        #enrichrSubPanelPlots .enrichr-plot-viz-tab {
-            position: relative;
-            isolation: isolate;
-            overflow: visible;
-            border: none !important;
-            border-radius: 0 !important;
-            background: transparent !important;
             box-shadow: none;
-            margin-left: -8px;
-        }
-        .heatmap-sub-tabs-row > *:first-child,
-        .table-sub-tabs-row > *:first-child,
-        #diffTab .diff-sub-tabs-row > *:first-child,
-        #saintTab .saint-sub-tabs-row > *:first-child,
-        #enrichrTab .enrichr-sub-tabs-row > *:first-child,
-        #tableColumnProfilePanel .col-profile-subtabs-row > *:first-child,
-        .data-filter-inner-tabs-row > *:first-child,
-        #enrichrSubPanelPlots .enrichr-plot-viz-tabs-row > *:first-child {
-            margin-left: 0 !important;
-        }
-
-        .heatmap-sub-tab::before,
-        .table-sub-tab::before,
-        #diffTab .diff-sub-tab::before,
-        #saintTab .saint-sub-tab::before,
-        #enrichrTab .enrichr-sub-tab::before,
-        #tableColumnProfilePanel .col-profile-sub-tab::before,
-        .data-filter-inner-tab::before,
-        #enrichrSubPanelPlots .enrichr-plot-viz-tab::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            transform: skewX(-20deg);
-            transform-origin: left bottom;
-            z-index: -1;
-            box-shadow: 0 1px 0 rgba(255,255,255,0.12) inset;
-        }
-        .heatmap-sub-tab::after,
-        .table-sub-tab::after,
-        #diffTab .diff-sub-tab::after,
-        #saintTab .saint-sub-tab::after,
-        #enrichrTab .enrichr-sub-tab::after,
-        #tableColumnProfilePanel .col-profile-sub-tab::after,
-        .data-filter-inner-tab::after,
-        #enrichrSubPanelPlots .enrichr-plot-viz-tab::after {
-            content: "";
-            position: absolute;
-            right: -12px;
-            top: 1px;
-            width: 14px;
-            height: calc(100% - 1px);
-            transform: skewX(-20deg);
-            transform-origin: left top;
-            background: linear-gradient(to right, rgba(0,0,0,0.22) 0%, rgba(0,0,0,0.06) 62%, rgba(0,0,0,0) 100%);
-            z-index: -2;
-            pointer-events: none;
-        }
-
-        /* L2 palettes */
-        .heatmap-sub-tab,
-        .table-sub-tab,
-        #diffTab .diff-sub-tab,
-        #saintTab .saint-sub-tab,
-        #enrichrTab .enrichr-sub-tab,
-        #tableColumnProfilePanel .col-profile-sub-tab {
-            color: var(--angled-tab-text);
-        }
-        .heatmap-sub-tab::before,
-        .table-sub-tab::before,
-        #diffTab .diff-sub-tab::before,
-        #saintTab .saint-sub-tab::before,
-        #enrichrTab .enrichr-sub-tab::before,
-        #tableColumnProfilePanel .col-profile-sub-tab::before {
-            background: linear-gradient(to bottom, var(--angled-tab-inactive-start) 0%, var(--angled-tab-inactive-end) 100%);
-            border: 1px solid var(--angled-tab-border);
-            border-bottom: none;
-        }
-        .heatmap-sub-tab:hover,
-        .table-sub-tab:hover,
-        #diffTab .diff-sub-tab:hover,
-        #saintTab .saint-sub-tab:hover,
-        #enrichrTab .enrichr-sub-tab:hover,
-        #tableColumnProfilePanel .col-profile-sub-tab:hover {
-            color: #ffffff;
-            filter: brightness(1.05);
-        }
-        .heatmap-sub-tab.active,
-        .table-sub-tab.active,
-        #diffTab .diff-sub-tab.active,
-        #saintTab .saint-sub-tab.active,
-        #enrichrTab .enrichr-sub-tab.active,
-        #tableColumnProfilePanel .col-profile-sub-tab.active {
-            color: var(--angled-tab-text-active);
-            z-index: 2;
-            filter: none;
-        }
-        .heatmap-sub-tab.active::before,
-        .table-sub-tab.active::before,
-        #diffTab .diff-sub-tab.active::before,
-        #saintTab .saint-sub-tab.active::before,
-        #enrichrTab .enrichr-sub-tab.active::before,
-        #tableColumnProfilePanel .col-profile-sub-tab.active::before {
-            background: linear-gradient(to bottom, var(--angled-tab-active-start) 0%, var(--angled-tab-active-end) 100%);
-            border-color: var(--angled-tab-active-border);
-            box-shadow: 0 2px 0 rgba(255,255,255,0.12) inset, 0 6px 14px rgba(0,0,0,0.22);
-        }
-        .heatmap-sub-tab.active:hover,
-        .table-sub-tab.active:hover,
-        #diffTab .diff-sub-tab.active:hover,
-        #saintTab .saint-sub-tab.active:hover,
-        #enrichrTab .enrichr-sub-tab.active:hover,
-        #tableColumnProfilePanel .col-profile-sub-tab.active:hover {
-            color: var(--angled-tab-text-active-hover);
-            filter: none;
-        }
-
-        /* L3 palette */
-        .data-filter-inner-tab {
-            color: var(--angled-tab-text);
-        }
-        .data-filter-inner-tab::before {
-            background: linear-gradient(to bottom, var(--angled-tab-inactive-start) 0%, var(--angled-tab-inactive-end) 100%);
-            border: 1px solid var(--angled-tab-border);
-            border-bottom: none;
-        }
-        .data-filter-inner-tab:hover {
-            color: #ffffff;
-            filter: brightness(1.05);
-        }
-        .data-filter-inner-tab.active {
-            color: var(--angled-tab-text-active);
-            z-index: 2;
-            filter: none;
-        }
-        .data-filter-inner-tab.active::before {
-            background: linear-gradient(to bottom, var(--angled-tab-active-start) 0%, var(--angled-tab-active-end) 100%);
-            border-color: var(--angled-tab-active-border);
-            box-shadow: 0 2px 0 rgba(255,255,255,0.12) inset, 0 6px 14px rgba(0,0,0,0.22);
-        }
-        .data-filter-inner-tab.active:hover {
-            color: var(--angled-tab-text-active-hover);
-            filter: none;
-        }
-
-        /* L4 palette */
-        #enrichrSubPanelPlots .enrichr-plot-viz-tab {
-            color: var(--angled-tab-text);
-        }
-        #enrichrSubPanelPlots .enrichr-plot-viz-tab::before {
-            background: linear-gradient(to bottom, var(--angled-tab-inactive-start) 0%, var(--angled-tab-inactive-end) 100%);
-            border: 1px solid var(--angled-tab-border);
-            border-bottom: none;
+            margin: 0;
+            transition: color 0.16s ease, border-color 0.16s ease;
         }
         #enrichrSubPanelPlots .enrichr-plot-viz-tab:hover {
-            color: #ffffff;
-            filter: brightness(1.05);
+            background: transparent;
+            color: var(--md-text-primary);
         }
         #enrichrSubPanelPlots .enrichr-plot-viz-tab.active {
-            color: var(--angled-tab-text-active);
-            z-index: 2;
-            filter: none;
-        }
-        #enrichrSubPanelPlots .enrichr-plot-viz-tab.active::before {
-            background: linear-gradient(to bottom, var(--angled-tab-active-start) 0%, var(--angled-tab-active-end) 100%);
-            border-color: var(--angled-tab-active-border);
-            box-shadow: 0 2px 0 rgba(255,255,255,0.12) inset, 0 6px 14px rgba(0,0,0,0.22);
+            background: transparent;
+            color: var(--md-accent-dark);
+            font-weight: 600;
+            border-bottom-color: var(--md-accent);
         }
         #enrichrSubPanelPlots .enrichr-plot-viz-tab.active:hover {
-            color: var(--angled-tab-text-active-hover);
-            filter: none;
+            color: var(--md-accent-dark);
         }
+
+        /* (Former angled/skewed "wedge" sub-tab styling removed — all sub-tab levels now use
+           the flat underline base blocks above, consistent with the top tab bar.) */
+
         #enrichrSubPanelPlots .enrichr-plot-viz-panels {
             flex: 1;
             min-height: 0;
@@ -1567,17 +1391,22 @@
             overflow-y: auto;
         }
 
+        /* Secondary actions — ghost / outline (Option C hierarchy): Add to Report, Pop out,
+           Export/Download CSV, example-data loaders, session import/export, Refresh, Clear, …
+           Sits a clear step below the solid primary CTAs. */
         .example-btn {
-            background: var(--md-btn-warn);
-            color: #fff;
-            border: 1px solid transparent;
+            background: transparent;
+            color: var(--md-accent-dark);
+            border: 1px solid var(--md-accent);
             margin-top: 10px;
-            box-shadow: var(--md-elevation-0);
+            box-shadow: none;
         }
 
-        .example-btn:hover {
-            background: var(--md-btn-warn-hover);
-            color: #fff;
+        .example-btn:hover,
+        .example-btn:active {
+            background: var(--md-accent-soft-bg);
+            color: var(--md-accent-dark);
+            border-color: var(--md-accent);
         }
 
         .visualization-container {
@@ -1799,7 +1628,7 @@
 
         .table-preview th,
         .table-preview td {
-            padding: 8px;
+            padding: 5px 8px;
             text-align: left;
             border: 1px solid #ddd;
         }
@@ -1810,6 +1639,8 @@
             position: sticky;
             top: 0;
             z-index: 10;
+            padding: 6px 8px;
+            line-height: 1.3;
         }
 
         .table-preview th.sortable-th {
@@ -1826,6 +1657,12 @@
             font-size: 0.75em;
             opacity: 0.95;
             margin-left: 4px;
+        }
+
+        /* Meta table preview: compact editable headers (flex wrapper + delete button) */
+        #metaTablePreview thead th {
+            padding-top: 4px;
+            padding-bottom: 4px;
         }
 
         .table-preview tr:nth-child(even) {
@@ -1849,7 +1686,7 @@
         .diann-annotation-preview-host.table-preview .diann-ann-table th,
         .diann-annotation-preview-host.table-preview .diann-ann-table td {
             border: 1px solid #ddd;
-            padding: 8px;
+            padding: 5px 8px;
             text-align: left;
         }
         /* Same header palette as Data Filter matrix preview (.data-check-matrix-table) and Meta (.table-preview th) */
@@ -1864,9 +1701,69 @@
             user-select: none;
             white-space: normal;
             vertical-align: bottom;
+            padding: 6px 8px;
+            line-height: 1.3;
         }
         .diann-annotation-preview-host.table-preview .diann-ann-table thead th:hover {
             background: var(--md-accent-hover);
+        }
+
+        /* Data PreProcess → Annotations: per-column filter input inside the table header
+           (added by installAnnColumnHeaderFilters into each annotation column's th). */
+        .ann-col-filter-wrap {
+            margin-top: 4px;
+        }
+
+        .ann-col-filter {
+            width: 100%;
+            min-width: 90px;
+            box-sizing: border-box;
+            font-size: 11px;
+            padding: 2px 5px;
+            border: 1px solid rgba(255, 255, 255, 0.55);
+            border-radius: 3px;
+            background: #fff;
+            color: #333;
+        }
+
+        .ann-col-filter:focus {
+            outline: none;
+            border-color: #fff;
+            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.35);
+        }
+
+        /* Data PreProcess → Annotations: dedicated "Class I sites only" toggle button. */
+        .ann-classi-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 10px;
+            border: 1px solid var(--md-border-subtle, #cfd8dc);
+            border-radius: 4px;
+            background: #fff;
+            cursor: pointer;
+            font-size: 12.5px;
+            line-height: 1.3;
+            color: #333;
+            user-select: none;
+        }
+
+        .ann-classi-btn:hover {
+            background: var(--md-accent-soft-bg, #f3e5f5);
+        }
+
+        .ann-classi-btn input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .ann-classi-btn.on,
+        .ann-classi-btn.on:hover {
+            background: var(--md-accent);
+            border-color: var(--md-accent);
+            color: #fff;
+            font-weight: 600;
         }
         .diann-annotation-preview-host.table-preview .diann-ann-table td {
             max-width: 280px;
@@ -1959,10 +1856,12 @@
             color: #fff;
             border: none;
             border-radius: var(--md-radius-sm);
-            padding: 2px 6px;
+            padding: 1px 5px;
+            margin: 0;
             cursor: pointer;
             font-size: 12px;
             font-weight: bold;
+            line-height: 1.15;
             opacity: 0.7;
             transition: opacity 0.2s;
             flex-shrink: 0;
@@ -2225,48 +2124,171 @@
             display: flex;
             flex-wrap: wrap;
             gap: 4px;
-            padding: 6px 8px 0;
-            border-bottom: 2px solid var(--angled-tab-active-border);
+            padding: 3px 8px 0;
+            border-bottom: 1px solid var(--md-border);
             background: var(--md-bg-elevated);
             flex-shrink: 0;
         }
         .data-filter-inner-tab {
-            padding: 6px 12px 5px;
-            font-size: 0.8em;
-            font-weight: 700;
+            padding: 4px 10px 3px;
+            font-size: 10.5px;
+            line-height: 1.25;
+            font-weight: 500;
             border: none;
+            border-bottom: 2px solid transparent;
             border-radius: 0;
             background: transparent;
-            color: var(--angled-tab-text);
+            color: var(--md-text-secondary);
             cursor: pointer;
             box-shadow: none;
-            transition: color 0.15s, filter 0.15s;
+            margin: 0;
+            transition: color 0.16s ease, border-color 0.16s ease;
         }
         .data-filter-inner-tab:hover {
             background: transparent;
-            color: #ffffff;
-            filter: brightness(1.05);
+            color: var(--md-text-primary);
         }
         .data-filter-inner-tab.active {
             background: transparent;
-            color: var(--angled-tab-text-active);
+            color: var(--md-accent-dark);
+            font-weight: 600;
+            border-bottom-color: var(--md-accent);
             position: relative;
             z-index: 1;
             box-shadow: none;
-            filter: none;
         }
         .data-filter-inner-tab.active:hover {
-            color: var(--angled-tab-text-active-hover);
-            filter: none;
+            color: var(--md-accent-dark);
         }
+
+        /* ---- Imputation overview panel ---- */
+        .imputation-overview-panel {
+            flex: 1;
+            min-height: 0;
+            overflow: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        .imputation-overview-stats {
+            padding: 8px 12px;
+            font-size: 12px;
+            line-height: 1.7;
+            color: var(--md-text-secondary);
+        }
+        .imputation-distribution-panel {
+            flex: 1;
+            min-height: 0;
+            overflow: auto;
+            padding: 8px 12px;
+            display: flex;
+            flex-direction: column;
+        }
+        .imputation-distribution-panel > #imputationDistributionHost {
+            flex: 1;
+            min-height: 0;
+            width: 100%;
+        }
+        .imputation-distribution-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 0 8px;
+            flex-shrink: 0;
+        }
+        .imputation-allsamples-panel {
+            flex: 1;
+            min-height: 0;
+            overflow: auto;
+            padding: 8px 12px;
+        }
+        .imputation-allsamples-panel > #imputationAllSamplesHost {
+            width: 100%;
+        }
+        .imputation-matrix-panel {
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+            padding: 8px 12px;
+            display: flex;
+            flex-direction: column;
+        }
+        .imputation-matrix-panel > #imputationMatrixHost {
+            flex: 1;
+            min-height: 0;
+            min-width: 0;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        .imputation-matrix-hint {
+            flex-shrink: 0;
+            padding: 0 0 6px;
+            font-size: 12px;
+            color: var(--md-text-secondary);
+        }
+        .sidebar-help-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            font-size: 10px;
+            font-weight: 600;
+            line-height: 1;
+            color: #667085;
+            background: #eceef3;
+            cursor: help;
+            vertical-align: 1px;
+        }
+        .sidebar-help-icon:hover {
+            background: #dde1ea;
+        }
+
+        /* ---- Batch effect detection panel ---- */
+        .batch-effect-detection-stats {
+            padding: 8px 12px;
+            font-size: 12px;
+            line-height: 1.7;
+            color: var(--md-text-secondary);
+            margin-bottom: 6px;
+        }
+        .batch-effect-per-batch-stats table {
+            font-size: 12px;
+            border-collapse: collapse;
+            width: 100%;
+            border: 1px solid var(--md-border-subtle);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .batch-effect-per-batch-stats table th {
+            background: var(--md-bg-surface-muted);
+            color: var(--md-accent-dark);
+            font-weight: 600;
+            padding: 6px 8px;
+            border-bottom: 1px solid var(--md-border);
+            text-align: left;
+        }
+        .batch-effect-per-batch-stats table td {
+            padding: 5px 8px;
+            border-bottom: 1px solid var(--md-border-subtle);
+            text-align: left;
+            font-variant-numeric: tabular-nums;
+        }
+        .batch-effect-per-batch-stats table tr:nth-child(even) td {
+            background: rgba(242, 239, 232, 0.35);
+        }
+
         #pcaTab .pca-viz-tabs-row,
-        #pcoaTab .pca-viz-tabs-row {
+        #pcoaTab .pca-viz-tabs-row,
+        #kmeansTab .pca-viz-tabs-row {
             margin-bottom: 8px;
             padding-left: 0;
             padding-right: 0;
         }
         #pcaTab .pca-viz-panels,
-        #pcoaTab .pca-viz-panels {
+        #pcoaTab .pca-viz-panels,
+        #kmeansTab .pca-viz-panels {
             flex: 1;
             min-height: 0;
             display: flex;
@@ -2274,18 +2296,31 @@
             overflow: hidden;
         }
         #pcaTab .pca-viz-panel,
-        #pcoaTab .pca-viz-panel {
+        #pcoaTab .pca-viz-panel,
+        #kmeansTab .pca-viz-panel {
             display: none;
             flex: 1;
             min-height: 0;
             overflow: hidden;
         }
         #pcaTab .pca-viz-panel.active,
-        #pcoaTab .pca-viz-panel.active {
+        #pcoaTab .pca-viz-panel.active,
+        #kmeansTab .pca-viz-panel.active {
             display: flex;
             flex-direction: column;
             flex: 1;
             min-height: 0;
+        }
+        /* Bound the container so the active panel's own overflow:auto engages
+           (otherwise the flex chain grows to fit the tall model panel). */
+        #kmeansTab .visualization-container {
+            min-height: 0;
+            overflow: hidden;
+        }
+        /* Each panel scrolls internally when its content exceeds the viewport
+           (cluster plot at fixed height, two stacked model plots, or a long table). */
+        #kmeansTab .pca-viz-panel.active {
+            overflow: auto;
         }
         #pcaVizPanelDetails .pca-details-content {
             flex: 1;
@@ -2698,6 +2733,27 @@
                 flex-direction: column;
             }
         }
+        /* Proportional Venn: options + notes column beside the diagram stacks
+           above it on narrow screens, mirroring .upset-viz-row-pair. */
+        @media (max-width: 900px) {
+            #upsetTab #upsetPropVennRow {
+                flex-direction: column;
+            }
+            #upsetTab #upsetPropVennOptsCol {
+                width: 100% !important;
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 10px 12px;
+            }
+            #upsetTab #upsetPropVennOptsCol .upset-comb-field {
+                flex: 1 1 160px;
+                min-width: 140px;
+            }
+            #upsetTab #upsetPropVennOptsCol #upsetPropVennNotes {
+                flex-basis: 100%;
+                margin-top: 0;
+            }
+        }
         #upsetTab .upset-viz-heading-row {
             display: flex;
             flex-wrap: wrap;
@@ -2708,6 +2764,8 @@
         }
         #upsetTab .upset-viz-heading-row .upset-viz-heading {
             margin: 0;
+            flex: 1 1 auto;
+            min-width: 0;
             font-size: 13px;
             font-weight: 600;
             color: #444;
@@ -2722,6 +2780,17 @@
             padding: 4px 10px;
             white-space: nowrap;
         }
+        #upsetTab .upset-viz-heading-row .upset-viz-popout-btn,
+        #upsetTab .upset-viz-heading-row .nebula-add-report-btn {
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 0;
+            line-height: 1.4;
+            padding: 5px 12px;
+            box-sizing: border-box;
+        }
         #upsetTab .upset-viz-host {
             flex: 1;
             min-height: 290px;
@@ -2735,7 +2804,7 @@
             min-height: 339px;
         }
         .upset-set-chooser-list {
-            max-height: 220px;
+            max-height: 110px;
             overflow-y: auto;
             border: 1px solid #ddd;
             border-radius: 4px;
@@ -2823,6 +2892,37 @@
             height: 380px;
             min-height: 360px;
         }
+        /* Column profile sub-tabs: stretch the active figure to the full visible panel height
+           (same flex chain as Column correlation → Distance matrix) */
+        #tableColumnProfilePanel #colProfilePlotsInnerTree,
+        #tableColumnProfilePanel #colProfilePlotsInnerBar,
+        #tableColumnProfilePanel #colProfilePlotsInnerCum,
+        #tableColumnProfilePanel #colProfilePlotsInnerPie,
+        #tableColumnProfilePanel #colProfilePlotsInnerHist {
+            display: flex;
+            flex-direction: column;
+            min-height: 100%;
+        }
+        #tableColumnProfilePanel #colProfilePlotsInnerTree .col-profile-plot-card,
+        #tableColumnProfilePanel #colProfilePlotsInnerBar .col-profile-plot-card,
+        #tableColumnProfilePanel #colProfilePlotsInnerCum .col-profile-plot-card,
+        #tableColumnProfilePanel #colProfilePlotsInnerPie .col-profile-plot-card,
+        #tableColumnProfilePanel #colProfilePlotsInnerHist .col-profile-plot-card {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        #tableColumnProfilePanel #colProfilePlotsInnerTree .col-profile-plot-host,
+        #tableColumnProfilePanel #colProfilePlotsInnerBar .col-profile-plot-host,
+        #tableColumnProfilePanel #colProfilePlotsInnerCum .col-profile-plot-host,
+        #tableColumnProfilePanel #colProfilePlotsInnerPie .col-profile-plot-host,
+        #tableColumnProfilePanel #colProfilePlotsInnerHist .col-profile-plot-host,
+        #tableColumnProfilePanel #colProfilePlotsInnerHist .col-profile-plot-host-tall {
+            flex: 1;
+            height: auto;
+            min-height: 320px;
+        }
 
         /* Column correlation (Data PreProcess → Column Correlation) */
         #tableColumnCorrelationPanel .col-profile-main {
@@ -2873,6 +2973,24 @@
             height: 400px;
             min-height: 380px;
         }
+        /* Distance matrix tab: stretch the figure to fill the whole visible panel
+           (the panel is otherwise mostly empty next to the near-square heatmap). */
+        #tableColumnCorrelationPanel #colCorrPlotsInnerDist {
+            display: flex;
+            flex-direction: column;
+            min-height: 100%;
+        }
+        #tableColumnCorrelationPanel #colCorrPlotsInnerDist .col-profile-plot-card {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        #tableColumnCorrelationPanel #colCorrPlotsInnerDist .col-corr-heatmap-host {
+            flex: 1;
+            height: auto;
+            min-height: 380px;
+        }
 
         /* Title row + “Add to Report” (Data QC, Column profile, Correlation, Clustering) */
         .nebula-graph-headrow {
@@ -2893,6 +3011,21 @@
             font-size: 12px;
             padding: 5px 12px;
             white-space: nowrap;
+        }
+        /* Give the "Pop out" and "Add to Report" heading-row buttons an identical box model
+           so they render at the same height (Pop out carries an inline SVG icon; inline-flex
+           centers it and the shared font/padding/line-height keeps both buttons equal). */
+        .nebula-graph-headrow .viz-popout-btn,
+        .nebula-graph-headrow .nebula-add-report-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            flex: 0 0 auto;
+            font-size: 12px;
+            line-height: 1.4;
+            padding: 5px 12px;
+            white-space: nowrap;
+            box-sizing: border-box;
         }
         #tableColumnProfilePanel .col-profile-plot-card .nebula-graph-headrow .nebula-graph-head-title,
         #tableColumnCorrelationPanel .col-profile-plot-card .nebula-graph-headrow .nebula-graph-head-title {
@@ -3090,14 +3223,25 @@
             box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.12);
             border-color: rgba(255, 255, 255, 0.25);
         }
+        /* Compact DataTables headers app-wide: shorter header rows (CDN default is 10px
+           vertical padding + 30px arrow reserve, ~38px tall) matching the 12px table font */
+        table.dataTable > thead > tr > th,
+        table.dataTable > thead > tr > td {
+            padding: 5px 24px 5px 8px !important;
+            line-height: 1.3 !important;
+        }
+        table.dataTable > tbody > tr > td {
+            padding: 4px 10px !important;
+            line-height: 1.35 !important;
+        }
         #tablePreview .qc-dt-matrix-scrollbox .data-check-matrix-table tbody td {
             vertical-align: middle;
         }
         .qc-dt-preview-host .qc-dt-bar-cell {
             position: relative;
             min-width: 72px;
-            min-height: 20px;
-            line-height: 20px;
+            min-height: 18px;
+            line-height: 18px;
             background: #eef1f7;
             border-radius: 4px;
             overflow: hidden;
@@ -3121,8 +3265,8 @@
         #tablePreview .qc-dt-bar-cell {
             position: relative;
             min-width: 72px;
-            min-height: 20px;
-            line-height: 20px;
+            min-height: 18px;
+            line-height: 18px;
             background: #eef1f7;
             border-radius: 4px;
             overflow: hidden;
@@ -3145,6 +3289,98 @@
         }
         #tablePreview .qc-dt-cell-na {
             color: #9ca3af;
+        }
+
+        /* DataTables matrix preview (Imputation → Matrix): same sizing chain as #tablePreview */
+        #imputationMatrixHost.qc-dt-preview-host,
+        #imputationMatrixHost .qc-dt-matrix-root {
+            flex: 1;
+            min-height: 0;
+            min-width: 0;
+        }
+        #imputationMatrixHost .qc-dt-table-host .dt-container {
+            flex: 1;
+            min-height: 0;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            font-size: 12px;
+        }
+        #imputationMatrixHost .qc-dt-table-host .dt-layout-row {
+            margin: 0.35rem 0;
+        }
+        #imputationMatrixHost .qc-dt-table-host .dt-layout-row.qc-dt-matrix-table-row {
+            flex: 1 1 auto;
+            min-height: 0;
+            min-width: 0;
+            display: flex;
+        }
+        #imputationMatrixHost .qc-dt-table-host .qc-dt-matrix-scrollbox {
+            flex: 1 1 auto;
+            min-height: 0;
+            min-width: 0;
+            overflow: auto;
+            -webkit-overflow-scrolling: touch;
+            border: 1px solid #e2e6ef;
+            border-radius: 6px;
+            background: #fff;
+        }
+        #imputationMatrixHost .qc-dt-matrix-scrollbox .data-check-matrix-table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 30;
+            background: var(--md-accent) !important;
+            color: #fff !important;
+            box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.12);
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+        #imputationMatrixHost .qc-dt-matrix-scrollbox .data-check-matrix-table tbody td {
+            vertical-align: middle;
+        }
+        #imputationMatrixHost .qc-dt-bar-cell {
+            position: relative;
+            min-width: 72px;
+            min-height: 18px;
+            line-height: 18px;
+            background: #eef1f7;
+            border-radius: 4px;
+            overflow: hidden;
+            padding: 0 6px;
+        }
+        #imputationMatrixHost .qc-dt-bar-fill {
+            position: absolute;
+            inset: 0 auto 0 0;
+            background: linear-gradient(90deg, rgba(99, 102, 241, 0.7), rgba(129, 140, 248, 0.7));
+            border-radius: 4px 0 0 4px;
+        }
+        #imputationMatrixHost .qc-dt-bar-val {
+            position: relative;
+            z-index: 1;
+            display: block;
+            font-variant-numeric: tabular-nums;
+            color: #1f2937;
+            text-align: center;
+            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
+        }
+        #imputationMatrixHost .qc-dt-bar-cell.qc-dt-imputed-cell {
+            background: #eaf7ef;
+        }
+        #imputationMatrixHost .qc-dt-bar-cell.qc-dt-imputed-cell .qc-dt-bar-fill {
+            background: linear-gradient(90deg, rgba(52, 168, 83, 0.7), rgba(130, 202, 157, 0.75));
+        }
+        #imputationMatrixHost .qc-dt-bar-cell.qc-dt-imputed-cell .qc-dt-bar-val {
+            font-weight: 600;
+            color: #14532d;
+        }
+        /* Unified, professional table font size across every TableDisplay-rendered table
+           (Data Filter matrix preview, Differential results, Enrichr, SAINT, DIANN
+           annotations, Name mapping, static previews). Keyed off the shared
+           `qc-dt-preview-host` container so tables and their DataTables chrome
+           (search / length / paging) all match the app's 12px table typography. */
+        .qc-dt-preview-host,
+        .qc-dt-preview-host table,
+        .qc-dt-preview-host .dt-container {
+            font-size: 12px;
         }
         #tableDiannAnnPanel.table-sub-panel {
             flex-direction: column;
@@ -3217,6 +3453,21 @@
             flex: 1;
             min-height: 0;
             overflow: auto;
+        }
+        #metaTableInnerTablePanel,
+        #metaTableInnerSankeyPanel {
+            flex: 1;
+            min-height: 0;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        #metaTableInnerSankeyPanel .meta-table-workspace > .tab-main-content > #metaSankeyPlotHost.table-preview {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
         #tableFeatureNameMapPanel .feature-name-map-workspace > .tab-main-content {
             display: flex;
@@ -3307,6 +3558,25 @@
             color: #fff;
             box-shadow: var(--md-elevation-1);
         }
+        /* Document sidebar: tab-group headers (mirror the main tab bar structure) */
+        .doc-outline-group {
+            margin: 12px 0 0 0;
+            padding: 2px 12px 0 12px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: var(--md-text-secondary, #5a5650);
+        }
+        .doc-outline-group:first-child {
+            margin-top: 0;
+        }
+        .doc-outline-btn--grouped {
+            margin-left: 10px;
+            border-left: 2px solid var(--md-accent, #98927c);
+            border-radius: 0 6px 6px 0;
+            font-weight: 500;
+        }
         .doc-section {
             display: none;
         }
@@ -3316,7 +3586,8 @@
 
         /* Document tab: Markdown-rendered help (doc/*.md) */
         .doc-markdown-main {
-            max-width: 1200px;
+            max-width: none;
+            width: 100%;
         }
         .doc-markdown-host {
             min-height: 120px;
@@ -3337,10 +3608,18 @@
             color: #991b1b;
         }
         #docMarkdownHost .doc-prose {
-            max-width: 1200px;
+            max-width: none;
+            width: 100%;
+            box-sizing: border-box;
+            padding: 20px 28px;
             line-height: 1.55;
             font-size: 14px;
             color: #1f2937;
+        }
+        /* Optional reading mode: cap the prose line length and center it */
+        #documentTab.doc-reading-width #docMarkdownHost .doc-prose {
+            max-width: 960px;
+            margin: 0 auto;
         }
         #docMarkdownHost .doc-prose h1,
         #docMarkdownHost .doc-prose h2,
@@ -3446,8 +3725,8 @@
         .data-qc-overall-summary-strip {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px 14px;
-            margin: 4px 0 12px;
+            gap: 6px 8px;
+            margin: 0;
             font-size: 12px;
             color: #374151;
         }
@@ -3466,6 +3745,8 @@
         }
         .data-qc-overall-card .nebula-graph-headrow .data-qc-overall-card-title {
             margin: 0;
+            flex: 1 1 auto;
+            min-width: 0;
         }
         .data-qc-overall-card-title {
             margin: 0 0 6px 0;
@@ -3564,13 +3845,6 @@
         #diffTab.tab-content > .tab-sidebar.diff-sidebar > .sidebar-section {
             margin-bottom: 0;
         }
-        #diffTab .diff-sidebar-title {
-            margin: 0 0 8px 0;
-            padding-bottom: 6px;
-            border-bottom: 1px solid var(--md-border-strong);
-            font-size: 1.05em;
-            font-weight: 600;
-        }
         #diffTab .diff-sidebar-split {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -3661,12 +3935,13 @@
         #diffTab .diff-run-section {
             padding: 8px 10px;
             margin: 0;
+            margin-top: auto;
             border-top: none;
         }
         #diffTab .diff-run-btn {
             width: 100%;
             padding: 8px 12px;
-            background: #4caf50;
+            background: var(--md-btn-success);
             color: #fff;
             border: none;
             border-radius: var(--md-radius-md, 4px);
@@ -3675,7 +3950,7 @@
             font-size: 0.92em;
         }
         #diffTab .diff-run-btn:hover {
-            background: #43a047;
+            background: var(--md-btn-success-hover);
         }
         #diffTab .diff-run-status {
             margin-top: 6px;
@@ -3747,12 +4022,12 @@
             width: 100%;
             border-collapse: separate;
             border-spacing: 0;
-            font-size: 11px;
+            font-size: 12px;
         }
         #diffTab #diffResultsTable th,
         #diffTab #diffResultsTable td {
             border: 1px solid #e2e6ef;
-            padding: 6px 8px;
+            padding: 5px 8px;
             text-align: left;
         }
         #diffTab #diffResultsTable th {
@@ -3765,6 +4040,28 @@
         }
         #diffTab #diffResultsTable tr:nth-child(even) {
             background: #f8f9fa;
+        }
+        #diffTab .diff-results-table tbody tr {
+            cursor: pointer;
+        }
+        #diffTab .diff-results-table td.dt-quant-cell {
+            padding: 1px 6px;
+            text-align: center;
+            white-space: nowrap;
+        }
+        #diffTab .diff-results-table tbody tr.diff-quant-selected td {
+            background: #eef2ff !important;
+            box-shadow: inset 2px 0 0 var(--md-accent, #667eea);
+        }
+        #diffTab #diffQuantDetail:empty {
+            display: none;
+        }
+        #diffTab #diffQuantDetail {
+            flex-shrink: 0;
+            padding: 8px 10px;
+            border: 1px solid #e2e6ef;
+            border-radius: 6px;
+            background: #fbfbfd;
         }
         #diffTab .diff-anova-group-list {
             max-height: 200px;
@@ -3785,5 +4082,23 @@
         }
         #diffTab .diff-anova-group-list label:last-child {
             margin-bottom: 0;
+        }
+
+        /* Meta Sankey — hierarchy column checklist (drag-to-reorder rows) */
+        #metaSankeyColumnList .meta-sankey-col-row[data-checked="true"] {
+            cursor: grab;
+        }
+        #metaSankeyColumnList .meta-sankey-col-row.meta-sankey-dragging {
+            cursor: grabbing;
+            opacity: 0.45;
+        }
+        #metaSankeyColumnList .meta-sankey-col-row.meta-sankey-drop-before {
+            box-shadow: 0 -2px 0 0 var(--md-accent, #98927c);
+        }
+        #metaSankeyColumnList .meta-sankey-col-row.meta-sankey-drop-after {
+            box-shadow: 0 2px 0 0 var(--md-accent, #98927c);
+        }
+        #metaSankeyColumnList .meta-sankey-col-row[data-checked="false"] {
+            opacity: 0.72;
         }
     

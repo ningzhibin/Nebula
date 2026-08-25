@@ -42,14 +42,12 @@
     var REPORT_PLOTLY_MAX_LAYOUT_H = 3200;
     var REPORT_PLOTLY_MAX_LAYOUT_W = 2400;
 
-    /** Default section ids when resetting UI: summary only; figures opt-in via Add to Report. */
-    var REPORT_SECTIONS_DEFAULT = [
-        'matrix_meta'
-    ];
+    /** Default section ids when resetting UI: none by default; summary and figures opt-in via checkboxes / Add to Report. */
+    var REPORT_SECTIONS_DEFAULT = [];
 
     /** Default figure descriptions (export caption / modal preset). User may override per section in `window.nebulaReportFigureCaptions`. */
     var FIGURE_CAPTION_DEFAULTS = {
-        per_column_summary: 'Per-column QC summary (horizontal D3 bars, PNG in report): one row per sample; metric and transform follow Data QC → Column correlation. Same pixels as the on-screen chart.',
+        per_column_summary: 'Per-column QC summary (interactive Plotly horizontal bars in the report, 50% taller than on screen for readability): one row per sample; metric and transform follow Data QC → Column correlation. Height auto-scales with sample count.',
         total_log_signal: 'Total spectral load per sample: sum of log10(1 + intensity) over quantified features (finite values > 0). Useful for comparing run-scale intensity between samples.',
         column_boxplots: 'Distribution of log10(1 + intensity) for values > 0 per sample (horizontal box plots). Whiskers: min/max of subsampled log values; box: Q1–Q3; line: median.',
         top_features_bar: 'Ranked intensities for the selected sample column (top N features by intensity); optional log10(1+I) scale from Column profile settings.',
@@ -60,7 +58,27 @@
         pca_2d: 'PCA projection of samples (first two selected principal components); interactive Plotly embed with the same PC axes, groups, and zoom range as the Clustering tab at export time. Preprocessing matches Clustering → PCA.',
         pca_3d: 'PCA 3D projection (three selected principal components): interactive D3 replica of the Clustering 3D tab at export time — drag to rotate, wheel to zoom, legend show/hide and hover highlight, tooltips, and column labels.',
         pcoa_2d: 'PCoA (classical MDS) ordination of samples on the selected distance metric (e.g. Bray-Curtis); interactive Plotly embed with the same coordinates, groups, ellipses, and zoom range as the Clustering → PCoA tab at export time.',
-        pcoa_3d: 'PCoA 3D ordination (three selected principal coordinates) on the chosen distance metric: interactive D3 replica of the Clustering → PCoA 3D tab at export time — drag to rotate, wheel to zoom, legend show/hide, tooltips, and column labels.'
+        pcoa_3d: 'PCoA 3D ordination (three selected principal coordinates) on the chosen distance metric: interactive D3 replica of the Clustering → PCoA 3D tab at export time — drag to rotate, wheel to zoom, legend show/hide, tooltips, and column labels.',
+        row_profile: 'Row profile of the selected features across samples (Data QC → Row Profile) at export time; plot type and normalization follow the on-screen settings.',
+        pca_scree: 'PCA scree plot: variance explained by each extracted principal component (Clustering → PCA → Details), captured as a vector snapshot.',
+        tsne: 't-SNE embedding of samples (Clustering → t-SNE) with the perplexity/iterations and preprocessing used on screen at export time.',
+        kmeans_clusters: 'K-means cluster plot: samples on the PCA projection colored by discovered cluster, with centroids (Clustering → K-means) at export time.',
+        diff_volcano: 'Differential volcano plot (−log10 p/FDR vs log2 fold change) with the current thresholds and group labels at export time.',
+        diff_ma: 'Differential MA plot (log2 fold change vs mean abundance) with the current thresholds and group labels at export time.',
+        diff_group_heatmap: 'Differential group heatmap of the top features by significance (Downstream → Differential) at export time.',
+        saint_scatter: 'SAINT scatter plot of prey scores (Downstream → SAINT) captured as a vector snapshot of the on-screen figure.',
+        saint_network: 'SAINT bait–prey interaction network (Downstream → SAINT) captured as a vector snapshot of the on-screen figure.',
+        enrichr_bar: 'Enrichr enrichment bar chart of top terms (Downstream → Enrichr) at export time.',
+        enrichr_bubble: 'Enrichr enrichment bubble plot of top terms (Downstream → Enrichr) at export time.',
+        enrichr_heatmap: 'Enrichr results heatmap (Downstream → Enrichr → Heatmap) at export time.',
+        corr_pair_scatter: 'Pairwise scatter of the two selected columns (Y vs X, Data QC → Column correlation → Paired correlation) at export time.',
+        corr_pair_qq: 'QQ plot of sorted quantiles for the two selected columns (Data QC → Column correlation → Paired correlation) at export time.',
+        corr_pair_bland: 'Bland–Altman plot of the two selected columns (Data QC → Column correlation → Paired correlation) at export time.',
+        corr_pair_refcorr: 'Correlation of each column with the reference column X (Data QC → Column correlation → Paired correlation) at export time.',
+        upset_plot: 'UpSet plot of set intersections (Data QC → UpSet / Venn / K-map → Linked views), captured as a vector snapshot of the on-screen figure.',
+        upset_venn: 'Venn diagram of set intersections (Data QC → UpSet / Venn / K-map → Linked views), captured as a vector snapshot of the on-screen figure.',
+        upset_karnaugh: 'Karnaugh map of set intersections (Data QC → UpSet / Venn / K-map → Linked views), captured as a vector snapshot of the on-screen figure.',
+        upset_prop_venn: 'Proportional Venn diagram with areas proportional to set sizes (Data QC → UpSet / Venn / K-map → Proportional Venn), captured as a vector snapshot of the on-screen figure.'
     };
 
     if (!global.nebulaReportFigureCaptions) {
@@ -86,19 +104,38 @@
 
     /** @type {{ id: string, title: string, group: string, capture: string, plotlyId?: string, svgHostId?: string, hostId?: string }[]} */
     var REPORT_SECTIONS = [
-        { id: 'matrix_meta', title: 'Matrix (Overall stats) and meta summary', group: 'Summary', capture: 'html' },
-        { id: 'per_column_summary', title: 'Per-column summary (bar)', group: 'Data QC → Overall', capture: 'svg_host', svgHostId: 'dataQcOverallSummaryPlot' },
-        { id: 'total_log_signal', title: 'Total log10(1+I) per sample', group: 'Data QC → Overall', capture: 'svg_host', svgHostId: 'dataQcOverallChartTotalLog' },
-        { id: 'column_boxplots', title: 'Per-column box plot (log10(1+I))', group: 'Data QC → Overall', capture: 'svg_host', svgHostId: 'dataQcOverallChartBox' },
+{ id: 'per_column_summary', title: 'Per-column summary (bar)', group: 'Data QC → Overall', capture: 'overall_plotly', plotlyId: 'dataQcOverallSummaryPlot', svgHostId: 'dataQcOverallSummaryPlot' },
+    { id: 'total_log_signal', title: 'Total log10(1+I) per sample', group: 'Data QC → Overall', capture: 'overall_plotly', plotlyId: 'dataQcOverallChartTotalLog', svgHostId: 'dataQcOverallChartTotalLog' },
+    { id: 'column_boxplots', title: 'Per-column box plot (log10(1+I))', group: 'Data QC → Overall', capture: 'overall_plotly', plotlyId: 'dataQcOverallChartBox', svgHostId: 'dataQcOverallChartBox' },
         { id: 'top_features_bar', title: 'Column profile — top features bar (current sample)', group: 'Data QC → Column profile', capture: 'plotly', plotlyId: 'colProfileBarPlot' },
         { id: 'column_profile_treemap', title: 'Column profile — treemap (current sample)', group: 'Data QC → Column profile', capture: 'plotly', plotlyId: 'colProfileTreePlot' },
         { id: 'corr_scatter_matrix', title: 'Column correlation — scatter / lower matrix', group: 'Data QC → Column correlation', capture: 'plotly', plotlyId: 'colCorrScatterMatrixMixed' },
         { id: 'corr_distance_heatmap', title: 'Column correlation — distance heatmap', group: 'Data QC → Column correlation', capture: 'plotly', plotlyId: 'colCorrDistHeatmap' },
+        { id: 'corr_pair_scatter', title: 'Column correlation — pair scatter (Y vs X)', group: 'Data QC → Column correlation', capture: 'plotly', plotlyId: 'colCorrScatterPlot' },
+        { id: 'corr_pair_qq', title: 'Column correlation — QQ plot (sorted quantiles)', group: 'Data QC → Column correlation', capture: 'plotly', plotlyId: 'colCorrQQPlot' },
+        { id: 'corr_pair_bland', title: 'Column correlation — Bland–Altman', group: 'Data QC → Column correlation', capture: 'plotly', plotlyId: 'colCorrBlandPlot' },
+        { id: 'corr_pair_refcorr', title: 'Column correlation — correlation with column X', group: 'Data QC → Column correlation', capture: 'plotly', plotlyId: 'colCorrRefCorrPlot' },
+        { id: 'upset_plot', title: 'UpSet / Venn / K-map — UpSet plot', group: 'Data QC → UpSet / Venn / K-map', capture: 'svg_host', svgHostId: 'upsetPlotHost' },
+        { id: 'upset_venn', title: 'UpSet / Venn / K-map — Venn diagram', group: 'Data QC → UpSet / Venn / K-map', capture: 'svg_host', svgHostId: 'upsetVennHost' },
+        { id: 'upset_karnaugh', title: 'UpSet / Venn / K-map — Karnaugh map', group: 'Data QC → UpSet / Venn / K-map', capture: 'svg_host', svgHostId: 'upsetKarnaughHost' },
+        { id: 'upset_prop_venn', title: 'UpSet / Venn / K-map — Proportional Venn', group: 'Data QC → UpSet / Venn / K-map', capture: 'svg_host', svgHostId: 'upsetPropVennHost' },
+        { id: 'row_profile', title: 'Row profile (selected features)', group: 'Data QC → Row profile', capture: 'plotly', plotlyId: 'rowProfileEmbeddedPlot' },
         { id: 'heatmap', title: 'Clustering — heatmap', group: 'Clustering', capture: 'plotly', plotlyId: 'heatmapPlot' },
         { id: 'pca_2d', title: 'Clustering — PCA 2D plot', group: 'Clustering', capture: 'pca_plotly' },
         { id: 'pca_3d', title: 'Clustering — PCA 3D plot', group: 'Clustering', capture: 'pca_3d_interactive' },
+        { id: 'pca_scree', title: 'Clustering — PCA scree (variance explained)', group: 'Clustering', capture: 'svg_host', svgHostId: 'pcaDetailsScreePlot' },
         { id: 'pcoa_2d', title: 'Clustering — PCoA 2D plot', group: 'Clustering', capture: 'pcoa_plotly' },
-        { id: 'pcoa_3d', title: 'Clustering — PCoA 3D plot', group: 'Clustering', capture: 'pcoa_3d_interactive' }
+        { id: 'pcoa_3d', title: 'Clustering — PCoA 3D plot', group: 'Clustering', capture: 'pcoa_3d_interactive' },
+        { id: 'tsne', title: 'Clustering — t-SNE plot', group: 'Clustering', capture: 'plotly', plotlyId: 'tsnePlot' },
+        { id: 'kmeans_clusters', title: 'Clustering — K-means cluster plot', group: 'Clustering', capture: 'plotly', plotlyId: 'kmClusterPlot' },
+        { id: 'diff_volcano', title: 'Differential — volcano plot', group: 'Downstream → Differential', capture: 'plotly', plotlyId: 'diffVolcanoPlot' },
+        { id: 'diff_ma', title: 'Differential — MA plot', group: 'Downstream → Differential', capture: 'plotly', plotlyId: 'diffMaPlot' },
+        { id: 'diff_group_heatmap', title: 'Differential — group heatmap', group: 'Downstream → Differential', capture: 'plotly', plotlyId: 'diffGroupHeatmapPlot' },
+        { id: 'saint_scatter', title: 'SAINT — scatter plot', group: 'Downstream → SAINT', capture: 'svg_host', svgHostId: 'saintVolcanoPlotSurface' },
+        { id: 'saint_network', title: 'SAINT — bait–prey network', group: 'Downstream → SAINT', capture: 'svg_host', svgHostId: 'saintNetworkContainer' },
+        { id: 'enrichr_bar', title: 'Enrichr — bar chart', group: 'Downstream → Enrichr', capture: 'plotly', plotlyId: 'enrichrPlotBar' },
+        { id: 'enrichr_bubble', title: 'Enrichr — bubble plot', group: 'Downstream → Enrichr', capture: 'plotly', plotlyId: 'enrichrPlotBubble' },
+        { id: 'enrichr_heatmap', title: 'Enrichr — results heatmap', group: 'Downstream → Enrichr', capture: 'plotly', plotlyId: 'enrichrHeatmapPlot' }
     ];
 
     /**
@@ -121,186 +158,6 @@
             .replace(/"/g, '&quot;');
     }
 
-    function fmtLogCell(x) {
-        if (!Number.isFinite(x)) return '—';
-        return x.toFixed(3);
-    }
-
-    function fmtTotalLogCell(x) {
-        if (!Number.isFinite(x)) return '—';
-        return x.toFixed(2);
-    }
-
-    function metaRowSampleId(row, sampleIdHeader) {
-        if (row == null || !sampleIdHeader) return '';
-        var v = row[sampleIdHeader];
-        return v == null ? '' : String(v).trim();
-    }
-
-    function collectMetaTableSummaryHtml(meta, columnHeaders) {
-        if (!meta || !Array.isArray(meta.headers) || !meta.headers.length) {
-            return '<p class="nebula-report-muted">No meta table loaded.</p>';
-        }
-        var nHdr = meta.headers.length;
-        var nRows = Array.isArray(meta.rows) ? meta.rows.length : 0;
-        var sidHeader = null;
-        for (var h = 0; h < meta.headers.length; h++) {
-            if (String(meta.headers[h]).trim().toLowerCase() === 'sample_id') {
-                sidHeader = meta.headers[h];
-                break;
-            }
-        }
-        var parts = [];
-        parts.push('<table class="nebula-report-table"><tbody>');
-        parts.push('<tr><th>Meta rows</th><td>' + nRows.toLocaleString() + '</td></tr>');
-        parts.push('<tr><th>Meta columns</th><td>' + nHdr.toLocaleString() + '</td></tr>');
-        parts.push('</tbody></table>');
-        parts.push('<p class="nebula-report-small"><strong>Column names:</strong> ' + escapeHtml(meta.headers.join(' · ')) + '</p>');
-
-        if (sidHeader && Array.isArray(columnHeaders) && columnHeaders.length) {
-            var idSet = {};
-            if (Array.isArray(meta.rows)) {
-                for (var r = 0; r < meta.rows.length; r++) {
-                    var id = metaRowSampleId(meta.rows[r], sidHeader);
-                    if (id) idSet[id] = true;
-                }
-            }
-            var matched = 0;
-            for (var c = 0; c < columnHeaders.length; c++) {
-                var col = String(columnHeaders[c] == null ? '' : columnHeaders[c]).trim();
-                if (col && idSet[col]) matched++;
-            }
-            parts.push(
-                '<p><strong>Sample_ID ↔ matrix columns:</strong> ' +
-                matched.toLocaleString() + ' of ' + columnHeaders.length.toLocaleString() +
-                ' matrix column headers match a <code>Sample_ID</code> value in the meta table (trimmed exact match).</p>'
-            );
-            parts.push('<p><strong>Distinct Sample_ID in meta:</strong> ' + Object.keys(idSet).length.toLocaleString() + '</p>');
-        } else if (!sidHeader) {
-            parts.push('<p class="nebula-report-muted">No <code>Sample_ID</code> column in meta — skipping column↔meta match summary.</p>');
-        }
-
-        var annCols = meta.headers.filter(function (x) {
-            return x && String(x).trim() !== '' && String(x).trim().toLowerCase() !== 'sample_id';
-        });
-        if (annCols.length) {
-            parts.push('<h4 class="nebula-report-subh2">Annotation columns</h4>');
-            parts.push('<p class="nebula-report-small">' + escapeHtml(annCols.join(', ')) + '</p>');
-            var maxAnn = Math.min(12, annCols.length);
-            parts.push(
-                '<table class="nebula-report-table nebula-report-matrix-table"><thead><tr>' +
-                '<th>Column</th><th>Non-empty cells</th><th>Distinct values</th></tr></thead><tbody>'
-            );
-            for (var a = 0; a < maxAnn; a++) {
-                var colName = annCols[a];
-                var nonEmpty = 0;
-                var seen = {};
-                if (Array.isArray(meta.rows)) {
-                    for (var rr = 0; rr < meta.rows.length; rr++) {
-                        var row2 = meta.rows[rr];
-                        var cell = row2 && row2[colName];
-                        var t = cell == null ? '' : String(cell).trim();
-                        if (t !== '') {
-                            nonEmpty++;
-                            seen[t] = true;
-                        }
-                    }
-                }
-                var distinct = Object.keys(seen).length;
-                parts.push(
-                    '<tr><td>' + escapeHtml(String(colName)) + '</td><td>' + nonEmpty.toLocaleString() + '</td><td>' +
-                    distinct.toLocaleString() + '</td></tr>'
-                );
-            }
-            parts.push('</tbody></table>');
-            if (annCols.length > maxAnn) {
-                parts.push('<p class="nebula-report-muted">(' + (annCols.length - maxAnn) + ' more annotation columns not tabulated.)</p>');
-            }
-        }
-        return parts.join('');
-    }
-
-    function collectMatrixMetaHtml() {
-        try {
-        var data = global.currentData;
-        var matrix = getCurrentMatrixForReport();
-        var meta = global.metaData;
-        if (!data || !Array.isArray(data.columnHeaders) || !data.columnHeaders.length) {
-            return '<p class="nebula-report-muted">No matrix loaded.</p>';
-        }
-        if (!matrix || !Array.isArray(matrix) || !matrix.length) {
-            return '<p class="nebula-report-muted">Matrix is empty (no row data in <code>currentDataMatrix</code> or <code>currentData.dataMatrix</code>).</p>';
-        }
-
-        var headers = data.columnHeaders;
-        var rowIds = Array.isArray(data.rowIds) ? data.rowIds : null;
-        var stats = null;
-        if (global.DataQcOverallDashboard && typeof global.DataQcOverallDashboard.computeColumnStats === 'function') {
-            stats = global.DataQcOverallDashboard.computeColumnStats(matrix, headers);
-        }
-
-        var parts = [];
-        parts.push('<h3 class="nebula-report-subh">Intensity matrix (Data QC → Overall)</h3>');
-        parts.push(
-            '<p class="nebula-report-small">Same <strong>current matrix</strong> as <strong>Data QC → Overall</strong>: a <em>quantified</em> cell is a finite intensity <strong>&gt; 0</strong>. ' +
-            'Medians / quartiles / whiskers use <code>log10(1 + I)</code> on quantified cells, with the same row subsampling rule as the Overall box plots when there are many features.</p>'
-        );
-        if (rowIds && rowIds.length && rowIds.length !== matrix.length) {
-            parts.push(
-                '<p class="nebula-report-muted">Note: <code>rowIds.length</code> (' + rowIds.length.toLocaleString() +
-                ') differs from matrix row count (' + matrix.length.toLocaleString() + '); stats use the matrix rows.</p>'
-            );
-        }
-
-        if (stats) {
-            var matrixCells = stats.matrixCells != null ? stats.matrixCells : stats.nRows * stats.nCols;
-            var tq = stats.totalQuantifiedCells != null ? stats.totalQuantifiedCells : 0;
-            var pct = matrixCells > 0 ? (100 * tq) / matrixCells : 0;
-            parts.push('<table class="nebula-report-table"><tbody>');
-            parts.push('<tr><th>Features (rows)</th><td>' + stats.nRows.toLocaleString() + '</td></tr>');
-            parts.push('<tr><th>Samples (columns)</th><td>' + stats.nCols.toLocaleString() + '</td></tr>');
-            parts.push(
-                '<tr><th>Quantified cells</th><td>' + tq.toLocaleString() + ' / ' + matrixCells.toLocaleString() +
-                ' (' + (Number.isFinite(pct) ? pct.toFixed(1) : '0') + '%)</td></tr>'
-            );
-            parts.push('<tr><th>Box / IQR note</th><td>' + escapeHtml(stats.boxNote || '') + '</td></tr>');
-            parts.push('</tbody></table>');
-
-            var maxSampleRows = 250;
-            var cols = stats.cols || [];
-            parts.push('<h4 class="nebula-report-subh2">Per-sample summary</h4>');
-            parts.push(
-                '<table class="nebula-report-table nebula-report-matrix-table"><thead><tr>' +
-                '<th>Sample</th><th>Quantified (I&gt;0)</th><th>Median log<sub>10</sub>(1+I)</th><th>Q1</th><th>Q3</th><th>Min log</th><th>Max log</th><th>Σ log<sub>10</sub>(1+I)</th>' +
-                '</tr></thead><tbody>'
-            );
-            for (var j = 0; j < cols.length && j < maxSampleRows; j++) {
-                var d = cols[j];
-                var nq = d.nQuant != null && Number.isFinite(d.nQuant) ? d.nQuant : null;
-                parts.push(
-                    '<tr><td>' + escapeHtml(d.label) + '</td><td>' + (nq != null ? nq.toLocaleString() : '—') + '</td>' +
-                    '<td>' + fmtLogCell(d.medLog) + '</td><td>' + fmtLogCell(d.q1) + '</td><td>' + fmtLogCell(d.q3) + '</td>' +
-                    '<td>' + fmtLogCell(d.minLog) + '</td><td>' + fmtLogCell(d.maxLog) + '</td><td>' + fmtTotalLogCell(d.totalLog) + '</td></tr>'
-                );
-            }
-            parts.push('</tbody></table>');
-            if (cols.length > maxSampleRows) {
-                parts.push(
-                    '<p class="nebula-report-muted">(' + (cols.length - maxSampleRows).toLocaleString() + ' additional samples omitted from this table.)</p>'
-                );
-            }
-        } else {
-            parts.push('<p class="nebula-report-muted">Data QC Overall module unavailable (<code>DataQcOverallDashboard.computeColumnStats</code>).</p>');
-        }
-
-        parts.push('<h3 class="nebula-report-subh">Meta table</h3>');
-        parts.push(collectMetaTableSummaryHtml(meta, headers));
-
-        return parts.join('');
-        } catch (eRep) {
-            return '<p class="nebula-report-muted">Matrix/meta summary error: ' + escapeHtml(eRep && eRep.message ? eRep.message : String(eRep)) + '</p>';
-        }
-    }
 
     function collectHtmlFragment(hostId) {
         var el = document.getElementById(hostId);
@@ -817,7 +674,54 @@
         return next;
     }
 
-    /** PCA 2D D3: redraw 2D view then rasterize SVG (works when PCA tab/panel is hidden). */
+    /**
+     * Data QC → Overall Plotly hosts: refresh the dashboard first (works while the panel is hidden),
+     * then snapshot the live Plotly figure as an interactive embed; PNG fallback when Plotly data is
+     * missing. heightScale (1.5 for per-column summary) boosts the report height on top of the
+     * column-count auto height.
+     */
+    function captureOverallPlotlyForReport(plotlyId, svgFallbackId, heightScale) {
+        var next = overallD3CaptureChain.then(function () {
+            return new Promise(function (resolve) {
+                var dash = global.DataQcOverallDashboard;
+                function runCapture() {
+                    collectPlotlyEmbedForReport(plotlyId).then(function (emb) {
+                        if (emb && emb.kind === 'plotly_embed') {
+                            if (heightScale && heightScale > 1 && emb.layout && Number.isFinite(Number(emb.layout.height))) {
+                                emb.layout.height = Math.round(Math.min(REPORT_PLOTLY_MAX_LAYOUT_H, Number(emb.layout.height) * heightScale));
+                            }
+                            resolve(emb);
+                        } else if (svgFallbackId) {
+                            captureOverallD3SvgHost(svgFallbackId).then(resolve);
+                        } else {
+                            resolve(emb);
+                        }
+                    });
+                }
+                if (dash && typeof dash.refresh === 'function') {
+                    Promise.resolve(dash.refresh())
+                        .then(function () {
+                            if (typeof global.requestAnimationFrame === 'function') {
+                                global.requestAnimationFrame(function () {
+                                    setTimeout(runCapture, 0);
+                                });
+                            } else {
+                                setTimeout(runCapture, 40);
+                            }
+                        })
+                        .catch(function () {
+                            runCapture();
+                        });
+                } else {
+                    runCapture();
+                }
+            });
+        });
+        overallD3CaptureChain = next.catch(function () {
+            return null;
+        });
+        return next;
+    }
     function capturePca2dSvgHost(hostId) {
         var next = pca2dCaptureChain.then(function () {
             return new Promise(function (resolve) {
@@ -1196,14 +1100,14 @@
     }
 
     function collectSection(def) {
-        if (def.capture === 'html' && def.id === 'matrix_meta') {
-            return Promise.resolve({ kind: 'html', html: collectMatrixMetaHtml() });
-        }
         if (def.capture === 'html_fragment') {
             return Promise.resolve(collectHtmlFragment(def.hostId));
         }
         if (def.capture === 'plotly') {
             return collectPlotlyEmbedForReport(def.plotlyId);
+        }
+        if (def.capture === 'overall_plotly') {
+            return captureOverallPlotlyForReport(def.plotlyId, def.svgHostId, 1);
         }
         if (def.capture === 'pca_plotly') {
             return collectPca2dPlotlyForReport();
@@ -1276,22 +1180,27 @@
             wi +
             '" height="' +
             hi +
-            '" style="width:' +
-            wi +
-            'px;height:' +
-            hi +
-            'px;min-width:' +
-            wi +
-            'px;max-width:none;display:block;vertical-align:top;image-rendering:-webkit-optimize-contrast;image-rendering:crisp-edges"'
+            '" style="width:100%;height:auto;max-width:100%;display:block;vertical-align:top;image-rendering:-webkit-optimize-contrast;image-rendering:crisp-edges"'
         );
     }
 
-    /** Outer &lt;figure&gt; shell for raster PNG: same width as the captured chart. */
+    function applyReportImgAttrsToDom(el, attrStr) {
+        if (!el || !attrStr) return;
+        var s = String(attrStr).trim();
+        if (!s) return;
+        var wm = s.match(/\bwidth="([^"]*)"/);
+        var hm = s.match(/\bheight="([^"]*)"/);
+        var sm = s.match(/\bstyle="([^"]*)"/);
+        if (wm && wm[1]) el.setAttribute('width', wm[1]);
+        if (hm && hm[1]) el.setAttribute('height', hm[1]);
+        if (sm && sm[1]) el.setAttribute('style', sm[1]);
+    }
+
+    /** Outer &lt;figure&gt; shell for raster PNG: full-width block so every report
+     *  figure in the preview/export occupies the same width (img width:100%). */
     function rasterFigureShellStyleFromImageBody(body) {
-        var w = Number(body.cssWidth);
-        if (!Number.isFinite(w) || w < 1) return '';
-        var wi = Math.round(w);
-        return ' style="display:inline-block;width:' + wi + 'px;min-width:' + wi + 'px;max-width:none;box-sizing:border-box;vertical-align:top"';
+        if (!body || !Number.isFinite(Number(body.cssWidth)) || Number(body.cssWidth) < 1) return '';
+        return ' style="display:block;width:100%;max-width:100%;box-sizing:border-box;vertical-align:top"';
     }
 
     /** Inline host for cloned SVG (fixed layout size matching the Clustering tab). */
@@ -1420,7 +1329,44 @@
                 var pl = pendingPlotly[pi];
                 if (!pl.host) continue;
                 try {
-                    global.Plotly.newPlot(pl.host, pl.data, pl.layout || {}, pl.config || {});
+                    var plLayout = pl.layout || {};
+                    if (pl.fullWidth || pl.fullHeight) {
+                        var l2 = {};
+                        var lk;
+                        for (lk in plLayout) l2[lk] = plLayout[lk];
+                        if (pl.fullWidth && pl.host.clientWidth > 100) {
+                            l2.width = pl.host.clientWidth;
+                        }
+                        if (pl.fullHeight) {
+                            /* Fill the visible preview box: size the host to the panel height
+                             * minus the figure chrome (section title + caption editor + padding). */
+                            var figEl = pl.host.parentElement;
+                            var rootEl = pl.host.closest ? pl.host.closest('.report-preview-root') : null;
+                            if (!rootEl) {
+                                var anc = figEl;
+                                while (anc && anc !== document && !(anc.className && String(anc.className).indexOf('report-preview-root') >= 0)) {
+                                    anc = anc.parentElement;
+                                }
+                                rootEl = (anc && anc !== document) ? anc : null;
+                            }
+                            if (figEl && rootEl && rootEl.clientHeight > 100) {
+                                var figTop = figEl.getBoundingClientRect().top;
+                                var boxTop = rootEl.getBoundingClientRect().top;
+                                var availH = rootEl.clientHeight - (figTop - boxTop);
+                                var capEl = figEl.querySelector('.nebula-report-preview-caption');
+                                var capH = capEl ? capEl.offsetHeight : 0;
+                                var hostH = Math.floor(availH - capH - 24);
+                                if (hostH > 200) {
+                                    pl.host.style.height = hostH + 'px';
+                                    pl.host.style.minHeight = '0';
+                                    l2.height = hostH;
+                                }
+                            }
+                        }
+                        global.Plotly.newPlot(pl.host, pl.data, l2, pl.config || {});
+                    } else {
+                        global.Plotly.newPlot(pl.host, pl.data, plLayout, pl.config || {});
+                    }
                 } catch (ePl) {
                     pl.host.innerHTML = '<p class="nebula-report-muted">Plotly mount failed: ' + escapeHtml(String(ePl && ePl.message ? ePl.message : ePl)) + '</p>';
                 }
@@ -1452,6 +1398,302 @@
         import('https://cdn.jsdelivr.net/npm/d3@7/+esm').then(mountPca3dAll).catch(function () {
             if (typeof global.d3 !== 'undefined') mountPca3dAll(global.d3);
         });
+    }
+
+/** Last active report group tab (persisted across preview refreshes). */
+        var reportPreviewActiveGroupName = null;
+
+        /**
+         * Map a report section id to its REPORT_SECTIONS group (fallback 'Other').
+         * @param {string|null|undefined} sectionId
+         */
+        function reportSectionGroupName(sectionId) {
+            if (!sectionId || !REPORT_SECTIONS || !REPORT_SECTIONS.length) return 'Other';
+            for (var i = 0; i < REPORT_SECTIONS.length; i++) {
+                if (REPORT_SECTIONS[i].id === sectionId && REPORT_SECTIONS[i].group) {
+                    return REPORT_SECTIONS[i].group;
+                }
+            }
+            return 'Other';
+        }
+
+        /**
+         * Preview-only: sections in these groups stretch their figures to the full
+         * width of the report right panel (instead of the locked layout width).
+         * @param {string|null|undefined} sectionId
+         */
+        function isReportFullWidthSection(sectionId) {
+            var g = reportSectionGroupName(sectionId);
+            return g === 'Data QC → Row profile' || g === 'Clustering';
+        }
+
+        /**
+         * Preview-only: these sections also fill the full visible height of the
+         * report preview box (Plotly host + layout height sized to the panel at mount).
+         * @param {string|null|undefined} sectionId
+         */
+        function isReportFullHeightSection(sectionId) {
+            return sectionId === 'heatmap' || sectionId === 'row_profile';
+        }
+
+        /**
+         * Saved-report: heatmap and row profile stretch to fill the whole content
+         * column (full width + full viewport height) instead of the locked layout size.
+         * @param {string|null|undefined} sectionId
+         */
+        function isExportFillSection(sectionId) {
+            return sectionId === 'heatmap' || sectionId === 'row_profile';
+        }
+
+        var REPORT_PREVIEW_SVG_SCALE = {};
+
+        function reportPreviewSvgScale(sectionId) {
+            return REPORT_PREVIEW_SVG_SCALE[sectionId] || 0;
+        }
+
+        /**
+         * Shrink an in-preview figure (svg_embed or raster image) to ratio of its natural size.
+         * A viewBox is required for SVG so the smaller width/height scales the drawing instead
+         * of clipping it; raster images scale directly via CSS width/height.
+         */
+        function scaleReportPreviewFigure(figEl, mediaEl, body, ratio) {
+            var w = Number(body.cssWidth);
+            var h = Number(body.cssHeight);
+            if (!Number.isFinite(w) || w < 1 || !Number.isFinite(h) || h < 1 || !(ratio > 0)) return;
+            var wS = Math.max(60, Math.round(w * ratio));
+            var hS = Math.max(40, Math.round(h * ratio));
+            if (mediaEl && mediaEl.getAttribute && mediaEl.tagName === 'SVG') {
+                if (!mediaEl.getAttribute('viewBox')) mediaEl.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+                mediaEl.setAttribute('width', wS);
+                mediaEl.setAttribute('height', hS);
+                mediaEl.style.width = wS + 'px';
+                mediaEl.style.height = hS + 'px';
+            } else if (mediaEl) {
+                mediaEl.style.width = wS + 'px';
+                mediaEl.style.height = hS + 'px';
+            }
+            figEl.style.width = wS + 'px';
+            figEl.style.minWidth = '0';
+            figEl.style.maxWidth = '100%';
+            var hostEl = figEl.querySelector('.nebula-report-svg-host');
+            if (hostEl) {
+                hostEl.style.width = wS + 'px';
+                hostEl.style.height = hS + 'px';
+                hostEl.style.minWidth = '0';
+                hostEl.style.minHeight = '0';
+            }
+        }
+
+    /**
+         * Preview tab label for a report section: the section title (each figure gets
+         * its own tab in the report preview), falling back to the id or 'Other'.
+         * @param {string|null|undefined} sectionId
+         */
+        function reportSectionTabName(sectionId) {
+            if (!sectionId || !REPORT_SECTIONS || !REPORT_SECTIONS.length) return 'Other';
+            for (var i = 0; i < REPORT_SECTIONS.length; i++) {
+                if (REPORT_SECTIONS[i].id === sectionId) {
+                    return REPORT_SECTIONS[i].title || sectionId;
+                }
+            }
+            return 'Other';
+        }
+
+        /**
+         * Group enabled report blocks by section (one figure per group/tab), preserving
+         * REPORT_SECTIONS order.
+         * @param {{ sectionId?: string, body?: object }[]} blocks
+         * @returns {{ name: string, blocks: object[] }[]}
+         */
+        function groupReportBlocks(blocks) {
+            var order = [];
+            var byName = {};
+            var out = [];
+            var i, j, name, secId;
+            for (i = 0; i < REPORT_SECTIONS.length; i++) {
+                name = reportSectionTabName(REPORT_SECTIONS[i].id);
+                if (!byName[name]) {
+                    byName[name] = [];
+                    order.push(name);
+                }
+            }
+            for (i = 0; i < blocks.length; i++) {
+                secId = blocks[i] && blocks[i].sectionId;
+                if (!secId) continue;
+                name = reportSectionTabName(secId);
+                if (!byName[name]) {
+                    byName[name] = [];
+                    order.push(name);
+                }
+                byName[name].push(blocks[i]);
+            }
+            for (i = 0; i < order.length; i++) {
+                if (byName[order[i]] && byName[order[i]].length) {
+                    out.push({ name: order[i], blocks: byName[order[i]] });
+                }
+            }
+            return out;
+        }
+
+    /**
+     * Activate a report group tab: swap panel visibility, update tab buttons, restore (center) and
+     * lazily mount that group's Plotly / PCA 3D interactives on first activation.
+     * @param {number} idx
+     * @param {HTMLElement[]} btns
+     * @param {HTMLElement[]} panels
+     * @param {{ name: string, blocks: object[] }[]} groups
+     * @param {{ plotly: object[], pca3d: object[] }[]} pendingByGroup
+     */
+    function activateReportGroupTab(idx, btns, panels, groups, pendingByGroup) {
+        var i;
+        for (i = 0; i < btns.length; i++) {
+            btns[i].className = i === idx ? 'nebula-report-tab active' : 'nebula-report-tab';
+            btns[i].setAttribute('aria-selected', i === idx ? 'true' : 'false');
+            panels[i].style.display = i === idx ? 'block' : 'none';
+        }
+        reportPreviewActiveGroupName = groups[idx] ? groups[idx].name : null;
+        var pend = pendingByGroup[idx];
+        if (pend && (pend.plotly.length || pend.pca3d.length)) {
+            var p1 = pend.plotly;
+            var p2 = pend.pca3d;
+            pend.plotly = [];
+            pend.pca3d = [];
+            mountReportPreviewInteractives(p1, p2);
+        }
+    }
+
+    /**
+     * Turn the linear preview into per-figure sub-tabs (one tab per enabled section).
+     * Each rendered section is (h2 + body) pair inside root; we re-parent those pairs into per-figure
+     * panels under a tab row and mount the active figure's interactives lazily.
+     * Falls back to the previous linear layout when only one figure exists.
+     * @param {HTMLElement} root
+     * @param {{ sectionId: string, body?: object }[]} blocks
+     * @param {object[]} allPendingPlotly
+     * @param {object[]} allPendingPca3d
+     */
+    function organizeReportPreviewGroups(root, blocks, allPendingPlotly, allPendingPca3d) {
+        var groups = groupReportBlocks(blocks);
+        if (!groups || groups.length <= 1) {
+            mountReportPreviewInteractives(allPendingPlotly, allPendingPca3d);
+            return;
+        }
+
+        /* Collect the (h2, body) pairs the linear renderer just appended. */
+        var kids = [];
+        var k;
+        for (k = 0; k < root.children.length; k++) kids.push(root.children[k]);
+        var units = [];
+        for (k = 0; k < kids.length; k++) {
+            var el = kids[k];
+            if (el && el.className && String(el.className).indexOf('nebula-report-preview-section-title') >= 0) {
+                var body = kids[k + 1] || null;
+                if (body) {
+                    units.push({ h2: el, body: body });
+                    k++;
+                }
+            }
+        }
+
+        /* Map each unit to its group index (units render in the same order as blocks). */
+        var unitGroups = [];
+        var g;
+        for (k = 0; k < units.length; k++) {
+            var blk = blocks[k];
+            var secId = blk && blk.sectionId;
+            var gName = reportSectionTabName(secId);
+            var gi = -1;
+            for (g = 0; g < groups.length; g++) {
+                if (groups[g].name === gName) { gi = g; break; }
+            }
+            if (gi < 0) gi = 0;
+            unitGroups.push(gi);
+        }
+
+        /* Detach only the section units (keep the h1 + meta header). */
+        var unitEls = {};
+        for (k = 0; k < units.length; k++) {
+            unitEls[units[k].h2] = true;
+            if (units[k].body) unitEls[units[k].body] = true;
+        }
+        for (var rm = kids.length - 1; rm >= 0; rm--) {
+            var kid = kids[rm];
+            if (kid && unitEls[kid] && kid.parentNode === root) root.removeChild(kid);
+        }
+
+        /* Panels + per-group pending buckets. */
+        var panels = [];
+        var pendingByGroup = [];
+        var i;
+        for (i = 0; i < groups.length; i++) {
+            panels.push(document.createElement('div'));
+            pendingByGroup.push({ plotly: [], pca3d: [] });
+        }
+        for (k = 0; k < units.length; k++) {
+            var panel = panels[unitGroups[k]];
+            panel.appendChild(units[k].h2);
+            panel.appendChild(units[k].body);
+        }
+        for (i = 0; i < panels.length; i++) {
+            var pd = pendingByGroup[i];
+            for (var pi = 0; pi < allPendingPlotly.length; pi++) {
+                if (panels[i].contains(allPendingPlotly[pi].host)) pd.plotly.push(allPendingPlotly[pi]);
+            }
+            for (pi = 0; pi < allPendingPca3d.length; pi++) {
+                if (panels[i].contains(allPendingPca3d[pi].host)) pd.pca3d.push(allPendingPca3d[pi]);
+            }
+        }
+
+        /* Active tab: last used group if still present, else first. */
+        var activeIdx = 0;
+        if (reportPreviewActiveGroupName) {
+            for (i = 0; i < groups.length; i++) {
+                if (groups[i].name === reportPreviewActiveGroupName) { activeIdx = i; break; }
+            }
+        }
+
+        /* Tab row. */
+        var tabsRow = document.createElement('div');
+        tabsRow.className = 'nebula-report-tabs';
+        tabsRow.setAttribute('role', 'tablist');
+        var btns = [];
+        for (i = 0; i < groups.length; i++) {
+            (function (idx) {
+                var btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'nebula-report-tab';
+                btn.setAttribute('role', 'tab');
+                btn.setAttribute('aria-selected', idx === activeIdx ? 'true' : 'false');
+                btn.textContent = groups[idx].name;
+                btn.addEventListener('click', function () {
+                    activateReportGroupTab(idx, btns, panels, groups, pendingByGroup);
+                });
+                btns.push(btn);
+                tabsRow.appendChild(btn);
+            })(i);
+        }
+        reportPreviewActiveGroupName = groups[activeIdx] ? groups[activeIdx].name : null;
+        btns[activeIdx].className = 'nebula-report-tab active';
+        btns[activeIdx].setAttribute('aria-selected', 'true');
+
+        for (i = 0; i < panels.length; i++) {
+            panels[i].className = 'nebula-report-tabpanel';
+            panels[i].setAttribute('role', 'tabpanel');
+            panels[i].style.display = i === activeIdx ? 'block' : 'none';
+        }
+
+        root.appendChild(tabsRow);
+        for (i = 0; i < panels.length; i++) root.appendChild(panels[i]);
+
+        /* Mount only the visible group now; the rest mount on first tab activation. */
+        var act = pendingByGroup[activeIdx];
+        if (act && (act.plotly.length || act.pca3d.length)) {
+            var actPlotly = act.plotly;
+            var actPca3d = act.pca3d;
+            act.plotly = [];
+            act.pca3d = [];
+            mountReportPreviewInteractives(actPlotly, actPca3d);
+        }
     }
 
     /**
@@ -1503,6 +1745,16 @@
                 var plotHost = document.createElement('div');
                 plotHost.className = 'nebula-report-plotly-host';
                 applyExportStyleString(plotHost, plotlyHostInlineStyleFromLayout(body.layout));
+                var fullW = isReportFullWidthSection(blk.sectionId);
+                var fullH = isReportFullHeightSection(blk.sectionId);
+                if (fullW) {
+                    plotFig.style.width = '100%';
+                    plotFig.style.minWidth = '0';
+                    plotFig.style.maxWidth = '100%';
+                    plotHost.style.width = '100%';
+                    plotHost.style.minWidth = '0';
+                    plotHost.style.maxWidth = '100%';
+                }
                 plotFig.appendChild(plotHost);
                 plotFig.appendChild(createPreviewCaptionEditor(
                     blk.sectionId,
@@ -1514,7 +1766,9 @@
                     host: plotHost,
                     data: body.data,
                     layout: body.layout,
-                    config: body.config || {}
+                    config: body.config || {},
+                    fullWidth: !!fullW,
+                    fullHeight: !!fullH
                 });
             } else if (body.kind === 'pca3d_interactive') {
                 var cap3d = blk.sectionId
@@ -1558,6 +1812,11 @@
                 applyExportStyleString(svgHost, reportSvgHostInlineStyle(body));
                 svgHost.innerHTML = body.svgMarkup || '';
                 figSvg.appendChild(svgHost);
+                var svgScale = reportPreviewSvgScale(blk.sectionId);
+                if (svgScale > 0) {
+                    var innerSvg = svgHost.querySelector('svg');
+                    scaleReportPreviewFigure(figSvg, innerSvg, body, svgScale);
+                }
                 figSvg.appendChild(createPreviewCaptionEditor(blk.sectionId, capSvg, 'Exact SVG copy at export time.'));
                 var staticNote = document.createElement('p');
                 staticNote.className = 'nebula-report-pca3d-static-note';
@@ -1575,7 +1834,9 @@
                 var img = document.createElement('img');
                 img.src = body.dataUrl || '';
                 img.alt = blk.title || '';
-                applyExportStyleString(img, reportRasterImgTagAttrs(body));
+                applyReportImgAttrsToDom(img, reportRasterImgTagAttrs(body));
+                var imgScale = reportPreviewSvgScale(blk.sectionId);
+                if (imgScale > 0) scaleReportPreviewFigure(figImg, img, body, imgScale);
                 figImg.appendChild(img);
                 figImg.appendChild(createPreviewCaptionEditor(blk.sectionId, capImg, 'Shown as figcaption in downloaded HTML.'));
                 if (blk.sectionId === 'pca_3d') {
@@ -1593,7 +1854,7 @@
             }
         }
 
-        mountReportPreviewInteractives(pendingPlotly, pendingPca3d);
+        organizeReportPreviewGroups(root, blocks, pendingPlotly, pendingPca3d);
     }
 
     function clearReportPreviewRoot(root) {
@@ -1622,8 +1883,8 @@
             '.nebula-report-matrix-table td{vertical-align:top;word-break:break-word;}',
             'figure{margin:12px 0;padding:8px;border:1px solid #e5e7eb;border-radius:6px;background:#fafafa;}',
             'figure.nebula-report-figure--plotly{margin:16px 0;padding:0;border:0;background:#fff;border-radius:0;display:inline-block;max-width:none;}',
-            'figure.nebula-report-figure--raster{margin:16px 0;padding:0;border:0;background:#fff;border-radius:0;display:inline-block;max-width:none;}',
-            'figure.nebula-report-figure--raster img{max-width:none;}',
+            'figure.nebula-report-figure--raster{margin:16px 0;padding:0;border:0;background:#fff;border-radius:0;display:block;width:100%;max-width:100%;box-sizing:border-box;}',
+            'figure.nebula-report-figure--raster img{width:100%;height:auto;max-width:100%;display:block;box-sizing:border-box;}',
             'figure.nebula-report-figure--svg{margin:16px 0;padding:0;border:0;background:#fff;border-radius:0;display:inline-block;max-width:none;}',
             'figure.nebula-report-figure--pca3d{margin:16px 0;padding:0;border:0;background:#fff;border-radius:0;display:inline-block;max-width:none;}',
             '.nebula-report-svg-host{line-height:0;overflow:hidden;background:#fff;box-sizing:border-box;}',
@@ -1648,18 +1909,65 @@
                 '.nebula-report-caption-edit{width:100%;box-sizing:border-box;font-size:0.82rem;line-height:1.4;padding:8px 10px;border:1px solid #cbd5e1;border-radius:6px;font-family:inherit;resize:vertical;min-height:4.5em;}'
             );
         }
+        var exportLayoutStyle = [
+            ':root{--nr-bg:#faf7f2;--nr-card:#ffffff;--nr-ink:#2b2a27;--nr-ink-6:#6b625a;--nr-line:#e8e1d8;--nr-accent:#c0582f;--nr-accent-deep:#a3451f;--nr-accent-soft:#f7e8de;--nr-header:#37302a;--nr-header-ink:#f5efe9;}',
+            'body{margin:0;background:var(--nr-bg);color:var(--nr-ink);font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;line-height:1.6;font-size:15px;-webkit-font-smoothing:antialiased;}',
+            'html{scroll-behavior:smooth;}',
+            '.nr-header{position:sticky;top:0;z-index:60;display:flex;align-items:center;background:var(--nr-header);color:var(--nr-header-ink);height:57px;padding:0 clamp(16px,3vw,40px);box-sizing:border-box;box-shadow:0 2px 14px rgba(15,12,8,0.18);}',
+            '.nr-header-inner{display:flex;flex-direction:column;gap:2px;}',
+            '.nr-header h1{margin:0;font-size:1.15rem;font-weight:700;letter-spacing:0.02em;color:var(--nr-header-ink);border:none;padding:0;}',
+            '.nr-meta{font-size:0.8rem;color:rgba(245,239,233,0.75);margin:0;}',
+'.nr-layout{display:grid;grid-template-columns:280px minmax(0,1fr);gap:0;width:100%;min-height:calc(100vh - 57px);}',
+'.nr-toc{position:sticky;top:57px;align-self:start;height:calc(100vh - 57px);overflow:auto;background:var(--nr-card);border:0;border-right:1px solid var(--nr-line);border-radius:0;padding:20px 16px 40px;box-shadow:none;box-sizing:border-box;}',
+            '.nr-toc-heading{font-size:0.7rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--nr-accent);margin:0 0 10px 6px;}',
+            '.nr-toc-list{list-style:none;margin:0;padding:0;}',
+            '.nr-toc-list li{margin:2px 0;}',
+            '.nr-toc-list a{display:flex;gap:8px;align-items:baseline;padding:7px 9px;border-radius:8px;text-decoration:none;color:var(--nr-ink-6);font-size:0.85rem;line-height:1.35;border-left:3px solid transparent;transition:background 0.15s,border-color 0.15s,color 0.15s;}',
+            '.nr-toc-list a:hover{background:var(--nr-accent-soft);color:var(--nr-accent-deep);}',
+            '.nr-toc-list a.active{background:var(--nr-accent-soft);color:var(--nr-accent-deep);border-left-color:var(--nr-accent);font-weight:600;}',
+            '.nr-toc-num{flex:0 0 auto;min-width:1.7em;text-align:right;font-size:0.72rem;font-weight:700;color:var(--nr-accent);}',
+            '.nr-toc-label{flex:1 1 auto;text-align:left;}',
+            '.nr-toc-back{display:block;margin:12px 4px 0;font-size:0.78rem;color:var(--nr-accent-deep);text-decoration:none;}',
+            '.nr-content{background:var(--nr-card);min-width:0;padding:20px clamp(20px,4vw,48px) 56px;}',
+            '.nr-section{scroll-margin-top:96px;padding:26px 0 4px;border-bottom:1px dashed var(--nr-line);}',
+            '.nr-section:last-child{border-bottom:none;}',
+'.nr-section--fill{display:flex;flex-direction:column;height:calc(100vh - 133px);min-height:420px;padding:14px 0 6px;border-bottom:0;}',
+'.nr-section--fill .nebula-report-figure--fill{flex:1 1 auto;min-height:0;}',
+'.nr-section--fill .nebula-report-plotly-host{flex:1 1 auto;min-height:0;max-height:100%;}',
+            '.nr-section-title{display:flex;align-items:baseline;gap:12px;margin:0 0 16px;font-size:1.22rem;color:#33291f;padding-bottom:8px;border-bottom:2px solid var(--nr-accent-soft);}',
+            '.nr-sec-num{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;min-width:2em;height:2em;padding:0 8px;background:var(--nr-accent);color:#fff;border-radius:9px;font-size:0.85rem;font-weight:700;}',
+            '.nr-back-top{display:inline-block;margin-top:18px;font-size:0.78rem;color:var(--nr-accent-deep);text-decoration:none;}',
+            '.nr-back-top:hover{text-decoration:underline;}',
+            '.nebula-report-small{background:#fbf4ec;border:1px solid #f0ddc6;border-left:4px solid var(--nr-accent);border-radius:10px;padding:10px 14px;font-size:0.86rem;color:#7a6a56;margin:18px 0;}',
+            'figure{margin:14px auto;}',
+            'figure.nebula-report-figure--plotly,figure.nebula-report-figure--raster,figure.nebula-report-figure--svg,figure.nebula-report-figure--pca3d{max-width:100%;}',
+            'figcaption{font-size:0.85rem;color:var(--nr-ink-6);margin-top:8px;text-align:center;}',
+            '.nebula-report-table{border-collapse:collapse;margin:10px 0;}',
+            '.nebula-report-table th,.nebula-report-table td{border:1px solid var(--nr-line);padding:7px 10px;text-align:left;font-size:0.9rem;}',
+            '.nebula-report-table th{background:#f8f1e9;color:#4a3a33;}',
+            'img{max-width:100%;height:auto;}',
+            '.nebula-report-matrix-table td{vertical-align:top;word-break:break-word;}',
+'@media (max-width:1024px){.nr-layout{grid-template-columns:1fr;gap:0;padding:16px;min-height:0}.nr-toc{position:static;top:auto;height:auto;max-height:none;border:1px solid var(--nr-line);border-radius:12px;margin-bottom:14px;box-shadow:0 10px 30px rgba(60,45,30,0.07)}.nr-toc-heading,.nr-toc-back{display:none}.nr-toc-list{display:flex;flex-wrap:wrap;gap:4px}.nr-toc-list li{margin:0}.nr-toc-num{display:none}.nr-content{padding:0 18px 24px}.nr-header{padding:0 18px}.nr-section--fill{height:auto;min-height:420px}}',
+'@media print{.nr-toc,.nr-toc-back,.nr-back-top,.nr-header{display:none}body{background:#fff}.nr-layout{display:block;padding:0}.nr-content{border:none;border-radius:0;box-shadow:none;padding:0}.nr-section{display:block !important;page-break-inside:avoid}.nr-section--fill{height:auto;min-height:0}}'
+        ].join('');
+        styleParts.push(exportLayoutStyle);
         var style = styleParts.join('');
+        var tocItems = '';
+        var ti;
+        for (ti = 0; ti < blocks.length; ti++) {
+            tocItems += '<li><a href="#sec-' + ti + '" data-nr-tab="' + ti + '" role="tab" aria-selected="' + (ti === 0 ? 'true' : 'false') + '"' + (ti === 0 ? ' class="active"' : '') + '><span class="nr-toc-num">' + (ti + 1) + '</span><span class="nr-toc-label">' + escapeHtml(blocks[ti].title || blocks[ti].sectionId || ('Section ' + (ti + 1))) + '</span></a></li>';
+        }
         var parts = [
-            '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>', escapeHtml(title), '</title><style>', style, '</style></head><body>',
-            '<h1>', escapeHtml(title), '</h1>',
-            '<p class="nebula-report-muted">Generated ', escapeHtml(meta.generatedAt), ' · ', escapeHtml(meta.appVersion || ''), '</p>'
+            '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>', escapeHtml(title), '</title><style>', style, '</style><noscript><style>.nr-section{display:block !important}</style></noscript></head><body>',
+            '<header class="nr-header" id="nr-top"><div class="nr-header-inner"><h1>', escapeHtml(title), '</h1><p class="nr-meta">Generated ', escapeHtml(meta.generatedAt), ' · ', escapeHtml(meta.appVersion || ''), '</p></div></header>',
+            '<div class="nr-layout"><nav class="nr-toc" aria-label="Figures in this report (vertical tabs)"><p class="nr-toc-heading">Contents</p><ul class="nr-toc-list" role="tablist" aria-orientation="vertical">', tocItems, '</ul><a class="nr-toc-back" href="#nr-top">Back to top</a></nav><div class="nr-content">'
         ];
         var plotlyEmbedSpecs = [];
         var pca3dInteractiveSpecs = [];
         var pca3dEmbedScriptOnce = '';
         for (var b = 0; b < blocks.length; b++) {
             var blk = blocks[b];
-            parts.push('<h2>', escapeHtml(blk.title), '</h2>');
+            parts.push('<section class="nr-section' + (!previewEd && isExportFillSection(blk.sectionId) ? ' nr-section--fill' : '') + '" id="sec-' + b + '" role="tabpanel" data-nr-panel="' + b + '"' + (b > 0 ? ' style="display:none"' : '') + '><h2 class="nr-section-title"><span class="nr-sec-num">' + (b + 1) + '</span>', escapeHtml(blk.title), '</h2>');
             if (blk.body.kind === 'html') {
                 parts.push(blk.body.html);
             } else if (blk.body.kind === 'plotly_embed') {
@@ -1673,7 +1981,8 @@
                     id: plotDomId,
                     data: blk.body.data,
                     layout: blk.body.layout,
-                    config: blk.body.config || {}
+                    config: blk.body.config || {},
+                    fill: !previewEd && isExportFillSection(blk.sectionId)
                 });
                 if (previewEd && blk.sectionId) {
                     parts.push(
@@ -1692,13 +2001,18 @@
                         '</textarea></div></figure>'
                     );
                 } else {
+                    var fillExportPlot = !previewEd && isExportFillSection(blk.sectionId);
                     parts.push(
-                        '<figure class="nebula-report-figure nebula-report-figure--plotly"',
-                        plotFigShell,
+                        '<figure class="nebula-report-figure nebula-report-figure--plotly' + (fillExportPlot ? ' nebula-report-figure--fill' : '') + '"',
+                        fillExportPlot
+                            ? ' style="display:flex;flex-direction:column;width:100%;max-width:100%;min-width:0;min-height:0;box-sizing:border-box;margin:0;flex:1 1 auto;"'
+                            : plotFigShell,
                         '><div id="',
                         escapeHtml(plotDomId),
                         '" class="nebula-report-plotly-host"',
-                        hostDimStyle,
+                        fillExportPlot
+                            ? ' style="flex:1 1 auto;width:100%;min-width:0;min-height:0;box-sizing:border-box;overflow:hidden;"'
+                            : hostDimStyle,
                         '></div><figcaption>',
                         escapeHtml(capP),
                         '</figcaption></figure>'
@@ -1846,6 +2160,7 @@
             } else {
                 parts.push('<p class="nebula-report-muted">', escapeHtml(blk.body.reason || 'Skipped'), '</p>');
             }
+            parts.push('<a class="nr-back-top" href="#nr-top">Back to top</a></section>');
         }
         var b64P3d = null;
         if (pca3dInteractiveSpecs.length) {
@@ -1888,7 +2203,7 @@
                         'if(typeof d3==="undefined"||!window.NebulaPca3dReportEmbed){if(tries<MAX){setTimeout(run,80);return;}return;}' +
                         'var j=u8(P);if(!j)return;var o;try{o=JSON.parse(j)}catch(e){return}' +
                         'var L=o&&o.plots?o.plots:[];for(var i=0;i<L.length;i++){var p=L[i],el=document.getElementById(p.id);' +
-                        'if(el&&p.payload){NebulaPca3dReportEmbed.mount(el,p.payload,d3);if(el.getAttribute("data-nebula-pca3d-interactive")!=="1"){el.setAttribute("data-nebula-pca3d-failed","1");}}}}' +
+'if(el&&p.payload){var s=el.closest?el.closest(".nr-section"):null;if(!s||!(s.style&&s.style.display==="none")){NebulaPca3dReportEmbed.mount(el,p.payload,d3);if(el.getAttribute("data-nebula-pca3d-interactive")!=="1"){el.setAttribute("data-nebula-pca3d-failed","1");}}else{window.__NR_PEND_PCA3D__=window.__NR_PEND_PCA3D__||[];window.__NR_PEND_PCA3D__.push(p);}}}}' +
                         'if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",run);else run();})();';
                     parts.push('<script>' + bootP3d + '<\/script>');
             }
@@ -1914,10 +2229,15 @@
                         '(function(){var P=' +
                         JSON.stringify(b64leg) +
                         ';function u8(d){try{return decodeURIComponent(escape(atob(d)))}catch(e){return null}}' +
+                        'window.__NR_PLOT_MNT__=function(el,p){if(!el||!p||!p.data)return;var L=p.layout||{};if(p.fill&&L&&typeof L==="object"){try{L.autosize=true;delete L.width;delete L.height;}catch(eF){}}' +
+                        'var pr;try{pr=Plotly.newPlot(el,p.data,L,p.config||{});}catch(eN){throw eN;}' +
+                        'if(p.fill){if(pr&&pr.then){pr.then(function(){try{Plotly.Plots.resize(el);}catch(eR){}});}else{setTimeout(function(){try{Plotly.Plots.resize(el);}catch(eR){}},150);}' +
+                        'window.__NR_FILL__=window.__NR_FILL__||[];if(window.__NR_FILL__.indexOf(el)<0)window.__NR_FILL__.push(el);' +
+                        'if(!window.__NR_FILL_BOUND__){window.__NR_FILL_BOUND__=1;window.addEventListener("resize",function(){var a=window.__NR_FILL__||[];for(var i=0;i<a.length;i++){try{Plotly.Plots.resize(a[i]);}catch(eW){}}});}}};' +
                         'function run(){if(typeof Plotly===\'undefined\'){setTimeout(run,60);return;}' +
                         'var j=u8(P);if(!j)return;var o;try{o=JSON.parse(j)}catch(e){return}' +
                         'var L=o&&o.plots?o.plots:[];for(var i=0;i<L.length;i++){var p=L[i],el=document.getElementById(p.id);' +
-                        'if(el&&p.data)Plotly.newPlot(el,p.data,p.layout||{},p.config||{});}}' +
+                        'if(el&&p.data){var s=el.closest?el.closest(".nr-section"):null;if(!s||!(s.style&&s.style.display==="none")){window.__NR_PLOT_MNT__(el,p);}else{window.__NR_PEND_PLOTLY__=window.__NR_PEND_PLOTLY__||[];window.__NR_PEND_PLOTLY__.push(p);}}}}' +
                         'if(document.readyState===\'loading\')document.addEventListener(\'DOMContentLoaded\',run);else run();})();';
                     parts.push('<script>' + boot + '<\/script>');
                 }
@@ -1928,6 +2248,10 @@
                 '<script>(function(){function w(){var a=document.querySelectorAll("textarea.nebula-report-caption-edit");for(var i=0;i<a.length;i++){(function(t){t.addEventListener("input",function(){var id=t.getAttribute("data-nebula-section");try{if(window.parent&&window.parent.nebulaReportPreviewCaptionInput)window.parent.nebulaReportPreviewCaptionInput(id,t.value);}catch(e){}});})(a[i]);}}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",w);else w();})();<\/script>'
             );
         }
+        parts.push('</div></div>');
+        parts.push(
+            '<script>(function(){var tabs=document.querySelectorAll(".nr-toc-list a[data-nr-tab]");var panels=document.querySelectorAll(".nr-section[data-nr-panel]");if(!tabs.length||!panels.length)return;function setActive(i){for(var j=0;j<tabs.length;j++){var on=j===i;if(on)tabs[j].classList.add("active");else tabs[j].classList.remove("active");tabs[j].setAttribute("aria-selected",on?"true":"false");}for(j=0;j<panels.length;j++){panels[j].style.display=j===i?"":"none";}mountForPanel(i);}function mountForPanel(i){var panel=panels[i];var pp=window.__NR_PEND_PLOTLY__||[];var pc=window.__NR_PEND_PCA3D__||[];window.__NR_PEND_PLOTLY__=[];window.__NR_PEND_PCA3D__=[];var rp=[],rc=[];for(var k=0;k<pp.length;k++){var spec=pp[k],el=document.getElementById(spec.id);if(el&&panel&&panel.contains(el)){if(window.Plotly){try{window.__NR_PLOT_MNT__?window.__NR_PLOT_MNT__(el,spec):Plotly.newPlot(el,spec.data,spec.layout||{},spec.config||{});}catch(e){rp.push(spec);}}else{rp.push(spec);}}else{rp.push(spec);}}for(k=0;k<pc.length;k++){var c=pc[k],el2=document.getElementById(c.id);if(el2&&panel&&panel.contains(el2)){if(window.NebulaPca3dReportEmbed&&window.d3){try{NebulaPca3dReportEmbed.mount(el2,c.payload,d3);if(el2.getAttribute("data-nebula-pca3d-interactive")!=="1"){el2.setAttribute("data-nebula-pca3d-failed","1");}}catch(e){rc.push(c);}}else{rc.push(c);}}else{rc.push(c);}}if(rp.length){window.__NR_PEND_PLOTLY__=window.__NR_PEND_PLOTLY__.concat(rp);}if(rc.length){window.__NR_PEND_PCA3D__=window.__NR_PEND_PCA3D__.concat(rc);}}function mountAll(){var pp=window.__NR_PEND_PLOTLY__||[];var pc=window.__NR_PEND_PCA3D__||[];window.__NR_PEND_PLOTLY__=[];window.__NR_PEND_PCA3D__=[];for(var k=0;k<pp.length;k++){var spec=pp[k],el=document.getElementById(spec.id);if(el&&window.Plotly){try{window.__NR_PLOT_MNT__?window.__NR_PLOT_MNT__(el,spec):Plotly.newPlot(el,spec.data,spec.layout||{},spec.config||{});}catch(e){window.__NR_PEND_PLOTLY__.push(spec);}}else if(el){window.__NR_PEND_PLOTLY__.push(spec);}}for(k=0;k<pc.length;k++){var c=pc[k],el2=document.getElementById(c.id);if(el2&&window.NebulaPca3dReportEmbed&&window.d3){try{NebulaPca3dReportEmbed.mount(el2,c.payload,d3);if(el2.getAttribute("data-nebula-pca3d-interactive")!=="1"){el2.setAttribute("data-nebula-pca3d-failed","1");}}catch(e){window.__NR_PEND_PCA3D__.push(c);}}else if(el2){window.__NR_PEND_PCA3D__.push(c);}}}var i;for(i=0;i<tabs.length;i++){(function(idx){tabs[idx].addEventListener("click",function(e){e.preventDefault();setActive(idx);});})(i);}var start=0;var h=location.hash||"";var m=h.match(/^#sec-([0-9]+)$/);if(m){var n=parseInt(m[1],10);if(n>=0&&n<panels.length){start=n;}}setActive(start);if(window.addEventListener){window.addEventListener("beforeprint",mountAll);}})();<\/script>'
+        );
         parts.push('</body></html>');
         return parts.join('');
     }
@@ -2173,6 +2497,7 @@
         clearReportPreviewRoot: clearReportPreviewRoot,
         setPreviewIframe: setPreviewIframe,
         clearPreviewIframe: clearPreviewIframe,
-        downloadHtml: downloadHtml
+        downloadHtml: downloadHtml,
+        renderHtml: buildHtmlDocument
     };
 })(typeof window !== 'undefined' ? window : this);

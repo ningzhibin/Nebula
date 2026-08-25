@@ -82,6 +82,7 @@
             container._qcMatrixTableLayoutRow = null;
         }
         try { delete container._qcLastMatrixScrollMaxPx; } catch (_) { container._qcLastMatrixScrollMaxPx = undefined; }
+        try { delete container._qcFixedMatrixMaxPx; } catch (_) { container._qcFixedMatrixMaxPx = 0; }
         var wrap = container.querySelector('#qcDtMatrixRoot');
         var $ = global.jQuery;
         if ($ && $.fn && $.fn.DataTable) {
@@ -165,15 +166,19 @@
         return { data: data, colMax: colMax, globalMax: globalMax };
     }
 
-    function barCellHtml(escapeHtml, value, denom, scaleModeLabel) {
+    function barCellHtml(escapeHtml, value, denom, scaleModeLabel, highlight) {
         if (value === null || value === undefined || (typeof value === 'number' && !Number.isFinite(value))) {
             return '<span class="qc-dt-cell-na">N/A</span>';
         }
         var safeDenom = Number.isFinite(denom) && denom > 0 ? denom : 1;
         var pct = Math.min(100, Math.round((Math.abs(value) / safeDenom) * 100));
         var label = escapeHtml(String(value.toFixed(2)));
+        var cls = highlight ? 'qc-dt-bar-cell qc-dt-imputed-cell' : 'qc-dt-bar-cell';
+        var tip = highlight
+            ? 'Imputed value (this cell was missing before imputation).'
+            : 'Bar width = |value| / ' + escapeHtml(scaleModeLabel) + ' max among all rows in the current matrix.';
         return (
-            '<div class="qc-dt-bar-cell" title="Bar width = |value| / ' + escapeHtml(scaleModeLabel) + ' max among all rows in the current matrix.">' +
+            '<div class="' + cls + '" title="' + tip + '">' +
             '<div class="qc-dt-bar-fill" style="width:' + pct + '%"></div>' +
             '<span class="qc-dt-bar-val">' + label + '</span>' +
             '</div>'
@@ -230,6 +235,91 @@
         }
     }
 
+    /* ---- CSV export (default Export CSV button on every TableDisplay table) ---- */
+
+    function csvEscape(value) {
+        if (value === null || value === undefined) return '';
+        if (typeof value === 'number') {
+            if (!Number.isFinite(value)) return '';
+            return String(value);
+        }
+        var s = String(value);
+        return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+    }
+
+    function defaultExportTimestamp() {
+        var d = new Date();
+        function pad(n) { return (n < 10 ? '0' : '') + n; }
+        return '' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) +
+            '-' + pad(d.getHours()) + pad(d.getMinutes()) + pad(d.getSeconds());
+    }
+
+    function downloadCsvFile(headerCells, rowCells, filename) {
+        var lines = [headerCells.map(csvEscape).join(',')];
+        for (var i = 0; i < rowCells.length; i++) {
+            lines.push(rowCells[i].map(csvEscape).join(','));
+        }
+        var csv = lines.join('\r\n');
+        /* BOM so Excel opens UTF-8 CSV correctly. */
+        var blob = new Blob([String.fromCharCode(0xFEFF) + csv], { type: 'text/csv;charset=utf-8;' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function () { try { URL.revokeObjectURL(url); } catch (_) { /* ignore */ } }, 0);
+    }
+
+    function ensureExportCss() {
+        if (document.getElementById('qc-dt-export-css')) return;
+        var st = document.createElement('style');
+        st.id = 'qc-dt-export-css';
+        st.textContent =
+            '.qc-dt-export-btn{font-size:11px;line-height:1.4;padding:3px 10px;margin:0 0 0 10px;' +
+            'border:1px solid var(--md-accent,#98927c);border-radius:6px;' +
+            'background:transparent;color:var(--md-accent-dark,#6e6a5d);' +
+            'font-family:inherit;cursor:pointer;flex-shrink:0;white-space:nowrap;' +
+            'display:inline-block;vertical-align:middle;align-self:center;}' +
+            '.qc-dt-export-btn:hover{background:var(--md-accent-soft-bg,#ebe8df);border-color:var(--md-accent,#98927c);color:var(--md-accent-dark,#6e6a5d);}' +
+            '.qc-dt-export-btn:active{transform:translateY(1px);}';
+        document.head.appendChild(st);
+    }
+
+    function makeExportButton(buildCsv, fileNameBase) {
+        ensureExportCss();
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'qc-dt-export-btn';
+        btn.textContent = 'Export CSV';
+        btn.title = 'Download the current view (all filtered and sorted rows, across all pages) as a CSV file.';
+        btn.addEventListener('click', function () {
+            try {
+                var payload = typeof buildCsv === 'function' ? buildCsv() : null;
+                if (!payload || !payload.rows) return;
+                var base = (typeof fileNameBase === 'string' && fileNameBase) ? fileNameBase : 'table-export';
+                downloadCsvFile(payload.headers || [], payload.rows, base + '-' + defaultExportTimestamp() + '.csv');
+            } catch (e) {
+                if (global.console) global.console.error('TableDisplay export CSV failed:', e);
+                if (global.alert) global.alert('Could not export CSV:\n' + (e && e.message ? e.message : String(e)));
+            }
+        });
+        return btn;
+    }
+
+    /** Place the Export CSV button in the DataTables top-right controls (next to the search box). */
+    function installExportCsvControl(root, buildCsv, fileNameBase) {
+        if (!root || !root.querySelector) return null;
+        var host = root.querySelector('.dt-layout-cell.dt-layout-end') || root.querySelector('.dt-length');
+        if (!host) return null;
+        var existing = root.querySelector('.qc-dt-export-btn');
+        if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
+        var btn = makeExportButton(buildCsv, fileNameBase);
+        host.appendChild(btn);
+        return btn;
+    }
+
     function renderStaticTable(container, options) {
         if (!container) return null;
         var opt = options || {};
@@ -267,6 +357,24 @@
         }
         table.appendChild(thead);
         table.appendChild(tbody);
+        function buildStaticCsv() {
+            var head = columns.map(function (c) {
+                return (c && c.title != null) ? String(c.title) : '';
+            });
+            var out = [];
+            for (var sri = 0; sri < rows.length; sri++) {
+                var srow = rows[sri] || {};
+                out.push(columns.map(function (col, cj) {
+                    return (typeof col.getValue === 'function') ? col.getValue(srow, sri) : srow[col.key];
+                }));
+            }
+            return { headers: head, rows: out };
+        }
+        var toolbar = document.createElement('div');
+        toolbar.className = 'qc-dt-static-toolbar';
+        toolbar.style.cssText = 'display:flex;justify-content:flex-end;align-items:center;padding:2px 0 6px;';
+        toolbar.appendChild(makeExportButton(buildStaticCsv, 'qc-static-export'));
+        root.appendChild(toolbar);
         root.appendChild(table);
         container.appendChild(root);
         return table;
@@ -432,12 +540,35 @@
                             });
                         }
                         attachControlTooltips(root);
+                        installExportCsvControl(root, buildGenericCsv, 'qc-table-export');
                         try { inst.columns.adjust(); } catch (_) { /* ignore */ }
                         onInit(inst, root, table);
                     }
                 }
             });
             container._qcGenericDtApi = api;
+
+            function buildGenericCsv() {
+                var keys = columns.map(function (c, idx) {
+                    return (c && c.key != null) ? c.key : ('c' + idx);
+                });
+                var head = columns.map(function (c) {
+                    return (c && c.title != null) ? String(c.title) : '';
+                });
+                var out = [];
+                try {
+                    var arr = api.rows({ search: 'applied', order: 'applied' }).data().toArray();
+                    for (var gi = 0; gi < arr.length; gi++) {
+                        var gro = arr[gi] || {};
+                        out.push(keys.map(function (k) { return gro[k]; }));
+                    }
+                } catch (e) {
+                    for (var gj = 0; gj < data.length; gj++) {
+                        out.push(keys.map(function (k) { return data[gj][k]; }));
+                    }
+                }
+                return { headers: head, rows: out };
+            }
             function emitSync() {
                 var info = api.page.info();
                 onSync({
@@ -465,6 +596,7 @@
                     });
                 }
                 attachControlTooltips(root);
+                installExportCsvControl(root, buildGenericCsv, 'qc-table-export');
                 emitSync();
                 try { api.columns.adjust(); } catch (_) { /* ignore */ }
             });
@@ -554,6 +686,10 @@
     function applyMatrixScrollMax(container, root) {
         var box = container._qcMatrixScrollBox;
         if (!box) return;
+        if (container._qcFixedMatrixMaxPx) {
+            box.style.maxHeight = container._qcFixedMatrixMaxPx + 'px';
+            return;
+        }
         var px = computeMatrixScrollMaxPx(container, root);
         var prev = container._qcLastMatrixScrollMaxPx;
         if (prev != null && Math.abs(prev - px) < 8) return;
@@ -576,6 +712,7 @@
         var displayStart = typeof opt.displayStart === 'number' ? opt.displayStart : 0;
         var pageLength = typeof opt.pageLength === 'number' ? opt.pageLength : 100;
         var lengthMenu = opt.lengthMenu || [[50, 100, 250, 500, -1], [50, 100, 250, 500, 'All']];
+        var fixedMaxHeightPx = (opt.maxHeightPx && Number.isFinite(opt.maxHeightPx)) ? Math.max(120, Math.floor(opt.maxHeightPx)) : 0;
 
         return ensureLibsLoaded().then(function () {
             destroy(container);
@@ -660,7 +797,9 @@
                             if (type === 'sort' || type === 'type' || type === 'filter') {
                                 return data === null || data === undefined || (typeof data === 'number' && !Number.isFinite(data)) ? null : data;
                             }
-                            return barCellHtml(escapeHtml, data, getBarDenominator(row, colIdx), getScaleModeLabel());
+                            var hl = !!(opt.highlightMask && row && typeof row._origRowIndex === 'number' &&
+                                opt.highlightMask[row._origRowIndex] && opt.highlightMask[row._origRowIndex][colIdx]);
+                            return barCellHtml(escapeHtml, data, getBarDenominator(row, colIdx), getScaleModeLabel(), hl);
                         }
                     });
                 })(j);
@@ -708,6 +847,7 @@
                         scaleMode = newMode;
                         refreshBarCells(inst);
                     });
+                    installExportCsvControl(root, buildMatrixCsv, 'qc-matrix-export');
                     requestAnimationFrame(function () {
                         applyMatrixScrollMax(container, root);
                         try { inst.columns.adjust(); } catch (_) { /* ignore */ }
@@ -721,6 +861,35 @@
 
             var api = new DataTable(table, dtOpts);
             container._qcMatrixDtApi = api;
+            container._qcFixedMatrixMaxPx = fixedMaxHeightPx;
+
+            function buildMatrixCsv() {
+                var head = ['ID'].concat(columnHeaders.map(function (h) {
+                    return h == null ? '' : String(h);
+                }));
+                var out = [];
+                try {
+                    var arr = api.rows({ search: 'applied', order: 'applied' }).data().toArray();
+                    for (var mi = 0; mi < arr.length; mi++) {
+                        var mrow = arr[mi] || {};
+                        var cells = [mrow.id == null ? '' : mrow.id];
+                        for (var mj = 0; mj < columnHeaders.length; mj++) {
+                            cells.push(mrow['c' + mj]);
+                        }
+                        out.push(cells);
+                    }
+                } catch (e) {
+                    for (var mk = 0; mk < rowData.length; mk++) {
+                        var mrow2 = rowData[mk] || {};
+                        var cells2 = [mrow2.id == null ? '' : mrow2.id];
+                        for (var mj2 = 0; mj2 < columnHeaders.length; mj2++) {
+                            cells2.push(mrow2['c' + mj2]);
+                        }
+                        out.push(cells2);
+                    }
+                }
+                return { headers: head, rows: out };
+            }
 
             function readSearchActive() {
                 var s = '';
@@ -811,6 +980,7 @@
                     scaleMode = newMode;
                     refreshBarCells(api);
                 });
+                installExportCsvControl(root, buildMatrixCsv, 'qc-matrix-export');
                 emitSync();
                 try { api.columns.adjust(); } catch (_) { /* ignore */ }
             });

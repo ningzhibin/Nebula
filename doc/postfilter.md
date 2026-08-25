@@ -1,8 +1,34 @@
-### Post-filter Behavior
+### 13. Post-filter behavior
 
-- Table and row profile selectors are refreshed.
-- Heatmap/PCA/t-SNE/Clustergrammer caches are reset to avoid stale results.
+What happens after you apply a filter in **Data PreProcess > Data Filter** - and how filtering interacts with the rest of the pipeline.
 
-- **Data PreProcess → Data Filter**: shared matrix preview (Row Filter and Column Filter) uses a scroll area with **sticky column headers**. **ID** cells show a native tooltip with DIANN annotation fields (when loaded from a protein group matrix). **Column Filter** uses a **two-column** sidebar (Column Select | pattern, groups, valid values). **Row Filter** uses the same **two-column** pattern (valid values + random sampling | CV, technical reproducibility, Row ID, clear pipeline). **Column Filter** keeps or removes sample columns (per-column checkboxes, optional **Choose by group** using one or two meta columns—same rules as group completeness—with **Check** / **Uncheck** per group); **Row Filter** includes group completeness, global min-valid, and row ID include actions.
+#### Immediate effects
 
-- **Row Filter → Arbitrary Technical Reproducibility Filter:** builds **bundles** of sample columns that are technical replicates of the same unit (see **Replicate Parsing** for automatic `T1`/`T2`/`R#` detection). You can instead choose a **Replicate bundle ID** meta column: every column with the **same** non-empty value in that column is one bundle (requires at least **two** columns per value). **Rule:** for each feature (row) and each bundle, if **any** replicate has a value that is **not** a confident detection (same convention as elsewhere: not a finite number **>** `0`), then **all** cells for that feature in that bundle are set to **`0`**. After that, any feature row that is **still all zero** across **all** sample columns is **removed**. Each apply runs from the **original** loaded matrix for the current Data Filter pipeline (same as other row tools).
+- The filtered matrix becomes the active matrix: **Passed** shows it, **Filtered out** lists what the last filter removed, **Summary** shows before/after stats and charts.
+- Table previews refresh (Data Preparation third column included).
+- **Stale downstream results are cleared**: heatmap, PCA, t-SNE, and Clustergrammer caches reset, so you can never look at projections computed from the unfiltered matrix by accident.
+
+#### What downstream tabs see
+
+- **Data QC** (Overall, Row profile, Column profile, Column correlation, UpSet/Venn) summarizes the filtered matrix; refresh the dashboard after filtering.
+- **Clustering** (Heatmap, PCA, PCoA, t-SNE, K-means) runs on the filtered matrix.
+- **Downstream** Differential / SAINT / Enrichr use the filtered matrix and its meta table.
+
+#### Order of the pipeline
+
+The Data PreProcess sub-tabs are independent steps applied in the order you use them:
+
+1. **Data Filter** - remove rows/columns.
+2. **Imputation** - fill missing values (see *15. Missing value imputation*).
+3. **Batch Effect** - correct batch effects (see *16. Batch effect correction*).
+
+Each step transforms the current matrix; a later step sees the result of the earlier ones. Each individual step's Apply/Reset works from its own snapshot (filters always recompute from the original loaded matrix; imputation Restores to the pre-imputation matrix, which includes your filters).
+
+#### Undoing
+
+- **Clear all Data Filter steps** returns to the original loaded matrix.
+- **Imputation > Reset to original** removes the imputation.
+- **Batch Effect > Reset to original** removes the correction.
+- Loading new data resets everything.
+
+See also: *11. Data Filter*, *12. Group completeness filter*.

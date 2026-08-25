@@ -1,5 +1,5 @@
 /**
- * Data QC → Overall: matrix-wide dashboard (D3 v7).
+ * Data QC → Overall: matrix-wide dashboard (Plotly).
  * Per-column summary bars use payload from `window.getDataQcOverallPerColumnSummaryPayload` (index.html).
  * Expects window.currentDataMatrix (row-major) and window.currentData.columnHeaders.
  */
@@ -108,13 +108,6 @@
         }
     }
 
-    async function getD3() {
-        if (global.__d3ForPca && global.__d3ForPca.scaleBand) return global.__d3ForPca;
-        const mod = await import('https://cdn.jsdelivr.net/npm/d3@7/+esm');
-        global.__d3ForPca = mod;
-        return mod;
-    }
-
     function quantileSorted(sorted, q) {
         if (!sorted.length) return NaN;
         const pos = (sorted.length - 1) * q;
@@ -182,114 +175,13 @@
         };
     }
 
-    function clear(el) {
-        if (!el) return;
-        el.innerHTML = '';
-    }
+    var OVERALL_PLOTLY_CONFIG = { displaylogo: false, scrollZoom: true };
 
-    function drawBoxPlots(d3, host, cols, caption) {
-        clear(host);
-        const n = cols.length;
-        if (!n) return;
-        const w = Math.max(360, resolveOverallChartOuterWidthPx(host));
-        const h = overallDashHeightForSamples(n, { perRow: 18, base: 100, minH: 280, maxH: 2200 });
-        const idx = cols.map((_, i) => i);
-        const tickLabs = cols.map((d) => overallDashShortAxisLabel(d.label, 44));
-        const maxChars = d3.max(tickLabs, (t) => t.length) || 6;
-        const margin = { t: 14, r: 20, b: 56, l: Math.min(400, Math.round(34 + maxChars * 6.4)) };
-        const innerW = w - margin.l - margin.r;
-        const innerH = h - margin.t - margin.b;
-        const svg = d3.select(host).append('svg').attr('width', w).attr('height', h);
-        const g = svg.append('g').attr('transform', `translate(${margin.l},${margin.t})`);
-        const y = d3.scaleBand().domain(idx).range([0, innerH]).padding(0.22);
-        const finite = cols.flatMap((d) => [d.minLog, d.maxLog, d.q1, d.q3, d.medLog]).filter((v) => Number.isFinite(v));
-        const lo = d3.min(finite) ?? 0;
-        const hi = d3.max(finite) ?? 1;
-        const x = d3.scaleLinear().domain([lo - (hi - lo) * 0.08, hi + (hi - lo) * 0.1]).nice().range([0, innerW]);
-        const tickFs = n > 48 ? '8px' : n > 28 ? '9px' : '10px';
-        const gy = g.append('g').call(d3.axisLeft(y).tickFormat((i) => tickLabs[i]).tickSizeOuter(0));
-        gy.selectAll('text').attr('font-size', tickFs);
-        gy.selectAll('.domain').attr('stroke', '#d1d5db');
-        gy.selectAll('.tick line').attr('stroke', '#e5e7eb');
-        const gx = g.append('g').attr('transform', `translate(0,${innerH})`).call(d3.axisBottom(x).ticks(Math.min(8, Math.max(4, Math.floor(innerW / 95)))));
-        gx.selectAll('.domain').attr('stroke', '#d1d5db');
-        gx.selectAll('.tick line').attr('stroke', '#e5e7eb');
-        cols.forEach((d, i) => {
-            if (!Number.isFinite(d.q1) || !Number.isFinite(d.q3)) return;
-            const yi = y(i);
-            const bw = y.bandwidth();
-            const cy = yi + bw / 2;
-            const xMin = x(d.minLog);
-            const xQ1 = x(d.q1);
-            const xQ3 = x(d.q3);
-            const xMax = x(d.maxLog);
-            g.append('line').attr('x1', xMin).attr('x2', xQ1).attr('y1', cy).attr('y2', cy).attr('stroke', '#94a3b8').attr('stroke-width', 1);
-            g.append('line').attr('x1', xQ3).attr('x2', xMax).attr('y1', cy).attr('y2', cy).attr('stroke', '#94a3b8').attr('stroke-width', 1);
-            const rx = Math.min(xQ1, xQ3);
-            const rw = Math.max(1, Math.abs(xQ3 - xQ1));
-            const fullLab = String(d.label == null ? '' : d.label);
-            const rct = g.append('rect').attr('x', rx).attr('y', yi + bw * 0.12).attr('width', rw).attr('height', Math.max(1, bw * 0.76)).attr('fill', '#c4b5a0').attr('stroke', '#78716c').attr('rx', 2);
-            rct.append('title').text(fullLab + ' — log10(1+I), I>0');
-            if (Number.isFinite(d.medLog)) {
-                const xm = x(d.medLog);
-                g.append('line').attr('x1', xm).attr('x2', xm).attr('y1', yi + bw * 0.1).attr('y2', yi + bw * 0.9).attr('stroke', '#1f2937').attr('stroke-width', 1.5);
-            }
-        });
-        g.append('text').attr('x', innerW / 2).attr('y', innerH + 40).attr('text-anchor', 'middle').attr('font-size', '11px').attr('fill', '#4b5563').text('log10(1 + I), I > 0');
-        if (caption) {
-            svg.append('text').attr('x', margin.l).attr('y', h - 6).attr('font-size', '10px').attr('fill', '#6b7280').text(caption);
-        }
-    }
-
-    function drawTotalLogBar(d3, host, cols, caption) {
-        clear(host);
-        const n = cols.length;
-        if (!n) return;
-        const w = Math.max(360, resolveOverallChartOuterWidthPx(host));
-        const h = overallDashHeightForSamples(n, { perRow: 20, base: 88, minH: 260, maxH: 2200 });
-        const idx = cols.map((_, i) => i);
-        const tickLabs = cols.map((d) => overallDashShortAxisLabel(d.label, 44));
-        const maxChars = d3.max(tickLabs, (t) => t.length) || 6;
-        const margin = { t: 14, r: 20, b: 52, l: Math.min(400, Math.round(34 + maxChars * 6.4)) };
-        const innerW = w - margin.l - margin.r;
-        const innerH = h - margin.t - margin.b;
-        const svg = d3.select(host).append('svg').attr('width', w).attr('height', h);
-        const g = svg.append('g').attr('transform', `translate(${margin.l},${margin.t})`);
-        const y = d3.scaleBand().domain(idx).range([0, innerH]).padding(0.2);
-        const maxV = d3.max(cols, (d) => d.totalLog) || 1;
-        const x = d3.scaleLinear().domain([0, maxV * 1.05]).nice().range([0, innerW]);
-        const tickFs = n > 48 ? '8px' : n > 28 ? '9px' : '10px';
-        const gy = g.append('g').call(d3.axisLeft(y).tickFormat((i) => tickLabs[i]).tickSizeOuter(0));
-        gy.selectAll('text').attr('font-size', tickFs);
-        gy.selectAll('.domain').attr('stroke', '#d1d5db');
-        gy.selectAll('.tick line').attr('stroke', '#e5e7eb');
-        const gx = g.append('g').attr('transform', `translate(0,${innerH})`).call(d3.axisBottom(x).ticks(5));
-        gx.selectAll('.domain').attr('stroke', '#d1d5db');
-        gx.selectAll('.tick line').attr('stroke', '#e5e7eb');
-        g.selectAll('rect.tlbar').data(cols).join('rect').attr('class', 'tlbar')
-            .attr('x', 0)
-            .attr('y', (_, i) => y(i))
-            .attr('width', (d) => Math.max(1, x(d.totalLog)))
-            .attr('height', y.bandwidth())
-            .attr('fill', '#8b9dc4')
-            .attr('rx', 2)
-            .each(function (d) {
-                const t = `${d.label}: Σ log10(1+I) over quantified IDs = ${Number.isFinite(d.totalLog) ? d.totalLog.toFixed(2) : '—'}`;
-                d3.select(this).append('title').text(t);
-            });
-        g.append('text').attr('x', innerW / 2).attr('y', innerH + 36).attr('text-anchor', 'middle').attr('font-size', '11px').attr('fill', '#4b5563').text('Σ log10(1+I)');
-        if (caption) {
-            svg.append('text').attr('x', margin.l).attr('y', h - 6).attr('font-size', '10px').attr('fill', '#6b7280').text(caption);
-        }
-    }
-
-    /**
-     * Horizontal bar chart: per-column summary metric (same data as former Plotly card).
-     * @param {import('d3')} d3
-     * @param {HTMLElement} host
-     * @param {{ summVals: number[], yLabsUnique: string[], fullLabs: string[], sumYTitle: string, n: number, sumWhat: string }} p
-     */
-    function drawPerColumnSummaryBars(d3, host, p) {
+    /** Reset a chart host and purge any previous Plotly graph so newPlot starts clean. */
+    function purgeHost(host) {
+        if (!host) return;
+        host.style.height = '';
+        host.style.minHeight = '';
         if (typeof global.Plotly !== 'undefined') {
             try {
                 global.Plotly.purge(host);
@@ -297,9 +189,125 @@
                 /* ignore */
             }
         }
-        host.style.height = '';
-        host.style.minHeight = '';
-        clear(host);
+        host.innerHTML = '';
+    }
+
+    /** Horizontal box plots per column (log10(1+I), I>0) as Plotly traces with precomputed quartiles. */
+    function drawBoxPlots(host, cols, caption) {
+        purgeHost(host);
+        const n = cols.length;
+        if (!n) return;
+        const w = Math.max(360, resolveOverallChartOuterWidthPx(host));
+        const h = overallDashHeightForSamples(n, { perRow: 18, base: 100, minH: 280, maxH: 2200 });
+        const tickLabs = cols.map((d) => overallDashShortAxisLabel(d.label, 44));
+        const maxChars = tickLabs.reduce((m, t) => Math.max(m, t.length), 0) || 6;
+        const marginL = Math.min(400, Math.round(34 + maxChars * 6.8));
+        const traces = [];
+        cols.forEach((d, i) => {
+            if (!Number.isFinite(d.q1) || !Number.isFinite(d.q3)) return;
+            traces.push({
+                type: 'box',
+                orientation: 'h',
+                y: [tickLabs[i]],
+                q1: [d.q1],
+                median: [Number.isFinite(d.medLog) ? d.medLog : null],
+                q3: [d.q3],
+                lowerfence: [Number.isFinite(d.minLog) ? d.minLog : null],
+                upperfence: [Number.isFinite(d.maxLog) ? d.maxLog : null],
+                customdata: [String(d.label == null ? '' : d.label)],
+                hovertemplate: '%{customdata}<br>log10(1+I), I>0<extra></extra>',
+                boxpoints: false,
+                fillcolor: '#c4b5a0',
+                line: { color: '#78716c', width: 1 },
+                marker: { color: '#1f2937' },
+                whiskerwidth: 0.5,
+                name: ''
+            });
+        });
+        if (!traces.length) return;
+        const finite = [];
+        cols.forEach((d) => {
+            [d.minLog, d.maxLog, d.q1, d.q3, d.medLog].forEach((v) => {
+                if (Number.isFinite(v)) finite.push(v);
+            });
+        });
+        const lo = finite.length ? Math.min.apply(null, finite) : 0;
+        const hi = finite.length ? Math.max.apply(null, finite) : 1;
+        const layout = {
+            width: w,
+            height: h,
+            autosize: false,
+            margin: { t: 14, r: 20, b: 56, l: marginL },
+            paper_bgcolor: '#ffffff',
+            plot_bgcolor: '#ffffff',
+            font: { family: 'Segoe UI, Roboto, Helvetica, Arial, sans-serif', size: 11, color: '#1f2937' },
+            showlegend: false,
+            xaxis: {
+                title: { text: 'log10(1 + I), I > 0', font: { size: 11, color: '#4b5563' } },
+                range: [lo - (hi - lo) * 0.08, hi + (hi - lo) * 0.1],
+                gridcolor: '#e5e7eb',
+                zerolinecolor: '#d1d5db',
+                automargin: true
+            },
+            yaxis: { automargin: true, tickfont: { size: n > 48 ? 10 : n > 28 ? 11 : 12 } },
+            annotations: caption
+                ? [{ xref: 'paper', yref: 'paper', x: 0, y: -0.09, xanchor: 'left', showarrow: false, text: caption, font: { size: 10, color: '#6b7280' } }]
+                : []
+        };
+        global.Plotly.newPlot(host, traces, layout, Object.assign({}, OVERALL_PLOTLY_CONFIG));
+    }
+
+    function drawTotalLogBar(host, cols, caption) {
+        purgeHost(host);
+        const n = cols.length;
+        if (!n) return;
+        const w = Math.max(360, resolveOverallChartOuterWidthPx(host));
+        const h = overallDashHeightForSamples(n, { perRow: 20, base: 88, minH: 260, maxH: 2200 });
+        const tickLabs = cols.map((d) => overallDashShortAxisLabel(d.label, 44));
+        const maxChars = tickLabs.reduce((m, t) => Math.max(m, t.length), 0) || 6;
+        const marginL = Math.min(400, Math.round(34 + maxChars * 6.8));
+        const maxV = cols.reduce((m, d) => Math.max(m, Number.isFinite(d.totalLog) ? d.totalLog : 0), 0) || 1;
+        const trace = {
+            type: 'bar',
+            orientation: 'h',
+            y: tickLabs,
+            x: cols.map((d) => (Number.isFinite(d.totalLog) ? d.totalLog : 0)),
+            customdata: cols.map((d) => String(d.label == null ? '' : d.label)),
+            width: 0.45,
+            hovertemplate: '%{customdata}: Σ log10(1+I) over quantified IDs = %{x:.2f}<extra></extra>',
+            marker: { color: '#8b9dc4' }
+        };
+        const layout = {
+            width: w,
+            height: h,
+            autosize: false,
+            margin: { t: 14, r: 20, b: 52, l: marginL },
+            paper_bgcolor: '#ffffff',
+            plot_bgcolor: '#ffffff',
+            font: { family: 'Segoe UI, Roboto, Helvetica, Arial, sans-serif', size: 11, color: '#1f2937' },
+            showlegend: false,
+            xaxis: {
+                title: { text: 'Σ log10(1+I)', font: { size: 11, color: '#4b5563' } },
+                range: [0, maxV * 1.05],
+                gridcolor: '#e5e7eb',
+                zerolinecolor: '#d1d5db',
+                automargin: true
+            },
+            yaxis: { automargin: true, tickfont: { size: n > 48 ? 10 : n > 28 ? 11 : 12 } },
+            annotations: caption
+                ? [{ xref: 'paper', yref: 'paper', x: 0, y: -0.09, xanchor: 'left', showarrow: false, text: caption, font: { size: 10, color: '#6b7280' } }]
+                : []
+        };
+        global.Plotly.newPlot(host, [trace], layout, Object.assign({}, OVERALL_PLOTLY_CONFIG));
+    }
+
+    /**
+     * Horizontal bar chart: per-column summary metric.
+     * @param {HTMLElement} host
+     * @param {{ summVals: number[], yLabsUnique: string[], fullLabs: string[], sumYTitle: string, n: number, sumWhat: string }} p
+     */
+    function drawPerColumnSummaryBars(host, p) {
+        purgeHost(host);
         const summVals = p.summVals;
         const yLabsUnique = p.yLabsUnique;
         const fullLabs = p.fullLabs;
@@ -309,62 +317,58 @@
         if (!n || !Array.isArray(yLabsUnique) || yLabsUnique.length !== n || !Array.isArray(fullLabs) || fullLabs.length !== n) return;
 
         const tickLabs = yLabsUnique.map((lab) => overallDashShortAxisLabel(lab, 44));
-        const maxChars = d3.max(tickLabs, (t) => t.length) || 6;
+        const maxChars = tickLabs.reduce((m, t) => Math.max(m, t.length), 0) || 6;
         const rowPx = maxChars > 140 ? 28 : maxChars > 80 ? 24 : 22;
         const h = overallDashHeightForSamples(n, { perRow: rowPx, base: 96, minH: 260, maxH: 2200 });
         const w = Math.max(360, resolveOverallChartOuterWidthPx(host));
-        const marginL = Math.min(720, Math.round(40 + maxChars * 5.6));
-        const margin = { t: 14, r: 24, b: 56, l: marginL };
-        const innerW = w - margin.l - margin.r;
-        const innerH = h - margin.t - margin.b;
-        const svg = d3.select(host).append('svg').attr('width', w).attr('height', h);
-        const g = svg.append('g').attr('transform', `translate(${margin.l},${margin.t})`);
-        const idx = summVals.map((_, i) => i);
-        const y = d3.scaleBand().domain(idx).range([0, innerH]).padding(0.2);
+        const marginL = Math.min(720, Math.round(40 + maxChars * 6.8));
         const finiteX = summVals.filter((v) => Number.isFinite(v));
-        const maxVraw = d3.max(finiteX);
-        const maxV = Number.isFinite(maxVraw) ? maxVraw : 1;
-        const minVraw = d3.min(finiteX);
-        const minV = Number.isFinite(minVraw) ? minVraw : 0;
+        const maxV = finiteX.length ? Math.max.apply(null, finiteX) : 1;
+        const minV = finiteX.length ? Math.min.apply(null, finiteX) : 0;
         let x0 = 0;
         let x1 = maxV * 1.05;
         if (!(x1 > 0) || !Number.isFinite(x1)) x1 = 1;
         if (sumWhat !== 'count_nz' && sumWhat !== 'detection' && Number.isFinite(minV) && minV < 0) {
             x0 = minV - (maxV - minV) * 0.08;
         }
-        const x = d3.scaleLinear().domain([x0, x1]).nice().range([0, innerW]);
-        const tickFs = n > 48 ? '8px' : n > 28 ? '9px' : '10px';
-        const gy = g.append('g').call(d3.axisLeft(y).tickFormat((i) => tickLabs[i]).tickSizeOuter(0));
-        gy.selectAll('text').attr('font-size', tickFs);
-        gy.selectAll('.domain').attr('stroke', '#d1d5db');
-        gy.selectAll('.tick line').attr('stroke', '#e5e7eb');
-        const xFmt = sumWhat === 'count_nz' ? d3.format(',.0f') : d3.format('.4g');
-        const gx = g.append('g').attr('transform', `translate(0,${innerH})`).call(d3.axisBottom(x).ticks(Math.min(8, Math.max(4, Math.floor(innerW / 95)))).tickFormat(xFmt));
-        gx.selectAll('.domain').attr('stroke', '#d1d5db');
-        gx.selectAll('.tick line').attr('stroke', '#e5e7eb');
-        g.selectAll('rect.pcsbar')
-            .data(idx)
-            .join('rect')
-            .attr('class', 'pcsbar')
-            .attr('x', (i) => Math.min(x(0), x(summVals[i])))
-            .attr('y', (i) => y(i))
-            .attr('width', (i) => {
-                const v = summVals[i];
-                if (!Number.isFinite(v)) return 0;
-                return Math.max(1, Math.abs(x(v) - x(0)));
-            })
-            .attr('height', y.bandwidth())
-            .attr('fill', '#2e7d32')
-            .attr('rx', 2)
-            .each(function (i) {
-                const v = summVals[i];
-                const full = String(fullLabs[i] == null ? '' : fullLabs[i]);
-                const t = `${full}\n${sumYTitle}: ${Number.isFinite(v) ? (sumWhat === 'count_nz' ? String(Math.round(v)) : v.toPrecision(6)) : '—'}`;
-                d3.select(this).append('title').text(t);
-            });
-        g.append('text').attr('x', innerW / 2).attr('y', innerH + 40).attr('text-anchor', 'middle').attr('font-size', '11px').attr('fill', '#4b5563').text(sumYTitle);
+        const countMode = sumWhat === 'count_nz';
+        const trace = {
+            type: 'bar',
+            orientation: 'h',
+            y: tickLabs,
+            x: summVals,
+            customdata: fullLabs,
+            width: 0.45,
+            hovertemplate: countMode
+                ? '%{customdata}<br>' + sumYTitle + ': %{x:,}<extra></extra>'
+                : '%{customdata}<br>' + sumYTitle + ': %{x:.4g}<extra></extra>',
+            marker: { color: '#2e7d32' }
+        };
         const foot = `Per-column summary (${p.n} column(s)). ${sumYTitle}.`;
-        svg.append('text').attr('x', margin.l).attr('y', h - 6).attr('font-size', '10px').attr('fill', '#6b7280').text(foot);
+        const layout = {
+            width: w,
+            height: h,
+            autosize: false,
+            margin: { t: 14, r: 24, b: 56, l: marginL },
+            paper_bgcolor: '#ffffff',
+            plot_bgcolor: '#ffffff',
+            font: { family: 'Segoe UI, Roboto, Helvetica, Arial, sans-serif', size: 11, color: '#1f2937' },
+            showlegend: false,
+            xaxis: {
+                title: { text: sumYTitle, font: { size: 11, color: '#4b5563' } },
+                range: [x0, x1],
+                tickformat: countMode ? ',.0f' : '',
+                nticks: Math.max(4, Math.min(8, Math.floor((w - marginL - 24) / 95))),
+                gridcolor: '#e5e7eb',
+                zerolinecolor: '#d1d5db',
+                automargin: true
+            },
+            yaxis: { automargin: true, autorange: 'reversed', tickfont: { size: n > 48 ? 10 : n > 28 ? 11 : 12 } },
+            annotations: [
+                { xref: 'paper', yref: 'paper', x: 0, y: -0.09, xanchor: 'left', showarrow: false, text: foot, font: { size: 10, color: '#6b7280' } }
+            ]
+        };
+        global.Plotly.newPlot(host, [trace], layout, Object.assign({}, OVERALL_PLOTLY_CONFIG));
     }
 
     /**
@@ -376,8 +380,7 @@
             return '<span class="nebula-report-muted">Load a matrix to see summary statistics.</span>';
         }
         return `<span class="dq-overall-pill"><strong>${meta.nRows.toLocaleString()}</strong> features (rows)</span>
-            <span class="dq-overall-pill"><strong>${meta.nCols.toLocaleString()}</strong> samples (columns)</span>
-            <span class="dq-overall-pill">Per-column bars: <strong>Data QC → Overall</strong> sidebar</span>`;
+            <span class="dq-overall-pill"><strong>${meta.nCols.toLocaleString()}</strong> samples (columns)</span>`;
     }
 
     function updateSummaryStrip(meta) {
@@ -424,19 +427,22 @@
             updateSummaryStrip(null);
             return;
         }
+        if (typeof global.Plotly === 'undefined') {
+            console.warn('Data QC → Overall: Plotly not loaded — skipping chart refresh.');
+            return;
+        }
         if (empty) empty.style.display = 'none';
         if (charts) charts.style.display = 'flex';
-        const d3 = await getD3();
         const stats = computeColumnStats(matrix, headers);
         updateSummaryStrip(stats);
         const elBox = document.getElementById('dataQcOverallChartBox');
         const elTot = document.getElementById('dataQcOverallChartTotalLog');
         const elSum = document.getElementById('dataQcOverallSummaryPlot');
-        if (elBox) drawBoxPlots(d3, elBox, stats.cols, stats.boxNote + ' Whiskers: min/max of subsampled log values; box: Q1–Q3; line: median.');
-        if (elTot) drawTotalLogBar(d3, elTot, stats.cols, 'Total summed log10(1+I) over all quantified features — relative spectral load per sample.');
+        if (elBox) drawBoxPlots(elBox, stats.cols, stats.boxNote + ' Whiskers: min/max of subsampled log values; box: Q1–Q3; line: median.');
+        if (elTot) drawTotalLogBar(elTot, stats.cols, 'Total summed log10(1+I) over all quantified features — relative spectral load per sample.');
         if (elSum && typeof global.getDataQcOverallPerColumnSummaryPayload === 'function') {
             const sp = global.getDataQcOverallPerColumnSummaryPayload();
-            if (sp && Array.isArray(sp.summVals) && sp.summVals.length) drawPerColumnSummaryBars(d3, elSum, sp);
+            if (sp && Array.isArray(sp.summVals) && sp.summVals.length) drawPerColumnSummaryBars(elSum, sp);
             else clearOverallSummaryHost();
         } else if (elSum) {
             clearOverallSummaryHost();

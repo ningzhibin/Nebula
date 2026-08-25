@@ -1,17 +1,136 @@
 {
   "sections": [
-    { "id": "overview", "title": "1. Overview", "file": "overview.md" },
-    { "id": "input", "title": "2. Input Data", "file": "input.md" },
-    { "id": "diann", "title": "3. DIANN Upload Rules", "file": "diann.md" },
-    { "id": "namemapping", "title": "3b. Name mapping (MyGene)", "file": "namemapping.md" },
-    { "id": "replicate", "title": "4. Replicate Parsing", "file": "replicate.md" },
-    { "id": "techfilter", "title": "5. Group completeness filter", "file": "techfilter.md" },
-    { "id": "postfilter", "title": "6. Post-filter Behavior", "file": "postfilter.md" },
-    { "id": "upsetvenn", "title": "7. UpSet / Venn / Karnaugh", "file": "upsetvenn.md" },
-    { "id": "columnprofile", "title": "8. Column profile", "file": "columnprofile.md" },
-    { "id": "columncorrelation", "title": "9. Column correlation", "file": "columncorrelation.md" },
-    { "id": "clustering", "title": "10. Clustering (Heatmap · PCA · PCoA · t-SNE)", "file": "clustering.md" },
-    { "id": "differential", "title": "11. Differential analysis", "file": "differential.md" },
-    { "id": "reportexport", "title": "12. Report export (MVP)", "file": "report.md" }
+    {
+      "id": "overview",
+      "title": "1. Overview & navigation",
+      "file": "overview.md",
+      "group": "About Nebula"
+    },
+    {
+      "id": "input",
+      "title": "2. Data Preparation",
+      "file": "input.md",
+      "group": "Data preparation"
+    },
+    {
+      "id": "diann",
+      "title": "3. DIA-NN upload rules",
+      "file": "diann.md",
+      "group": "Data preparation"
+    },
+    {
+      "id": "maxquant",
+      "title": "4. MaxQuant upload rules",
+      "file": "maxquant.md",
+      "group": "Data preparation"
+    },
+    {
+      "id": "replicate",
+      "title": "5. Replicate parsing",
+      "file": "replicate.md",
+      "group": "Data preparation"
+    },
+    {
+      "id": "qcoverall",
+      "title": "6. Data QC — Overall",
+      "file": "qcoverall.md",
+      "group": "Data QC"
+    },
+    {
+      "id": "rowprofile",
+      "title": "7. Data QC — Row profile",
+      "file": "rowprofile.md",
+      "group": "Data QC"
+    },
+    {
+      "id": "columnprofile",
+      "title": "8. Data QC — Column profile",
+      "file": "columnprofile.md",
+      "group": "Data QC"
+    },
+    {
+      "id": "columncorrelation",
+      "title": "9. Data QC — Column correlation",
+      "file": "columncorrelation.md",
+      "group": "Data QC"
+    },
+    {
+      "id": "upsetvenn",
+      "title": "10. UpSet / Venn / K-map",
+      "file": "upsetvenn.md",
+      "group": "Data QC"
+    },
+    {
+      "id": "datafilter",
+      "title": "11. Data Filter",
+      "file": "datafilter.md",
+      "group": "Data preprocess"
+    },
+    {
+      "id": "techfilter",
+      "title": "12. Group completeness filter",
+      "file": "techfilter.md",
+      "group": "Data preprocess"
+    },
+    {
+      "id": "postfilter",
+      "title": "13. Post-filter behavior",
+      "file": "postfilter.md",
+      "group": "Data preprocess"
+    },
+    {
+      "id": "namemapping",
+      "title": "14. Name mapping (MyGene)",
+      "file": "namemapping.md",
+      "group": "Data preprocess"
+    },
+    {
+      "id": "imputation",
+      "title": "15. Missing value imputation",
+      "file": "imputation.md",
+      "group": "Data preprocess"
+    },
+    {
+      "id": "batcheffect",
+      "title": "16. Batch effect correction",
+      "file": "batcheffect.md",
+      "group": "Data preprocess"
+    },
+    {
+      "id": "metatable",
+      "title": "17. Meta table & Sankey",
+      "file": "metatable.md",
+      "group": "Data preprocess"
+    },
+    {
+      "id": "clustering",
+      "title": "18. Clustering (Heatmap · Clustergrammer · PCA · PCoA · t-SNE · K-means)",
+      "file": "clustering.md",
+      "group": "Clustering"
+    },
+    {
+      "id": "differential",
+      "title": "19. Differential analysis",
+      "file": "differential.md",
+      "group": "Downstream"
+    },
+    {
+      "id": "saint",
+      "title": "20. SAINT analysis",
+      "file": "saint.md",
+      "group": "Downstream"
+    },
+    {
+      "id": "enrichr",
+      "title": "21. Enrichr enrichment",
+      "file": "enrichr.md",
+      "group": "Downstream"
+    },
+    {
+      "id": "report",
+      "title": "22. Report export",
+      "file": "report.md",
+      "group": "Report"
+    }
   ]
 }

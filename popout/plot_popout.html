@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plot — pop-out</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        #banner {
+            padding: 8px 16px;
+            background: #667eea;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+        #root {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            padding: 10px 14px 16px;
+        }
+        #waiting { font-size: 13px; line-height: 1.45; color: #555; padding: 8px 0 0 0; }
+        #plot {
+            flex: 1;
+            min-height: 0;
+            width: 100%;
+            display: none;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+        }
+        #err { padding: 24px; color: #b00; max-width: 720px; line-height: 1.45; }
+    </style>
+</head>
+<body>
+    <div id="banner">Plot pop-out</div>
+    <div id="root">
+        <p id="waiting">Receiving plot from the main window… If this stays more than a few seconds, re-click <strong>Pop out</strong> in the app (allow pop-ups).</p>
+        <div id="plot"></div>
+    </div>
+    <script>
+        (function () {
+            var QC_SOURCE = 'DataMatrixQC';
+            var QC_TYPE = 'plot_popout_payload';
+            var STORAGE_KEY = 'qc_plot_popout';
+            var dataAccepted = false;
+            var waitingEl = document.getElementById('waiting');
+            var bannerEl = document.getElementById('banner');
+            var plotDiv = document.getElementById('plot');
+
+            function showErr(html) {
+                if (dataAccepted) return;
+                if (waitingEl) waitingEl.style.display = 'none';
+                plotDiv.style.display = 'none';
+                var err = document.getElementById('err');
+                if (!err) {
+                    err = document.createElement('p');
+                    err.id = 'err';
+                    document.getElementById('root').appendChild(err);
+                }
+                err.innerHTML = html;
+            }
+
+            function render(payload) {
+                if (dataAccepted) return;
+                if (!payload || !payload.data || !payload.layout) {
+                    showErr('Invalid payload (missing <code>data</code> or <code>layout</code>).');
+                    return;
+                }
+                if (payload.title) {
+                    document.title = payload.title + ' — pop-out';
+                    bannerEl.textContent = payload.title;
+                }
+                if (waitingEl) waitingEl.style.display = 'none';
+                plotDiv.style.display = 'block';
+
+                var data = payload.data;
+                var layout = JSON.parse(JSON.stringify(payload.layout));
+                layout.autosize = true;
+                delete layout.width;
+                delete layout.height;
+
+                var cfg = Object.assign({
+                    responsive: true,
+                    editable: false,
+                    displayModeBar: true,
+                    displaylogo: false,
+                    scrollZoom: true
+                }, payload.config || {});
+                // The pop-out is itself the full-size view, so drop any injected "Pop out" modebar button.
+                cfg.modeBarButtonsToAdd = [];
+
+                try {
+                    Plotly.newPlot('plot', data, layout, cfg);
+                } catch (e) {
+                    plotDiv.style.display = 'none';
+                    showErr('Plotly error: ' + (e && e.message ? e.message : String(e)));
+                    return;
+                }
+                dataAccepted = true;
+
+                function doResize() { try { Plotly.Plots.resize('plot'); } catch (ex) { /* ignore */ } }
+                window.addEventListener('resize', function () {
+                    clearTimeout(window._popResizeT);
+                    window._popResizeT = setTimeout(doResize, 80);
+                });
+                setTimeout(doResize, 0);
+                setTimeout(doResize, 100);
+                setTimeout(doResize, 320);
+            }
+
+            window.addEventListener('message', function onMsg(e) {
+                var d = e.data;
+                if (!d || d.source !== QC_SOURCE || d.type !== QC_TYPE || !d.payload) return;
+                render(d.payload);
+                window.removeEventListener('message', onMsg);
+            });
+
+            var raw = null;
+            try { raw = sessionStorage.getItem(STORAGE_KEY); } catch (e) { raw = null; }
+            if (raw) {
+                try {
+                    var payload = JSON.parse(raw);
+                    if (payload && payload.data && payload.layout) { render(payload); return; }
+                } catch (e2) { showErr('Invalid stored data.'); return; }
+            }
+
+            setTimeout(function () {
+                if (dataAccepted) return;
+                showErr('No plot data received. In the app, generate the figure, then click <strong>Pop out</strong> on its toolbar. Under <code>file://</code>, the parent sends data via <code>postMessage</code> (allow pop-ups).');
+            }, 8000);
+        })();
+    </script>
+</body>
+</html>

@@ -1,7 +1,24 @@
-### Column profile
+### 8. Data QC — Column profile
 
-- **Data PreProcess** sub-tab **Column profile** (after **Row Profile**): one **button per sample column** above the plots.
-- For the selected column, finite numeric values are sorted **high → low**. Interactive **Plotly** views: ranked **bars + line** (linear intensity y-axis: scientific notation, e.g. `1.2e+6`), **cumulative % of total**, **treemap**, and **pie** (top *N* features + **Other**; sidebar *Max features*). Optional **log10(1 + intensity)** for the bar/line panel uses fixed-decimal y ticks on the transformed scale.
-- A full-width panel plots a **histogram** (probability density) and **Gaussian KDE** curve of **log10(1 + intensity)** for **every** feature in that column (not limited by *Max features*); KDE uses a Silverman bandwidth and subsamples very large matrices for speed.
-- **Row Profile** chart (Data QC → **Row Profile**): **Plot type** is **Stacked bar (composition)** (default), **Bar** (grouped bars per sample), or **Line** (trend across samples). Linear **Value** y-axis uses the same scientific tick style; **log Y** and **Z-score** modes keep their own tick formats. The plot uses the **full width and height** of the Row Profile plot column inside a framed container; sample names get extra bottom space and smaller tick fonts when there are many columns.
-- **Stacked bar (composition)**: one bar per sample with the selected rows **stacked**, so each segment shows that row's contribution to the sample total. Values are **additive** — non-finite / non-positive cells count as **0**, and **log / Z-score do not apply**. Optional **Show as % composition** normalizes each sample's stack to **100%** (y-axis 0–100 %) so relative contributions are comparable across samples. Use it to see how a handful of selected proteins partition the signal in each sample.
+The **Data QC > Column profile** sub-tab profiles **one sample column at a time**: ranked intensities, cumulative share, treemap, pie, and the intensity distribution - five interactive Plotly figures in inner sub-tabs.
+
+#### Sidebar (Display options)
+
+- **Sample column** - which sample to profile (populated from the matrix columns; changes repopulate/redraw immediately).
+- **Row/feature label** - what to show in hover/labels: `First.Protein.Description` (default), `Matrix row ID`, `Protein.Names`, `Genes`, `Protein.Group`.
+- **Max features (bar, curve, treemap, pie)** - default 500 (range 10-20000): the top N features by intensity are shown individually; the remaining mass is grouped as *Other* (treemap / pie).
+- **Use log10(1 + intensity) for bar & line chart** - unchecked by default; check to plot the ranked-intensity bar/line on a log scale.
+- **Mark contaminant proteins (Cont_)** - checked by default; `Cont_`/`CON__` rows are shown red in the bar/pie/treemap and their share of the sample's total intensity is reported.
+- **Refresh plots** - redraws the active figure.
+
+#### The five figures (inner sub-tabs)
+
+- **Treemap** (first, default) - area-proportional rectangles of the top features + an *Other* group.
+- **Ranked intensity** - bars sorted by intensity (highest first) with a connecting line; optionally log10(1+intensity) scale.
+- **Cumulative %** - cumulative percentage of the sample's total intensity in sorted order.
+- **Pie chart** - top N features + *Other* as a pie.
+- **Distribution** - log10(1+I) histogram + KDE over **all features** of the sample.
+
+Only the active tab's figure is drawn, and each figure stretches to the full height of the visible panel. The **Add to Report** buttons on the treemap and ranked-intensity cards switch to the figure's own tab before capture; the status line under the figures reports the active view.
+
+See also: *7. Data QC - Row profile*, *22. Report export*.

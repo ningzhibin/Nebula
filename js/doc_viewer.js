@@ -79,10 +79,21 @@
         var outline = document.getElementById('docOutline');
         if (!outline) return;
         outline.innerHTML = '';
+        var currentGroup = null;
         sections.forEach(function (entry) {
+            var g = entry.group || '';
+            if (g !== currentGroup) {
+                currentGroup = g;
+                if (g) {
+                    var h = document.createElement('div');
+                    h.className = 'doc-outline-group';
+                    h.textContent = g;
+                    outline.appendChild(h);
+                }
+            }
             var btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = 'doc-outline-btn';
+            btn.className = 'doc-outline-btn' + (g ? ' doc-outline-btn--grouped' : '');
             btn.setAttribute('data-doc', entry.id);
             btn.textContent = entry.title || entry.id;
             btn.addEventListener('click', function () {
@@ -206,8 +217,33 @@
             });
     }
 
+    var readingWidthBound = false;
+
+    function applyDocReadingWidth(limit) {
+        var tab = document.getElementById('documentTab');
+        if (tab) tab.classList.toggle('doc-reading-width', !!limit);
+    }
+
+    function bindReadingWidthToggle() {
+        if (readingWidthBound) return;
+        readingWidthBound = true;
+        var cb = document.getElementById('docReadingWidthToggle');
+        if (!cb) return;
+        var stored = null;
+        try { stored = localStorage.getItem('nebulaDocLimitWidth'); } catch (e) {}
+        cb.checked = stored === '1';
+        applyDocReadingWidth(cb.checked);
+        cb.addEventListener('change', function () {
+            applyDocReadingWidth(cb.checked);
+            try { localStorage.setItem('nebulaDocLimitWidth', cb.checked ? '1' : '0'); } catch (e) {}
+        });
+    }
+
     window.nebulaDocViewer = {
-        showDocumentSection: showDocumentSection,
+        showDocumentSection: function (sectionName) {
+            bindReadingWidthToggle();
+            return showDocumentSection(sectionName);
+        },
         clearCache: function () {
             htmlCache.clear();
         }
