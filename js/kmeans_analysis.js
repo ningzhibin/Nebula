@@ -364,7 +364,7 @@
                 };
                 Plotly.react(silHost, silTraces, silLayout, { responsive: true, displaylogo: false });
             } else {
-                silHost.innerHTML = '<div style="padding:24px;color:#666;font-size:13px;">Silhouette analysis is skipped when there are more than ' +
+                silHost.innerHTML = '<div style="padding:24px;color:#666;font-size:var(--fs-md);">Silhouette analysis is skipped when there are more than ' +
                     SILHOUETTE_SAMPLE_CAP + ' samples (it grows with the square of the sample count). ' +
                     'k was chosen by the elbow method; reduce Max samples to enable silhouette.</div>';
             }

@@ -1,4 +1,4 @@
-### 15. Missing value imputation
+### 16. Missing value imputation
 
 The **Data PreProcess > Imputation** sub-tab replaces missing values in the matrix with imputed estimates. Choose a method, tune its parameters, press **Apply imputation**, and inspect the result in the four inner tabs. Downstream analyses use the imputed matrix.
 

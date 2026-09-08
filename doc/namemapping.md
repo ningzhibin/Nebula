@@ -1,4 +1,4 @@
-### 14. Name mapping (MyGene)
+### 15. Name mapping (MyGene)
 
 The **Data PreProcess > Name mapping** sub-tab maps your matrix row IDs to gene symbols, protein names, and UniProt accessions using the free **MyGene.info** API (no key required). The results are stored like DIANN annotations: they become the **feature labels** shown in plots and tables, and they power Row Profile search.
 

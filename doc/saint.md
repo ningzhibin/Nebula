@@ -1,4 +1,4 @@
-### 20. SAINT analysis
+### 21. SAINT analysis
 
 The **Downstream > SAINT** sub-tab scores bait-prey interactions in affinity-purification mass spectrometry (AP-MS) data using the SAINT algorithm: for each bait, it compares test (T) vs control (C) samples to compute interaction probabilities. Three sub-tabs: **SAINT analysis**, **Network**, and **Scatter Plot**.
 

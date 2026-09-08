@@ -1,0 +1,77 @@
+/* =============================================================
+   Nebula typography tokens — SINGLE SOURCE OF TRUTH
+   ------------------------------------------------------------
+   Font families + the hierarchical font-size scale for the whole
+   project. Loaded by:
+     • the app (index.html, before css/main.css)
+     • popout/*.html (linked as ../css/font_tokens.css)
+     • the exported report (values are baked into its CSS at
+       generation time via NebulaFonts, see js/nebula_fonts.js)
+
+   RULE (repo-wide): never hardcode a font-family or font-size in
+   markup, stylesheets, or JS-generated DOM. Reference a token:
+     font-family: var(--font-body | --font-mono | --font-display)
+     font-size: var(--fs-2xs … --fs-4xl | --fs-base)
+   JS that needs a literal font string (e.g. Plotly font.family,
+   canvas measurement) must use window.NebulaFonts (js/nebula_fonts.js).
+   ============================================================= */
+:root {
+    /* Type system (Journal style: Fraunces display · IBM Plex Sans body ·
+       IBM Plex Mono data) */
+    --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+    --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Consolas, monospace;
+
+    /* rem anchor (keeps rem math stable; also the anti-Bootstrap pin) */
+    --fs-root: 16px;
+
+    /* Hierarchical font-size scale — every UI role uses one of these
+       steps, so the same role reads the same size on every page.
+       --fs-base is the app body size; micro steps serve dense data
+       (ticks, compact labels); large steps serve headings. */
+    --fs-2xs: 10px;   /* micro: axis ticks, sort arrows */
+    --fs-xs: 11px;    /* compact labels, dense data values */
+    --fs-sm: 12px;    /* standard small text: notes, hints, controls */
+    --fs-md: 13px;    /* dense tables, secondary text */
+    --fs-lg: 14px;    /* standard labels, emphasis */
+    --fs-base: 15px;  /* body / base text (app-wide default) */
+    --fs-xl: 16px;    /* h4, emphasized inline text */
+    --fs-2xl: 18px;   /* h3, placeholder / empty-state titles */
+    --fs-3xl: 22px;   /* h2, section headings */
+    --fs-4xl: 28px;   /* h1, report titles */
+}
+
+/* ---------- base cascade (components in main.css override later) ---------- */
+body {
+    font-family: var(--font-body);
+    font-size: var(--fs-base);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Default heading hierarchy (a fallback for any heading a component
+   does not size explicitly; main.css may restyle specific ones later) */
+h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+}
+h1 { font-size: var(--fs-4xl); }
+h2 { font-size: var(--fs-3xl); }
+h3 { font-size: var(--fs-2xl); }
+h4 { font-size: var(--fs-xl); }
+
+/* ---------- utility classes (optional sugar for inline markup) ---------- */
+.fs-2xs  { font-size: var(--fs-2xs); }
+.fs-xs   { font-size: var(--fs-xs); }
+.fs-sm   { font-size: var(--fs-sm); }
+.fs-md   { font-size: var(--fs-md); }
+.fs-lg   { font-size: var(--fs-lg); }
+.fs-base { font-size: var(--fs-base); }
+.fs-xl   { font-size: var(--fs-xl); }
+.fs-2xl  { font-size: var(--fs-2xl); }
+.fs-3xl  { font-size: var(--fs-3xl); }
+.fs-4xl  { font-size: var(--fs-4xl); }
+.font-display  { font-family: var(--font-display); }
+.font-mono     { font-family: var(--font-mono); }
+.font-body     { font-family: var(--font-body); }

@@ -1,4 +1,4 @@
-### 21. Enrichr enrichment
+### 22. Enrichr enrichment
 
 The **Downstream > Enrichr** sub-tab runs gene-list enrichment against the Enrichr libraries (client-side calls to the public Enrichr API) and visualizes the results three ways: the **Run Analysis** results table, **Enrichment plots**, and a clustered **Heatmap** of the enriched terms.
 

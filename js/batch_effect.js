@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Batch Effect Detection & Correction for Nebula
  * Methods: Median centering, Mean centering, ComBat-lite (location+scale).
  * Simplified PCA for on-the-fly batch visualization (no Web Worker needed).
@@ -508,7 +508,7 @@ function refreshBatchDetectionPanel() {
         '<strong>Batch column:</strong> ' + batchCol + ' (' + assigned.batchNames.length + ' batches: ' + assigned.batchNames.join(', ') + ')<br>' +
         '<strong>Silhouette (batch):</strong> ' + (meanSil >= 0 ? meanSil.toFixed(3) : 'N/A') + '  <span class="small" style="color:#888;">(+1 = well-separated batches, 0 = overlap, -1 = mis-assigned)</span><br></div>';
 
-    var perBatchHtml = '<div class="batch-effect-per-batch-stats"><table style="font-size:12px; border-collapse:collapse; width:100%;">' +
+    var perBatchHtml = '<div class="batch-effect-per-batch-stats"><table style="font-size:var(--fs-sm); border-collapse:collapse; width:100%;">' +
         '<tr style="background:#f2efe8;"><th>Batch</th><th>Samples</th><th>Mean (log10)</th><th>SD</th><th>Median (log10)</th></tr>';
     assigned.batchNames.forEach(function (name) {
         var s = stats.perBatchStats[name] || { mean: 0, sd: 0, median: 0, n: 0 };

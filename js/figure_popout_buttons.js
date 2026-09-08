@@ -54,6 +54,10 @@
         { id: 'pcoaPlot3d', type: 'auto', title: 'PCoA 3D' },
         // Clustering → t-SNE
         { id: 'tsnePlot', type: 'plotly', title: 't-SNE', report: 'tsne' },
+        // Clustering → UMAP
+        { id: 'umapPlot', type: 'plotly', title: 'UMAP', report: 'umap' },
+        // Data PreProcess → Outliers
+        { id: 'outlierScorePlot', type: 'plotly', title: 'Outlier score', report: 'outlier_score' },
         // Clustering → K-means
         { id: 'kmClusterPlot', type: 'plotly', title: 'K-means clusters', report: 'kmeans_clusters' },
         { id: 'kmElbowPlot', type: 'plotly', title: 'Elbow (WCSS vs k)' },

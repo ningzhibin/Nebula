@@ -1,4 +1,4 @@
-### 17. Meta table & Sankey
+### 18. Meta table & Sankey
 
 The **Data PreProcess > Meta Table** sub-tab shows and edits the sample metadata, and visualizes its hierarchical structure as a **Sankey** diagram. The meta table is auto-generated from matrix column names (see *5. Replicate parsing*); you can override it by uploading your own in Data Preparation.
 

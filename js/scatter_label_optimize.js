@@ -6,7 +6,10 @@
 (function (global) {
     'use strict';
 
-    var DEFAULT_FONT = 'Segoe UI, Roboto, Helvetica, Arial, sans-serif';
+    // Prefer the app body stack (css/font_tokens.css via NebulaFonts) so canvas
+    // measurement matches the rendered Plotly/DOM typeface; fall back if no tokens.
+    var DEFAULT_FONT = (typeof window !== 'undefined' && window.NebulaFonts && window.NebulaFonts.body)
+        || 'IBM Plex Sans, Segoe UI, system-ui, sans-serif';
 
     /** @type {HTMLCanvasElement|null} */
     var _measureCanvas = null;

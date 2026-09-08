@@ -16,12 +16,13 @@
     /** Max JSON size for interactive PCA 3D payload in report HTML. */
     var PCA3D_INTERACTIVE_JSON_MAX_CHARS = 6000000;
     var D3_CDN_URL = 'https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js';
-    var PCA3D_EMBED_SCRIPT_URL = 'js/pca3d_report_embed.js?v=5.11';
-    var PCA3D_EMBED_VERSION = '5.11';
+    var PCA3D_EMBED_SCRIPT_URL = 'js/pca3d_report_embed.js?v=5.63';
+    var PCA3D_EMBED_VERSION = '5.63';
     var pca3dEmbedScriptCache = null;
 
     /** Preload embed source so report HTML can inline it (blob iframe cannot load relative js/). */
     (function preloadPca3dEmbedScript() {
+        if (typeof location !== 'undefined' && location.protocol === 'file:') return;
         if (global.__NEBULA_PCA3D_EMBED_SCRIPT_TEXT__) {
             pca3dEmbedScriptCache = global.__NEBULA_PCA3D_EMBED_SCRIPT_TEXT__;
             return;
@@ -62,6 +63,8 @@
         row_profile: 'Row profile of the selected features across samples (Data QC → Row Profile) at export time; plot type and normalization follow the on-screen settings.',
         pca_scree: 'PCA scree plot: variance explained by each extracted principal component (Clustering → PCA → Details), captured as a vector snapshot.',
         tsne: 't-SNE embedding of samples (Clustering → t-SNE) with the perplexity/iterations and preprocessing used on screen at export time.',
+        umap: 'UMAP embedding of samples (Clustering → UMAP) with the n_neighbors/min_dist/spread/seed and preprocessing used on screen at export time.',
+        outlier_score: 'Outlier score per sample (Data PreProcess → Outliers): max robust modified z-score across the 5 QC metrics with the flag threshold, at export time.',
         kmeans_clusters: 'K-means cluster plot: samples on the PCA projection colored by discovered cluster, with centroids (Clustering → K-means) at export time.',
         diff_volcano: 'Differential volcano plot (−log10 p/FDR vs log2 fold change) with the current thresholds and group labels at export time.',
         diff_ma: 'Differential MA plot (log2 fold change vs mean abundance) with the current thresholds and group labels at export time.',
@@ -127,6 +130,8 @@
         { id: 'pcoa_2d', title: 'Clustering — PCoA 2D plot', group: 'Clustering', capture: 'pcoa_plotly' },
         { id: 'pcoa_3d', title: 'Clustering — PCoA 3D plot', group: 'Clustering', capture: 'pcoa_3d_interactive' },
         { id: 'tsne', title: 'Clustering — t-SNE plot', group: 'Clustering', capture: 'plotly', plotlyId: 'tsnePlot' },
+        { id: 'umap', title: 'Clustering — UMAP plot', group: 'Clustering', capture: 'plotly', plotlyId: 'umapPlot' },
+        { id: 'outlier_score', title: 'Data PreProcess — outlier score per sample', group: 'Data PreProcess', capture: 'plotly', plotlyId: 'outlierScorePlot' },
         { id: 'kmeans_clusters', title: 'Clustering — K-means cluster plot', group: 'Clustering', capture: 'plotly', plotlyId: 'kmClusterPlot' },
         { id: 'diff_volcano', title: 'Differential — volcano plot', group: 'Downstream → Differential', capture: 'plotly', plotlyId: 'diffVolcanoPlot' },
         { id: 'diff_ma', title: 'Differential — MA plot', group: 'Downstream → Differential', capture: 'plotly', plotlyId: 'diffMaPlot' },
@@ -1867,18 +1872,37 @@
         buildOpts = buildOpts || {};
         var previewEd = !!buildOpts.previewCaptionEditors;
         var title = 'Nebula report';
+        /* Typography: this is a standalone exported document, so bake the app's
+           design tokens (css/font_tokens.css, read via NebulaFonts) into its own
+           :root — the report then uses the identical stacks + --fs-* scale. */
+        function fsBake(step, fallbackPx) {
+            var v = (window.NebulaFonts && window.NebulaFonts.css) ? window.NebulaFonts.css('--fs-' + step, '') : '';
+            return v || (fallbackPx + 'px');
+        }
+        var fontTokensCss = ':root{' +
+            '--font-body:' + ((window.NebulaFonts && window.NebulaFonts.body) || 'IBM Plex Sans, Segoe UI, system-ui, sans-serif') + ';' +
+            '--font-mono:' + ((window.NebulaFonts && window.NebulaFonts.mono) || 'IBM Plex Mono, ui-monospace, Consolas, monospace') + ';' +
+            '--font-display:' + ((window.NebulaFonts && window.NebulaFonts.display) || 'Fraunces, Georgia, serif') + ';' +
+            '--fs-root:' + fsBake('root', 16) + ';' +
+            '--fs-2xs:' + fsBake('2xs', 10) + ';' + '--fs-xs:' + fsBake('xs', 11) + ';' +
+            '--fs-sm:' + fsBake('sm', 12) + ';' + '--fs-md:' + fsBake('md', 13) + ';' +
+            '--fs-lg:' + fsBake('lg', 14) + ';' + '--fs-base:' + fsBake('base', 15) + ';' +
+            '--fs-xl:' + fsBake('xl', 16) + ';' + '--fs-2xl:' + fsBake('2xl', 18) + ';' +
+            '--fs-3xl:' + fsBake('3xl', 22) + ';' + '--fs-4xl:' + fsBake('4xl', 28) + '}' +
+            'code,pre{font-family:var(--font-mono);font-size:var(--fs-sm);}';
         var styleParts = [
-            'body{font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;margin:24px;color:#1f2937;background:#fff;}',
-            'h1{font-size:1.35rem;border-bottom:1px solid #e5e7eb;padding-bottom:8px;}',
-            'h2{font-size:1.05rem;margin-top:28px;color:#374151;}',
-            '.nebula-report-subh{font-size:1rem;margin:20px 0 8px;color:#1f2937;border-bottom:1px solid #e5e7eb;padding-bottom:4px;}',
-            '.nebula-report-subh2{font-size:0.92rem;margin:14px 0 6px;color:#374151;}',
-            '.nebula-report-small,.nebula-report-meta-hint{font-size:0.88rem;line-height:1.45;color:#4b5563;margin:6px 0;}',
-            '.nebula-report-muted{color:#6b7280;font-size:0.95rem;}',
+            fontTokensCss,
+            'body{font-family:var(--font-body);margin:24px;color:#1f2937;background:#fff;}',
+            'h1{font-size: var(--fs-3xl);border-bottom:1px solid #e5e7eb;padding-bottom:8px;}',
+            'h2{font-size: var(--fs-xl);margin-top:28px;color:#374151;}',
+            '.nebula-report-subh{font-size: var(--fs-xl);margin:20px 0 8px;color:#1f2937;border-bottom:1px solid #e5e7eb;padding-bottom:4px;}',
+            '.nebula-report-subh2{font-size: var(--fs-base);margin:14px 0 6px;color:#374151;}',
+            '.nebula-report-small,.nebula-report-meta-hint{font-size: var(--fs-lg);line-height:1.45;color:#4b5563;margin:6px 0;}',
+            '.nebula-report-muted{color:#6b7280;font-size: var(--fs-base);}',
             '.nebula-report-table{border-collapse:collapse;margin:8px 0;}',
             '.nebula-report-table th,.nebula-report-table td{border:1px solid #e5e7eb;padding:6px 10px;text-align:left;}',
             '.nebula-report-table th{background:#f3f4f6;width:200px;}',
-            '.nebula-report-matrix-table{font-size:0.8rem;}',
+            '.nebula-report-matrix-table{font-size: var(--fs-md);}',
             '.nebula-report-matrix-table th{background:#eef2ff;}',
             '.nebula-report-matrix-table td{vertical-align:top;word-break:break-word;}',
             'figure{margin:12px 0;padding:8px;border:1px solid #e5e7eb;border-radius:6px;background:#fafafa;}',
@@ -1891,13 +1915,13 @@
             '.nebula-report-svg-host svg{display:block;max-width:none;}',
             '.nebula-report-pca3d-host svg{display:block;max-width:none;}',
             '.nebula-report-pca3d-host{line-height:0;overflow:hidden;background:#fff;box-sizing:border-box;position:relative;}',
-            '.nebula-report-pca3d-hint{font-size:0.82rem;color:#4338ca;margin:4px 0 0;padding:0;}',
-            '.nebula-report-pca3d-static-note{font-size:0.82rem;color:#b45309;margin:4px 0 0;}',
-            '.nebula-pca3d-tooltip{position:fixed;z-index:99999;pointer-events:none;background:rgba(17,24,39,0.95);color:#f8fafc;border:1px solid rgba(99,102,241,0.35);border-radius:6px;padding:8px 10px;font-size:12px;line-height:1.35;max-width:min(420px,45vw);box-shadow:0 8px 24px rgba(2,6,23,0.35);display:none;white-space:normal;}',
-            'figcaption{font-size:0.85rem;color:#4b5563;margin-top:6px;white-space:pre-wrap;}',
+            '.nebula-report-pca3d-hint{font-size: var(--fs-md);color:#4338ca;margin:4px 0 0;padding:0;}',
+            '.nebula-report-pca3d-static-note{font-size: var(--fs-md);color:#b45309;margin:4px 0 0;}',
+            '.nebula-pca3d-tooltip{position:fixed;z-index:99999;pointer-events:none;background:rgba(17,24,39,0.95);color:#f8fafc;border:1px solid rgba(99,102,241,0.35);border-radius:6px;padding:8px 10px;font-size: var(--fs-sm);line-height:1.35;max-width:min(420px,45vw);box-shadow:0 8px 24px rgba(2,6,23,0.35);display:none;white-space:normal;}',
+            'figcaption{font-size: var(--fs-lg);color:#4b5563;margin-top:6px;white-space:pre-wrap;}',
             'img{max-width:100%;height:auto;}',
-            '.nebula-report-fragment{font-size:0.9rem;}',
-            '.dq-overall-pill{display:inline-block;margin:4px 8px 4px 0;padding:4px 10px;background:#eef2ff;border-radius:999px;font-size:0.88rem;}',
+            '.nebula-report-fragment{font-size: var(--fs-lg);}',
+            '.dq-overall-pill{display:inline-block;margin:4px 8px 4px 0;padding:4px 10px;background:#eef2ff;border-radius:999px;font-size: var(--fs-lg);}',
             '.nebula-report-figure--plotly .nebula-report-plotly-host{min-height:0;max-width:none;box-sizing:border-box;}'
         ];
         if (previewEd) {
@@ -1905,45 +1929,45 @@
                 '.nebula-report-figure--preview{margin:12px 0;padding:10px;border:1px solid #d1d5db;border-radius:8px;background:#fff;}',
                 '.nebula-report-figure--preview.nebula-report-figure--plotly,.nebula-report-figure--preview.nebula-report-figure--raster,.nebula-report-figure--preview.nebula-report-figure--svg,.nebula-report-figure--preview.nebula-report-figure--pca3d{max-width:none;}',
                 '.nebula-report-preview-caption{margin-top:10px;padding-top:10px;border-top:1px solid #e5e7eb;}',
-                '.nebula-report-cap-label{display:block;font-size:0.78rem;font-weight:600;color:#374151;margin-bottom:4px;}',
-                '.nebula-report-caption-edit{width:100%;box-sizing:border-box;font-size:0.82rem;line-height:1.4;padding:8px 10px;border:1px solid #cbd5e1;border-radius:6px;font-family:inherit;resize:vertical;min-height:4.5em;}'
+                '.nebula-report-cap-label{display:block;font-size: var(--fs-sm);font-weight:600;color:#374151;margin-bottom:4px;}',
+                '.nebula-report-caption-edit{width:100%;box-sizing:border-box;font-size: var(--fs-md);line-height:1.4;padding:8px 10px;border:1px solid #cbd5e1;border-radius:6px;font-family:inherit;resize:vertical;min-height:4.5em;}'
             );
         }
         var exportLayoutStyle = [
             ':root{--nr-bg:#faf7f2;--nr-card:#ffffff;--nr-ink:#2b2a27;--nr-ink-6:#6b625a;--nr-line:#e8e1d8;--nr-accent:#c0582f;--nr-accent-deep:#a3451f;--nr-accent-soft:#f7e8de;--nr-header:#37302a;--nr-header-ink:#f5efe9;}',
-            'body{margin:0;background:var(--nr-bg);color:var(--nr-ink);font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;line-height:1.6;font-size:15px;-webkit-font-smoothing:antialiased;}',
+            'body{margin:0;background:var(--nr-bg);color:var(--nr-ink);font-family:var(--font-body);line-height:1.6;font-size:var(--fs-base);-webkit-font-smoothing:antialiased;}',
             'html{scroll-behavior:smooth;}',
             '.nr-header{position:sticky;top:0;z-index:60;display:flex;align-items:center;background:var(--nr-header);color:var(--nr-header-ink);height:57px;padding:0 clamp(16px,3vw,40px);box-sizing:border-box;box-shadow:0 2px 14px rgba(15,12,8,0.18);}',
             '.nr-header-inner{display:flex;flex-direction:column;gap:2px;}',
-            '.nr-header h1{margin:0;font-size:1.15rem;font-weight:700;letter-spacing:0.02em;color:var(--nr-header-ink);border:none;padding:0;}',
-            '.nr-meta{font-size:0.8rem;color:rgba(245,239,233,0.75);margin:0;}',
+            '.nr-header h1{margin:0;font-size: var(--fs-2xl);font-weight:700;letter-spacing:0.02em;color:var(--nr-header-ink);border:none;padding:0;}',
+            '.nr-meta{font-size: var(--fs-md);color:rgba(245,239,233,0.75);margin:0;}',
 '.nr-layout{display:grid;grid-template-columns:280px minmax(0,1fr);gap:0;width:100%;min-height:calc(100vh - 57px);}',
 '.nr-toc{position:sticky;top:57px;align-self:start;height:calc(100vh - 57px);overflow:auto;background:var(--nr-card);border:0;border-right:1px solid var(--nr-line);border-radius:0;padding:20px 16px 40px;box-shadow:none;box-sizing:border-box;}',
-            '.nr-toc-heading{font-size:0.7rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--nr-accent);margin:0 0 10px 6px;}',
+            '.nr-toc-heading{font-size: var(--fs-xs);font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--nr-accent);margin:0 0 10px 6px;}',
             '.nr-toc-list{list-style:none;margin:0;padding:0;}',
             '.nr-toc-list li{margin:2px 0;}',
-            '.nr-toc-list a{display:flex;gap:8px;align-items:baseline;padding:7px 9px;border-radius:8px;text-decoration:none;color:var(--nr-ink-6);font-size:0.85rem;line-height:1.35;border-left:3px solid transparent;transition:background 0.15s,border-color 0.15s,color 0.15s;}',
+            '.nr-toc-list a{display:flex;gap:8px;align-items:baseline;padding:7px 9px;border-radius:8px;text-decoration:none;color:var(--nr-ink-6);font-size: var(--fs-lg);line-height:1.35;border-left:3px solid transparent;transition:background 0.15s,border-color 0.15s,color 0.15s;}',
             '.nr-toc-list a:hover{background:var(--nr-accent-soft);color:var(--nr-accent-deep);}',
             '.nr-toc-list a.active{background:var(--nr-accent-soft);color:var(--nr-accent-deep);border-left-color:var(--nr-accent);font-weight:600;}',
-            '.nr-toc-num{flex:0 0 auto;min-width:1.7em;text-align:right;font-size:0.72rem;font-weight:700;color:var(--nr-accent);}',
+            '.nr-toc-num{flex:0 0 auto;min-width:1.7em;text-align:right;font-size: var(--fs-sm);font-weight:700;color:var(--nr-accent);}',
             '.nr-toc-label{flex:1 1 auto;text-align:left;}',
-            '.nr-toc-back{display:block;margin:12px 4px 0;font-size:0.78rem;color:var(--nr-accent-deep);text-decoration:none;}',
+            '.nr-toc-back{display:block;margin:12px 4px 0;font-size: var(--fs-sm);color:var(--nr-accent-deep);text-decoration:none;}',
             '.nr-content{background:var(--nr-card);min-width:0;padding:20px clamp(20px,4vw,48px) 56px;}',
             '.nr-section{scroll-margin-top:96px;padding:26px 0 4px;border-bottom:1px dashed var(--nr-line);}',
             '.nr-section:last-child{border-bottom:none;}',
 '.nr-section--fill{display:flex;flex-direction:column;height:calc(100vh - 133px);min-height:420px;padding:14px 0 6px;border-bottom:0;}',
 '.nr-section--fill .nebula-report-figure--fill{flex:1 1 auto;min-height:0;}',
 '.nr-section--fill .nebula-report-plotly-host{flex:1 1 auto;min-height:0;max-height:100%;}',
-            '.nr-section-title{display:flex;align-items:baseline;gap:12px;margin:0 0 16px;font-size:1.22rem;color:#33291f;padding-bottom:8px;border-bottom:2px solid var(--nr-accent-soft);}',
-            '.nr-sec-num{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;min-width:2em;height:2em;padding:0 8px;background:var(--nr-accent);color:#fff;border-radius:9px;font-size:0.85rem;font-weight:700;}',
-            '.nr-back-top{display:inline-block;margin-top:18px;font-size:0.78rem;color:var(--nr-accent-deep);text-decoration:none;}',
+            '.nr-section-title{display:flex;align-items:baseline;gap:12px;margin:0 0 16px;font-size: var(--fs-2xl);color:#33291f;padding-bottom:8px;border-bottom:2px solid var(--nr-accent-soft);}',
+            '.nr-sec-num{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;min-width:2em;height:2em;padding:0 8px;background:var(--nr-accent);color:#fff;border-radius:9px;font-size: var(--fs-lg);font-weight:700;}',
+            '.nr-back-top{display:inline-block;margin-top:18px;font-size: var(--fs-sm);color:var(--nr-accent-deep);text-decoration:none;}',
             '.nr-back-top:hover{text-decoration:underline;}',
-            '.nebula-report-small{background:#fbf4ec;border:1px solid #f0ddc6;border-left:4px solid var(--nr-accent);border-radius:10px;padding:10px 14px;font-size:0.86rem;color:#7a6a56;margin:18px 0;}',
+            '.nebula-report-small{background:#fbf4ec;border:1px solid #f0ddc6;border-left:4px solid var(--nr-accent);border-radius:10px;padding:10px 14px;font-size: var(--fs-lg);color:#7a6a56;margin:18px 0;}',
             'figure{margin:14px auto;}',
             'figure.nebula-report-figure--plotly,figure.nebula-report-figure--raster,figure.nebula-report-figure--svg,figure.nebula-report-figure--pca3d{max-width:100%;}',
-            'figcaption{font-size:0.85rem;color:var(--nr-ink-6);margin-top:8px;text-align:center;}',
+            'figcaption{font-size: var(--fs-lg);color:var(--nr-ink-6);margin-top:8px;text-align:center;}',
             '.nebula-report-table{border-collapse:collapse;margin:10px 0;}',
-            '.nebula-report-table th,.nebula-report-table td{border:1px solid var(--nr-line);padding:7px 10px;text-align:left;font-size:0.9rem;}',
+            '.nebula-report-table th,.nebula-report-table td{border:1px solid var(--nr-line);padding:7px 10px;text-align:left;font-size: var(--fs-lg);}',
             '.nebula-report-table th{background:#f8f1e9;color:#4a3a33;}',
             'img{max-width:100%;height:auto;}',
             '.nebula-report-matrix-table td{vertical-align:top;word-break:break-word;}',

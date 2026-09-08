@@ -1,4 +1,4 @@
-### 19. Differential analysis
+### 20. Differential analysis
 
 The **Downstream > Differential** sub-tab tests every feature for differences between sample groups and visualizes the results: volcano plot, MA plot, p-value histogram, an optional group heatmap, and a sortable results table. It runs on the current matrix with the meta table groups.
 

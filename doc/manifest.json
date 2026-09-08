@@ -79,58 +79,70 @@
       "group": "Data preprocess"
     },
     {
+      "id": "outliers",
+      "title": "14. Outlier detection",
+      "file": "outliers.md",
+      "group": "Data preprocess"
+    },
+    {
       "id": "namemapping",
-      "title": "14. Name mapping (MyGene)",
+      "title": "15. Name mapping (MyGene)",
       "file": "namemapping.md",
       "group": "Data preprocess"
     },
     {
       "id": "imputation",
-      "title": "15. Missing value imputation",
+      "title": "16. Missing value imputation",
       "file": "imputation.md",
       "group": "Data preprocess"
     },
     {
       "id": "batcheffect",
-      "title": "16. Batch effect correction",
+      "title": "17. Batch effect correction",
       "file": "batcheffect.md",
       "group": "Data preprocess"
     },
     {
       "id": "metatable",
-      "title": "17. Meta table & Sankey",
+      "title": "18. Meta table & Sankey",
       "file": "metatable.md",
       "group": "Data preprocess"
     },
     {
       "id": "clustering",
-      "title": "18. Clustering (Heatmap · Clustergrammer · PCA · PCoA · t-SNE · K-means)",
+      "title": "19. Clustering (Heatmap · Clustergrammer · PCA · PCoA · t-SNE · UMAP · K-means)",
       "file": "clustering.md",
       "group": "Clustering"
     },
     {
       "id": "differential",
-      "title": "19. Differential analysis",
+      "title": "20. Differential analysis",
       "file": "differential.md",
       "group": "Downstream"
     },
     {
       "id": "saint",
-      "title": "20. SAINT analysis",
+      "title": "21. SAINT analysis",
       "file": "saint.md",
       "group": "Downstream"
     },
     {
       "id": "enrichr",
-      "title": "21. Enrichr enrichment",
+      "title": "22. Enrichr enrichment",
       "file": "enrichr.md",
       "group": "Downstream"
     },
     {
       "id": "report",
-      "title": "22. Report export",
+      "title": "23. Report export",
       "file": "report.md",
       "group": "Report"
+    },
+    {
+      "id": "faq",
+      "title": "24. FAQ",
+      "file": "faq.md",
+      "group": "About Nebula"
     }
   ]
 }

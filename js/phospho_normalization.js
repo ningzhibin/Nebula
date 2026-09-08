@@ -690,11 +690,11 @@ function renderPhosphoDataview(data, hostId) {
     var host = document.getElementById(hostId);
     if (!host) return;
     if (!data || !data.dataMatrix || !data.dataMatrix.length) {
-        host.innerHTML = '<p style="padding:14px; color:#555; font-size:12px;">No data loaded yet.</p>';
+        host.innerHTML = '<p style="padding:14px; color:#555; font-size:var(--fs-sm);">No data loaded yet.</p>';
         return;
     }
     if (!window.TableDisplay || typeof window.TableDisplay.renderMatrixPreview !== 'function') {
-        host.innerHTML = '<p style="padding:14px; color:#555; font-size:12px;">Table module not loaded.</p>';
+        host.innerHTML = '<p style="padding:14px; color:#555; font-size:var(--fs-sm);">Table module not loaded.</p>';
         return;
     }
     var rowIds = phosphoViewRowIds(data);
@@ -722,9 +722,9 @@ function showPhosphoDataview(kind) {
     if (nTab) nTab.style.display = kind === 'normalized' || normalizedPhosphoData ? 'inline-block' : 'none';
     p.style.display = kind === 'phospho' ? 'block' : 'none';
     pr.style.display = kind === 'proteome' ? 'block' : 'none';
-    pTab.style.background = kind === 'phospho' ? '#007bff' : '#6c757d';
-    prTab.style.background = kind === 'proteome' ? '#007bff' : '#6c757d';
-    if (nTab) nTab.style.background = kind === 'normalized' ? '#28a745' : '#6c757d';
+    pTab.style.background = kind === 'phospho' ? 'var(--md-accent)' : 'var(--md-btn-muted-bg)';
+    prTab.style.background = kind === 'proteome' ? 'var(--md-accent)' : 'var(--md-btn-muted-bg)';
+    if (nTab) nTab.style.background = kind === 'normalized' ? 'var(--md-btn-success)' : 'var(--md-btn-muted-bg)';
     pTab.classList.toggle('active', kind === 'phospho');
     prTab.classList.toggle('active', kind === 'proteome');
     if (nTab) nTab.classList.toggle('active', kind === 'normalized');

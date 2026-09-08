@@ -1,6 +1,6 @@
-### 18. Clustering (Heatmap · Clustergrammer · PCA · PCoA · t-SNE · K-means)
+### 19. Clustering (Heatmap · Clustergrammer · PCA · PCoA · t-SNE · UMAP · K-means)
 
-The top-level **Clustering** tab groups six unsupervised views of the loaded intensity matrix as sub-tabs: **Heatmap**, **Clustergrammer**, **PCA**, **PCoA**, **t-SNE**, and **K-means**. All read the current matrix (after Data PreProcess filtering/imputation/correction) and join metadata to matrix columns by `Sample_ID` for group coloring. Most views ordinate **samples (columns)** - the usual QC question is *do replicates/conditions group as expected?*
+The top-level **Clustering** tab groups seven unsupervised views of the loaded intensity matrix as sub-tabs: **Heatmap**, **Clustergrammer**, **PCA**, **PCoA**, **t-SNE**, **UMAP**, and **K-means**. All read the current matrix (after Data PreProcess filtering/imputation/correction) and join metadata to matrix columns by `Sample_ID` for group coloring. Most views ordinate **samples (columns)** - the usual QC question is *do replicates/conditions group as expected?*
 
 #### Heatmap
 
@@ -60,6 +60,15 @@ Non-linear neighbor embedding (D3 2D scatter) for visualizing local structure wh
 - **Display:** the same **group-annotation** coloring (first column = color, second = shape), **Show Column Labels**, auto/manual label style, leader arrows, plot width/height, and optional title.
 - **Caveats:** t-SNE axes are **not interpretable** distances and the layout depends on perplexity and the random seed - use it for **exploration**, and rely on PCA/PCoA for variance/distance interpretation.
 
+#### UMAP
+
+Non-linear neighbor embedding (Uniform Manifold Approximation and Projection; McInnes et al., 2018) that preserves **both local neighborhoods and broader global structure** - often a better default than t-SNE when you want cluster separation *and* a sense of how clusters relate. Computed in the browser with **umap-js** (JS port of the Python **umap-learn** package), so the parameters below match the umap-learn names.
+
+- **Parameters:** **Neighbors (n_neighbors, 2–100)** (default 15; larger = more global view, smaller = more local detail), **Min. distance (min_dist, 0–0.99)** (default 0.1; low = tight clumps for clustering, high = even spread), **Spread** (default 1.0; scale of the embedding, works with min_dist), **Epochs** (blank = automatic: 500 for ≤10,000 samples, 200 above; larger = more accurate but slower), **Random seed** (default 42; fixed seed makes the embedding reproducible). Progress shows per-epoch while optimizing.
+- **Preprocessing & sampling:** **Log10 Transform** (checked), column-wise z-score (checked - recommended so no feature dominates the neighborhood graph), row-wise z-score, and **Max Samples / Max Features** caps (UMAP handles many samples well; limit features to 200-500 for speed).
+- **Display:** the same **group-annotation** coloring (first column = color, second = shape), **Show Column Labels**, auto/manual label style, leader arrows, plot width/height, and optional title. **Add to Report** and **Pop out** work as on the other tabs.
+- **Caveats:** like t-SNE, UMAP axes are **not interpretable** distances and the exact layout depends on the seed and hyperparameters - use it for **exploration** alongside PCA/PCoA.
+
 #### K-means
 
 Exploratory clustering of **samples (columns)** by their feature profiles - reveal potential groups when no metadata grouping exists.
@@ -77,6 +86,7 @@ Exploratory clustering of **samples (columns)** by their feature profiles - reve
 - **PCA** - variance-based overview; best when global intensity structure is meaningful (log scale).
 - **PCoA** - when a **non-Euclidean** distance (e.g. Bray-Curtis composition) is more appropriate than variance.
 - **t-SNE** - many samples and you want to surface local neighborhoods/sub-clusters.
+- **UMAP** - like t-SNE but with better preservation of global relationships; good first non-linear view.
 - **K-means** - no known grouping and you want a concrete partition of the samples (with diagnostics for choosing k).
 
 **Session JSON** stores the sidebar control values for these views; reopening a sub-tab or regenerating redraws from the restored settings. Group-annotation checkboxes are rebuilt after the metadata column list is repopulated.

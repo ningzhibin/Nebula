@@ -1,4 +1,4 @@
-### 22. Report export
+### 23. Report export
 
 The **Report** tab assembles the figures you marked with **Add to Report** into a live preview and a self-contained HTML report. Figures are embedded exactly as they were on screen at capture time (interactive Plotly where possible, vector snapshots otherwise).
 

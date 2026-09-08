@@ -1,4 +1,4 @@
-### 16. Batch effect correction
+### 17. Batch effect correction
 
 The **Data PreProcess > Batch Effect** sub-tab detects and corrects batch effects using metadata batch assignments. The **Detection** tab shows PCA colored by batch; **Correction** applies the selected method and shows the corrected PCA; **Before/After** compares the two.
 

@@ -621,8 +621,8 @@ window.saintCanRunAnalysis = function() {
         }
 
         function sortIndicator(col, currentCol, dir) {
-            if (col !== currentCol) return ' <span style="opacity:0.4; font-size:0.85em;">↕</span>';
-            return dir === 1 ? ' <span style="font-size:0.85em;">↑</span>' : ' <span style="font-size:0.85em;">↓</span>';
+            if (col !== currentCol) return ' <span style="opacity:0.4; font-size:var(--fs-md);">↕</span>';
+            return dir === 1 ? ' <span style="font-size:var(--fs-md);">↑</span>' : ' <span style="font-size:var(--fs-md);">↓</span>';
         }
 
         function getFilteredScores() {
@@ -671,7 +671,7 @@ window.saintCanRunAnalysis = function() {
             const wrap = document.getElementById('saintResultsTableWrap');
             if (!wrap || !window.saintResults || !window.saintResults.scores) return;
             const scores = getFilteredAndSortedScores();
-            let html = '<div style="margin-bottom: 12px; padding: 10px; background-color: #f8f9fa; border-radius: 4px; font-size: 13px;">';
+            let html = '<div style="margin-bottom: 12px; padding: 10px; background-color: #f8f9fa; border-radius: 4px; font-size: var(--fs-md);">';
             html += '<strong>Confidence levels:</strong> ';
             html += '<span style="background-color: #d4edda; padding: 3px 8px; border-radius: 3px; margin: 0 4px;">Green = High</span>';
             html += '<span style="background-color: #fff3cd; padding: 3px 8px; border-radius: 3px; margin: 0 4px;">Yellow = Medium</span>';
@@ -1061,7 +1061,7 @@ window.saintCanRunAnalysis = function() {
                 .attr('y', plotH + 40)
                 .attr('text-anchor', 'middle')
                 .attr('fill', '#333')
-                .style('font-size', '13px')
+                .style('font-size', 'var(--fs-md, 13px)')
                 .text(xLabel);
             g.append('text')
                 .attr('transform', 'rotate(-90)')
@@ -1069,7 +1069,7 @@ window.saintCanRunAnalysis = function() {
                 .attr('y', -50)
                 .attr('text-anchor', 'middle')
                 .attr('fill', '#333')
-                .style('font-size', '13px')
+                .style('font-size', 'var(--fs-md, 13px)')
                 .text(yLabel);
 
             const refG = g.append('g').attr('class', 'volcano-ref-lines');
