@@ -621,8 +621,8 @@ window.saintCanRunAnalysis = function() {
         }
 
         function sortIndicator(col, currentCol, dir) {
-            if (col !== currentCol) return ' <span style="opacity:0.4; font-size:var(--fs-md);">↕</span>';
-            return dir === 1 ? ' <span style="font-size:var(--fs-md);">↑</span>' : ' <span style="font-size:var(--fs-md);">↓</span>';
+            if (col !== currentCol) return ' <span style="opacity:0.4; font-size:0.85em;">↕</span>';
+            return dir === 1 ? ' <span style="font-size:0.85em;">↑</span>' : ' <span style="font-size:0.85em;">↓</span>';
         }
 
         function getFilteredScores() {
@@ -671,13 +671,13 @@ window.saintCanRunAnalysis = function() {
             const wrap = document.getElementById('saintResultsTableWrap');
             if (!wrap || !window.saintResults || !window.saintResults.scores) return;
             const scores = getFilteredAndSortedScores();
-            let html = '<div style="margin-bottom: 12px; padding: 10px; background-color: #f8f9fa; border-radius: 4px; font-size: var(--fs-md);">';
+            let html = '<div style="margin-bottom: 12px; padding: 10px; background-color: var(--md-bg-surface-muted); border-radius: 4px; font-size: 13px;">';
             html += '<strong>Confidence levels:</strong> ';
-            html += '<span style="background-color: #d4edda; padding: 3px 8px; border-radius: 3px; margin: 0 4px;">Green = High</span>';
-            html += '<span style="background-color: #fff3cd; padding: 3px 8px; border-radius: 3px; margin: 0 4px;">Yellow = Medium</span>';
-            html += '<span style="background-color: #f8d7da; padding: 3px 8px; border-radius: 3px; margin: 0 4px;">Red = Low</span>';
+            html += '<span style="background-color: var(--md-ok-soft-bg); color: var(--md-ok-soft-fg); padding: 3px 8px; border-radius: 3px; margin: 0 4px;">Green = High</span>';
+            html += '<span style="background-color: #2a230f; padding: 3px 8px; border-radius: 3px; margin: 0 4px;">Yellow = Medium</span>';
+            html += '<span style="background-color: var(--md-danger-soft-bg); color: var(--md-danger-soft-fg); padding: 3px 8px; border-radius: 3px; margin: 0 4px;">Red = Low</span>';
             if (document.getElementById('saintResultsSearchInput') && document.getElementById('saintResultsSearchInput').value.trim()) {
-                html += ` <span style="color:#666;">(${scores.length} of ${window.saintResults.scores.length} rows)</span>`;
+                html += ` <span style="color: var(--md-text-secondary);">(${scores.length} of ${window.saintResults.scores.length} rows)</span>`;
             }
             html += '</div>';
             html += '<div id="saintResultsTableHost"></div>';
@@ -748,9 +748,10 @@ window.saintCanRunAnalysis = function() {
             const constructBtn = document.getElementById('saintConstructNetworkBtn');
             
             if (!results || !results.scores) {
-                container.innerHTML = '<p style="padding: 20px; text-align: center; color: #666;">No results to display.</p>';
+                container.innerHTML = '';
                 downloadBtn.style.display = 'none';
                 if (constructBtn) { constructBtn.disabled = true; }
+                if (typeof window.updateSaintEmpty === 'function') window.updateSaintEmpty();
                 return;
             }
 
@@ -767,6 +768,7 @@ window.saintCanRunAnalysis = function() {
             renderResultsTable();
             downloadBtn.style.display = 'block';
             if (constructBtn) constructBtn.disabled = false;
+            if (typeof window.updateSaintEmpty === 'function') window.updateSaintEmpty();
         }
 
         function saintInitVolcanoTabIfNeeded() {
@@ -1061,7 +1063,7 @@ window.saintCanRunAnalysis = function() {
                 .attr('y', plotH + 40)
                 .attr('text-anchor', 'middle')
                 .attr('fill', '#333')
-                .style('font-size', 'var(--fs-md, 13px)')
+                .style('font-size', '13px')
                 .text(xLabel);
             g.append('text')
                 .attr('transform', 'rotate(-90)')
@@ -1069,7 +1071,7 @@ window.saintCanRunAnalysis = function() {
                 .attr('y', -50)
                 .attr('text-anchor', 'middle')
                 .attr('fill', '#333')
-                .style('font-size', 'var(--fs-md, 13px)')
+                .style('font-size', '13px')
                 .text(yLabel);
 
             const refG = g.append('g').attr('class', 'volcano-ref-lines');
@@ -2653,6 +2655,8 @@ window.saintCanRunAnalysis = function() {
             if (!resultsEl) return false;
             var terms = JSON.parse(JSON.stringify(bundle.terms));
             window.enrichrSetupResultsDisplay(terms, resultsEl, function () {}, bundle);
+            window._enrichrHasResults = true;
+            if (typeof window.updateEnrichrEmpty === 'function') window.updateEnrichrEmpty();
             return true;
         };
 
@@ -2666,6 +2670,8 @@ window.saintCanRunAnalysis = function() {
             var geneList = [];
             var runBtn = document.getElementById('enrichrRunBtn');
             resultsEl.innerHTML = '';
+            window._enrichrHasResults = false;
+            if (typeof window.updateEnrichrEmpty === 'function') window.updateEnrichrEmpty();
             enrichrClearLog('Starting Enrichr enrichment analysis...');
             var updateStatus = function(msg, isError) {
                 var prefix = isError ? 'ERROR: ' : '';
@@ -2776,9 +2782,13 @@ window.saintCanRunAnalysis = function() {
                     if (!terms || !Array.isArray(terms)) throw new Error('No results for ' + libraryName);
                     updateStatus('Done. Found ' + terms.length + ' terms.');
                     window.enrichrSetupResultsDisplay(terms, resultsEl, updateStatus, null);
+                    window._enrichrHasResults = true;
+                    if (typeof window.updateEnrichrEmpty === 'function') window.updateEnrichrEmpty();
                 })
                 .catch(function(err) {
                     updateStatus('Enrichment failed: ' + (err.message || err), true);
+                    window._enrichrHasResults = false;
+                    if (typeof window.updateEnrichrEmpty === 'function') window.updateEnrichrEmpty();
                 });
         }
         window.runEnrichrEnrichment = runEnrichrEnrichment;
@@ -3072,6 +3082,7 @@ window.switchSaintSubTab = function(name) {
     if (name === 'network' && typeof applyNetworkDisplayOptions === 'function') {
         setTimeout(function() { applyNetworkDisplayOptions(); }, 60);
     }
+    if (typeof window.updateSaintEmpty === 'function') window.updateSaintEmpty();
 };
 
 window.saintOnMainTabOpened = function() {
@@ -3123,5 +3134,6 @@ window.restoreSaintSessionSnapshot = function (bundle) {
     if (downloadBtn) downloadBtn.style.display = 'block';
     if (constructBtn) constructBtn.disabled = false;
     if (typeof window.refreshEnrichrGeneSourceOptions === 'function') window.refreshEnrichrGeneSourceOptions();
+    if (typeof window.updateSaintEmpty === 'function') window.updateSaintEmpty();
     return true;
 };

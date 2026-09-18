@@ -80,7 +80,11 @@
     binary: getComputedStyle(document.documentElement).getPropertyValue('--binary').trim() || '#2e6b5c',
     intensity: getComputedStyle(document.documentElement).getPropertyValue('--intensity').trim() || '#3c5f8f',
     hybrid: getComputedStyle(document.documentElement).getPropertyValue('--hybrid').trim() || '#bc4421',
-    ink: '#211d17', ink2: '#57503f', ink3: '#8a816c', line: '#d5cdb9', paper: '#fbf9f4'
+    get ink() { return (typeof nebulaCssVar === 'function') ? nebulaCssVar('--hyb-ink', '#211d17') : '#211d17'; },
+    get ink2() { return (typeof nebulaCssVar === 'function') ? nebulaCssVar('--hyb-ink-2', '#57503f') : '#57503f'; },
+    get ink3() { return (typeof nebulaCssVar === 'function') ? nebulaCssVar('--hyb-ink-3', '#8a816c') : '#8a816c'; },
+    get line() { return (typeof nebulaCssVar === 'function') ? nebulaCssVar('--hyb-line', '#d5cdb9') : '#d5cdb9'; },
+    get paper() { return (typeof nebulaCssVar === 'function') ? nebulaCssVar('--hyb-fig', '#fbf9f4') : '#fbf9f4'; }
   };
 
   const state = {
@@ -195,14 +199,7 @@
   const SVGNS = 'http://www.w3.org/2000/svg';
   function svgEl(name, attrs, parent) {
     const el = document.createElementNS(SVGNS, name);
-    for (const k in attrs || {}) {
-      const v = attrs[k];
-      /* var() values are CSS custom-property refs (tokens from
-         css/font_tokens.css) — presentation ATTRIBUTES can't resolve them,
-         so route those through the element's inline style instead. */
-      if (typeof v === 'string' && v.indexOf('var(') === 0) el.style.setProperty(k, v);
-      else el.setAttribute(k, v);
-    }
+    for (const k in attrs || {}) el.setAttribute(k, attrs[k]);
     if (parent) parent.appendChild(el);
     return el;
   }
@@ -262,19 +259,19 @@
     for (const t of Y) {
       if (t < m.ymin * (opts.yLog ? 0.999 : 1) - 1e-12) continue;
       svgEl('line', { x1: m.l, x2: c.w - m.r, y1: y(t), y2: y(t), stroke: COLORS.line, 'stroke-width': 0.7 }, g);
-      svgEl('text', { x: m.l - 7, y: y(t) + 3.5, 'text-anchor': 'end', 'font-size': 11, fill: COLORS.ink3, 'font-family': 'var(--font-mono, monospace)' }, g).textContent = fmtTick(t, opts.yLog);
+      svgEl('text', { x: m.l - 7, y: y(t) + 3.5, 'text-anchor': 'end', 'font-size': 10.5, fill: COLORS.ink3, 'font-family': 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif' }, g).textContent = fmtTick(t, opts.yLog);
     }
     for (const t of X) {
       if (t < m.xmin * (opts.xLog ? 0.999 : 1) - 1e-12) continue;
       svgEl('line', { x1: x(t), x2: x(t), y1: h - m.b, y2: h - m.b + 4, stroke: COLORS.ink3, 'stroke-width': 0.7 }, g);
-      svgEl('text', { x: x(t), y: h - m.b + 16, 'text-anchor': 'middle', 'font-size': 11, fill: COLORS.ink3, 'font-family': 'var(--font-mono, monospace)' }, g).textContent = fmtTick(t, opts.xLog);
+      svgEl('text', { x: x(t), y: h - m.b + 16, 'text-anchor': 'middle', 'font-size': 10.5, fill: COLORS.ink3, 'font-family': 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif' }, g).textContent = fmtTick(t, opts.xLog);
     }
     // frame
     svgEl('line', { x1: m.l, x2: c.w - m.r, y1: h - m.b, y2: h - m.b, stroke: COLORS.ink, 'stroke-width': 1.2 }, g);
     svgEl('line', { x1: m.l, x2: m.l, y1: m.t, y2: h - m.b, stroke: COLORS.ink, 'stroke-width': 1.2 }, g);
-    if (opts.xLabel) svgEl('text', { x: (m.l + c.w - m.r) / 2, y: h - 2, 'text-anchor': 'middle', 'font-size': 12, fill: COLORS.ink2, 'font-family': 'var(--font-body, sans-serif)' }, g).textContent = opts.xLabel;
+    if (opts.xLabel) svgEl('text', { x: (m.l + c.w - m.r) / 2, y: h - 2, 'text-anchor': 'middle', 'font-size': 11.5, fill: COLORS.ink2, 'font-family': 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif' }, g).textContent = opts.xLabel;
     if (opts.yLabel) {
-      const t = svgEl('text', { x: 12, y: (m.t + h - m.b) / 2, 'text-anchor': 'middle', 'font-size': 12, fill: COLORS.ink2, 'font-family': 'var(--font-body, sans-serif)', transform: `rotate(-90 12 ${(m.t + h - m.b) / 2})` }, g);
+      const t = svgEl('text', { x: 12, y: (m.t + h - m.b) / 2, 'text-anchor': 'middle', 'font-size': 11.5, fill: COLORS.ink2, 'font-family': 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif', transform: `rotate(-90 12 ${(m.t + h - m.b) / 2})` }, g);
       t.textContent = opts.yLabel;
     }
   }
@@ -322,7 +319,7 @@
       x: c.x(px), y: c.y(py), 'font-size': (opts && opts.size) || 11,
       fill: (opts && opts.color) || COLORS.ink2,
       'text-anchor': (opts && opts.anchor) || 'start',
-      'font-family': 'var(--font-body, sans-serif)',
+      'font-family': 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif',
       'font-style': (opts && opts.italic) ? 'italic' : 'normal',
       'font-weight': (opts && opts.bold) || 400
     }, c.g);
@@ -334,7 +331,7 @@
   function attachHover(container, svg, seriesDefs) {
     // seriesDefs: [{name, color, pts:[{x,y,label}], data}]
     const tip = document.createElement('div');
-    tip.style.cssText = 'position:absolute;pointer-events:none;background:#211d17;color:#f6f2ea;font-family:var(--font-mono);font-size:var(--fs-xs);padding:7px 10px;line-height:1.5;opacity:0;transition:opacity .12s ease;z-index:30;white-space:nowrap;';
+    tip.style.cssText = 'position:absolute;pointer-events:none;background:#211d17;color:#f6f2ea;font-family:Inter,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;font-size:11px;padding:7px 10px;line-height:1.5;opacity:0;transition:opacity .12s ease;z-index:30;white-space:nowrap;';
     container.style.position = 'relative';
     container.appendChild(tip);
     const overlay = svgEl('rect', { x: 0, y: 0, width: '100%', height: '100%', fill: 'transparent' }, svg);
@@ -413,17 +410,17 @@
     const Yt = niceTicks(0, yMax, 5);
     for (const t of Yt) {
       svgEl('line', { x1: M.l, x2: W - M.r, y1: c.y(t), y2: c.y(t), stroke: COLORS.line, 'stroke-width': 0.7 }, c.g);
-      svgEl('text', { x: M.l - 7, y: c.y(t) + 3.5, 'text-anchor': 'end', 'font-size': 11, fill: COLORS.ink3, 'font-family': 'var(--font-mono, monospace)' }, c.g).textContent = String(Math.round(t));
+      svgEl('text', { x: M.l - 7, y: c.y(t) + 3.5, 'text-anchor': 'end', 'font-size': 10.5, fill: COLORS.ink3, 'font-family': 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif' }, c.g).textContent = String(Math.round(t));
     }
     for (const t of xTicks) {
       if (t < xMin * 0.99 || t > xMax * 1.01) continue;
       svgEl('line', { x1: xL(t), x2: xL(t), y1: Hh - M.b, y2: Hh - M.b + 4, stroke: COLORS.ink3, 'stroke-width': 0.7 }, c.g);
-      svgEl('text', { x: xL(t), y: Hh - M.b + 16, 'text-anchor': 'middle', 'font-size': 11, fill: COLORS.ink3, 'font-family': 'var(--font-mono, monospace)' }, c.g).textContent = isLog ? fmtTick(t, true) : t.toFixed(1);
+      svgEl('text', { x: xL(t), y: Hh - M.b + 16, 'text-anchor': 'middle', 'font-size': 10.5, fill: COLORS.ink3, 'font-family': 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif' }, c.g).textContent = isLog ? fmtTick(t, true) : t.toFixed(1);
     }
     svgEl('line', { x1: M.l, x2: W - M.r, y1: Hh - M.b, y2: Hh - M.b, stroke: COLORS.ink, 'stroke-width': 1.2 }, c.g);
     svgEl('line', { x1: M.l, x2: M.l, y1: M.t, y2: Hh - M.b, stroke: COLORS.ink, 'stroke-width': 1.2 }, c.g);
-    svgEl('text', { x: (M.l + W - M.r) / 2, y: Hh - 3, 'text-anchor': 'middle', 'font-size': 12, fill: COLORS.ink2, 'font-family': 'var(--font-body, sans-serif)' }, c.g).textContent = isLog ? 'estimated FDR (log scale, mode: ' + axisMode + ')' : 'estimated FDR (linear 0–1)';
-    const yl = svgEl('text', { x: 13, y: (M.t + Hh - M.b) / 2, 'text-anchor': 'middle', 'font-size': 12, fill: COLORS.ink2, 'font-family': 'var(--font-body, sans-serif)', transform: `rotate(-90 13 ${(M.t + Hh - M.b) / 2})` }, c.g);
+    svgEl('text', { x: (M.l + W - M.r) / 2, y: Hh - 3, 'text-anchor': 'middle', 'font-size': 11.5, fill: COLORS.ink2, 'font-family': 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif' }, c.g).textContent = isLog ? 'estimated FDR (log scale, mode: ' + axisMode + ')' : 'estimated FDR (linear 0–1)';
+    const yl = svgEl('text', { x: 13, y: (M.t + Hh - M.b) / 2, 'text-anchor': 'middle', 'font-size': 11.5, fill: COLORS.ink2, 'font-family': 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif', transform: `rotate(-90 13 ${(M.t + Hh - M.b) / 2})` }, c.g);
     yl.textContent = '# selected proteins';
 
     // diagonal reference (FDR = true selection fraction? no — reference line est FDR = cp)
@@ -472,7 +469,7 @@
     svgEl('line', { x1: xL(v), x2: xL(v), y1: c.m.t, y2: c.h - c.m.b, stroke: color, 'stroke-width': 1.1, 'stroke-dasharray': '5 4', opacity: 0.75 }, c.g);
   }
   function text2(c, xAbs, yAbs, str, opts) {
-    const t = svgEl('text', { x: xAbs, y: yAbs, 'font-size': (opts && opts.size) || 11, fill: (opts && opts.color) || COLORS.ink2, 'font-family': 'var(--font-body, sans-serif)' }, c.g);
+    const t = svgEl('text', { x: xAbs, y: yAbs, 'font-size': (opts && opts.size) || 11, fill: (opts && opts.color) || COLORS.ink2, 'font-family': 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif' }, c.g);
     t.textContent = str;
     return t;
   }
@@ -501,7 +498,7 @@
     // y grid + labels
     for (const t of niceTicks(0, yMax, 5)) {
       svgEl('line', { x1: M.l, x2: W - M.r, y1: c.y(t), y2: c.y(t), stroke: COLORS.line, 'stroke-width': 0.7 }, c.g);
-      svgEl('text', { x: M.l - 7, y: c.y(t) + 3.5, 'text-anchor': 'end', 'font-size': 11, fill: COLORS.ink3, 'font-family': 'var(--font-mono, monospace)' }, c.g).textContent = String(Math.round(t));
+      svgEl('text', { x: M.l - 7, y: c.y(t) + 3.5, 'text-anchor': 'end', 'font-size': 10.5, fill: COLORS.ink3, 'font-family': 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif' }, c.g).textContent = String(Math.round(t));
     }
     // frame
     svgEl('line', { x1: M.l, x2: W - M.r, y1: Hh - M.b, y2: Hh - M.b, stroke: COLORS.ink, 'stroke-width': 1.2 }, c.g);
@@ -536,9 +533,9 @@
     }
     for (const [t, lab] of ticks) {
       svgEl('line', { x1: c.x(t), x2: c.x(t), y1: Hh - M.b, y2: Hh - M.b + 4, stroke: COLORS.ink3, 'stroke-width': 0.7 }, c.g);
-      svgEl('text', { x: c.x(t), y: Hh - M.b + 16, 'text-anchor': 'middle', 'font-size': 11, fill: COLORS.ink3, 'font-family': 'var(--font-mono, monospace)' }, c.g).textContent = lab;
+      svgEl('text', { x: c.x(t), y: Hh - M.b + 16, 'text-anchor': 'middle', 'font-size': 10.5, fill: COLORS.ink3, 'font-family': 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif' }, c.g).textContent = lab;
     }
-    svgEl('text', { x: (M.l + W - M.r) / 2, y: Hh - 2, 'text-anchor': 'middle', 'font-size': 12, fill: COLORS.ink2, 'font-family': 'var(--font-body, sans-serif)' }, c.g)
+    svgEl('text', { x: (M.l + W - M.r) / 2, y: Hh - 2, 'text-anchor': 'middle', 'font-size': 11.5, fill: COLORS.ink2, 'font-family': 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif' }, c.g)
       .textContent = axis === 'log' ? ('p-value (log scale, ' + n + ' bins)') : 'p-value (linear 0–1, ' + n + ' bins of ' + (1 / n).toFixed(2) + ')';
     if ($(legendId)) {
       $(legendId).innerHTML = datasets.map(d =>
@@ -695,18 +692,18 @@
     const xTicks = niceTicks(-xMax, xMax, 7);
     for (const t of xTicks) {
       svgEl('line', { x1: X(t), x2: X(t), y1: Hh - M.b, y2: Hh - M.b + 4, stroke: COLORS.ink3, 'stroke-width': 0.7 }, g);
-      svgEl('text', { x: X(t), y: Hh - M.b + 16, 'text-anchor': 'middle', 'font-size': 11, fill: COLORS.ink3, 'font-family': 'var(--font-mono, monospace)' }, g).textContent = String(Math.round(t * 10) / 10);
+      svgEl('text', { x: X(t), y: Hh - M.b + 16, 'text-anchor': 'middle', 'font-size': 10.5, fill: COLORS.ink3, 'font-family': 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif' }, g).textContent = String(Math.round(t * 10) / 10);
     }
     for (const t of niceTicks(yLo, yMax, 5)) {
       if (t > yMax) continue;
       svgEl('line', { x1: M.l, x2: W - M.r, y1: Y(t), y2: Y(t), stroke: COLORS.line, 'stroke-width': 0.7 }, g);
-      svgEl('text', { x: M.l - 7, y: Y(t) + 3.5, 'text-anchor': 'end', 'font-size': 11, fill: COLORS.ink3, 'font-family': 'var(--font-mono, monospace)' }, g).textContent = (signed ? String(Math.round(t * 20) / 20) : String(Math.round(t)));
+      svgEl('text', { x: M.l - 7, y: Y(t) + 3.5, 'text-anchor': 'end', 'font-size': 10.5, fill: COLORS.ink3, 'font-family': 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif' }, g).textContent = (signed ? String(Math.round(t * 20) / 20) : String(Math.round(t)));
     }
     svgEl('line', { x1: M.l, x2: W - M.r, y1: Hh - M.b, y2: Hh - M.b, stroke: COLORS.ink, 'stroke-width': 1.2 }, g);
     svgEl('line', { x1: M.l, x2: M.l, y1: M.t, y2: Hh - M.b, stroke: COLORS.ink, 'stroke-width': 1.2 }, g);
     svgEl('line', { x1: X(0), x2: X(0), y1: M.t, y2: Hh - M.b, stroke: COLORS.line, 'stroke-width': 1 }, g);
-    svgEl('text', { x: (M.l + W - M.r) / 2, y: Hh - 3, 'text-anchor': 'middle', 'font-size': 12, fill: COLORS.ink2, 'font-family': 'var(--font-body, sans-serif)' }, g).textContent = def.xLabel;
-    const yl = svgEl('text', { x: 13, y: (M.t + Hh - M.b) / 2, 'text-anchor': 'middle', 'font-size': 12, fill: COLORS.ink2, 'font-family': 'var(--font-body, sans-serif)', transform: `rotate(-90 13 ${(M.t + Hh - M.b) / 2})` }, g);
+    svgEl('text', { x: (M.l + W - M.r) / 2, y: Hh - 3, 'text-anchor': 'middle', 'font-size': 11.5, fill: COLORS.ink2, 'font-family': 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif' }, g).textContent = def.xLabel;
+    const yl = svgEl('text', { x: 13, y: (M.t + Hh - M.b) / 2, 'text-anchor': 'middle', 'font-size': 11.5, fill: COLORS.ink2, 'font-family': 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif', transform: `rotate(-90 13 ${(M.t + Hh - M.b) / 2})` }, g);
     yl.textContent = def.yLabel || '−log₁₀ p';
     // guides: |FC| = 1 always; target-FDR line + quadrant shading for p-scale
     // modes; a ΔPresence = 0 reference line for the significant-mode
@@ -718,12 +715,12 @@
       if (pCut <= yMax) {
         const yCut = Y(pCut);
         svgEl('line', { x1: M.l, x2: W - M.r, y1: yCut, y2: yCut, stroke: COLORS.ink3, 'stroke-width': 1, 'stroke-dasharray': '4 3' }, g);
-        svgEl('text', { x: W - M.r - 4, y: yCut - 5, 'text-anchor': 'end', 'font-size': 11, fill: COLORS.ink3, 'font-family': 'var(--font-mono, monospace)' }, g).textContent = 'target FDR ' + fmtP(res.options.targetFdr);
+        svgEl('text', { x: W - M.r - 4, y: yCut - 5, 'text-anchor': 'end', 'font-size': 10.5, fill: COLORS.ink3, 'font-family': 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif' }, g).textContent = 'target FDR ' + fmtP(res.options.targetFdr);
       }
     } else {
       const yZero = Y(0);
       svgEl('line', { x1: M.l, x2: W - M.r, y1: yZero, y2: yZero, stroke: COLORS.ink3, 'stroke-width': 1, 'stroke-dasharray': '4 3' }, g);
-      svgEl('text', { x: W - M.r - 4, y: yZero - 5, 'text-anchor': 'end', 'font-size': 11, fill: COLORS.ink3, 'font-family': 'var(--font-mono, monospace)' }, g).textContent = 'Δ presence = 0';
+      svgEl('text', { x: W - M.r - 4, y: yZero - 5, 'text-anchor': 'end', 'font-size': 10.5, fill: COLORS.ink3, 'font-family': 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif' }, g).textContent = 'Δ presence = 0';
     }
     svgEl('line', { x1: fcL, x2: fcL, y1: M.t, y2: Hh - M.b, stroke: COLORS.ink3, 'stroke-width': 1, 'stroke-dasharray': '4 3' }, g);
     svgEl('line', { x1: fcR, x2: fcR, y1: M.t, y2: Hh - M.b, stroke: COLORS.ink3, 'stroke-width': 1, 'stroke-dasharray': '4 3' }, g);
@@ -769,7 +766,7 @@
       drawn.push({ px: d.px, py: d.py, p: d.p, el });
     };
     let nSelUp = 0, nSelDown = 0, nEdge = 0;
-    for (const d of laid) if (!d.sel) placeEl(d, 3.4, '#cdc4ae', COLORS.paper, 0.8, 0.7);
+    for (const d of laid) if (!d.sel) placeEl(d, 3.4, (nebulaIsDarkTheme() ? '#3b4a63' : '#cdc4ae'), COLORS.paper, 0.8, 0.7);
     for (const d of laid) {
       if (!d.sel) continue;
       if (def.colorOf) { const cc = def.colorOf(d.p.x); placeEl(d, 4.6, cc.fill, cc.ring || '#ffffff', cc.ring ? 2 : 1.5, 0.95); }
@@ -781,7 +778,7 @@
     // hover — 2-D nearest point
     const svg = c.svg;
     const tip = document.createElement('div');
-    tip.style.cssText = 'position:absolute;pointer-events:none;background:#211d17;color:#f6f2ea;font-family:var(--font-mono);font-size:var(--fs-xs);padding:7px 10px;line-height:1.5;opacity:0;transition:opacity .12s ease;z-index:30;white-space:nowrap;';
+    tip.style.cssText = 'position:absolute;pointer-events:none;background:#211d17;color:#f6f2ea;font-family:Inter,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;font-size:11px;padding:7px 10px;line-height:1.5;opacity:0;transition:opacity .12s ease;z-index:30;white-space:nowrap;';
     container.style.position = 'relative';
     container.appendChild(tip);
     const overlay = svgEl('rect', { x: 0, y: 0, width: '100%', height: '100%', fill: 'transparent' }, svg);
@@ -837,11 +834,11 @@
           '<span class="item"><span class="swatch" style="background:' + COLORS.intensity + ';border-radius:50%"></span>' + (def.legI || 'intensity origin') + ' (' + cI + ')</span>' +
           (cBoth ? '<span class="item"><span class="swatch" style="background:' + COLORS.binary + ';border:2px solid ' + COLORS.intensity + ';border-radius:50%"></span>' + (def.legBoth || 'both origins') + ' (' + cBoth + ')</span>' : '') +
           (cH ? '<span class="item"><span class="swatch" style="background:' + COLORS.hybrid + ';border-radius:50%"></span>' + (def.legH || 'hybrid only') + ' (' + cH + ')</span>' : '') +
-          '<span class="item"><span class="swatch" style="background:#cdc4ae;border-radius:50%"></span>' + (def.selLabel ? 'neither stage (' + nUn + ')' : 'not selected (' + nUn + ')') + '</span>';
+          '<span class="item"><span class="swatch" style="background:' + (nebulaIsDarkTheme() ? '#3b4a63' : '#cdc4ae') + ';border-radius:50%"></span>' + (def.selLabel ? 'neither stage (' + nUn + ')' : 'not selected (' + nUn + ')') + '</span>';
       } else {
         items =
           '<span class="item"><span class="swatch" style="background:' + def.color + ';border-radius:50%"></span>selected (' + nSel + ')</span>' +
-          '<span class="item"><span class="swatch" style="background:#cdc4ae;border-radius:50%"></span>not selected (' + nUn + ')</span>';
+          '<span class="item"><span class="swatch" style="background:' + (nebulaIsDarkTheme() ? '#3b4a63' : '#cdc4ae') + ';border-radius:50%"></span>not selected (' + nUn + ')</span>';
       }
       if (nEdge) items += '<span class="item"><span class="swatch" style="background:transparent;border:2px solid ' + def.color + ';border-radius:50%"></span>no usable FC — edge (observed at most once, ' + nEdge + ')</span>';
       const nCap = pts.filter(p => p.sel && p.cap).length;
@@ -911,7 +908,7 @@
       const yMax = Math.max(3, yf[Math.floor(0.99 * yf.length)] * 1.12);
       const c = baseChart(el, W, Hh, { l: M.l, r: M.r, t: M.t, b: M.b, xmin: -xMax, xmax: xMax, ymin: 0, ymax: yMax });
       axes(c, { xLabel, yLabel: '−log₁₀ p', xn: 6, yn: 5 });
-      svgEl('text', { x: W / 2, y: 15, 'text-anchor': 'middle', 'font-size': 12, fill: COLORS.ink, 'font-family': 'var(--font-body, sans-serif)' }, c.g).textContent = title;
+      svgEl('text', { x: W / 2, y: 15, 'text-anchor': 'middle', 'font-size': 11.5, fill: COLORS.ink, 'font-family': 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif' }, c.g).textContent = title;
       for (const gx of [-1, 1]) svgEl('line', { x1: c.x(gx), x2: c.x(gx), y1: M.t, y2: Hh - M.b, stroke: COLORS.ink3, 'stroke-width': 1, 'stroke-dasharray': '4 3' }, c.g);
       const pCut = -Math.log10(res.options.targetFdr);
       if (pCut <= yMax) svgEl('line', { x1: M.l, x2: W - M.r, y1: c.y(pCut), y2: c.y(pCut), stroke: COLORS.ink3, 'stroke-width': 1, 'stroke-dasharray': '4 3' }, c.g);
@@ -937,7 +934,7 @@
       }
       for (const d of laid) if (!d.p.sel) svgEl('circle', { cx: d.px.toFixed(1), cy: d.py.toFixed(1), r: 3.2, fill: '#cdc4ae', stroke: COLORS.paper, 'stroke-width': 1.4, opacity: 0.75 }, c.g);
       for (const d of laid) if (d.p.sel) svgEl('circle', { cx: d.px.toFixed(1), cy: d.py.toFixed(1), r: 4.2, fill: def.color, stroke: COLORS.paper, 'stroke-width': 1.4 }, c.g);
-      svgEl('text', { x: M.l + 8, y: M.t - 6, 'font-size': 11, fill: COLORS.ink3, 'font-family': 'var(--font-mono, monospace)' }, c.g)
+      svgEl('text', { x: M.l + 8, y: M.t - 6, 'font-size': 10.5, fill: COLORS.ink3, 'font-family': 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif' }, c.g)
         .textContent = (def.label === 'all' ? 'all ' + rows.length : def.label + ' ' + rows.filter(p => p.sel).length + '/' + rows.length);
     };
     if (ones.length < 3) {
@@ -988,9 +985,9 @@
         const cl = v => Math.max(-yMax * 0.99, Math.min(yMax * 0.99, v));
         svgEl('line', { x1: c.x(xa), y1: c.y(cl(intercept + slope * xa)), x2: c.x(xb), y2: c.y(cl(intercept + slope * xb)), stroke: COLORS.ink3, 'stroke-width': 1.4, 'stroke-dasharray': '5 3' }, c.g);
       }
-      for (const p of rows) if (!p.sel) dot(c, p.pres, Math.max(-yMax, Math.min(yMax, p.fc)), 3.2, '#cdc4ae', { opacity: 0.75 });
+      for (const p of rows) if (!p.sel) dot(c, p.pres, Math.max(-yMax, Math.min(yMax, p.fc)), 3.2, (nebulaIsDarkTheme() ? '#3b4a63' : '#cdc4ae'), { opacity: 0.75 });
       for (const p of rows) if (p.sel) dot(c, p.pres, Math.max(-yMax, Math.min(yMax, p.fc)), 4.2, def.color);
-      svgEl('text', { x: M.l + 8, y: M.t + 12, 'font-size': 11, fill: COLORS.ink, 'font-family': 'var(--font-mono, monospace)' }, c.g)
+      svgEl('text', { x: M.l + 8, y: M.t + 12, 'font-size': 11, fill: COLORS.ink, 'font-family': 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif' }, c.g)
         .textContent = 'N ' + rows.length + ' · Pearson r ' + fmtR(r) + ' · Spearman ρ ' + fmtR(rho);
     }
 
@@ -1055,37 +1052,37 @@
     svgEl('rect', { x: X(1), y: Y(-0.3), width: X(4) - X(1), height: Y(-1.0) - Y(-0.3), fill: bg.quant, rx: 4 }, g);
     for (const t of [-1, -0.5, 0, 0.5, 1]) {
       svgEl('line', { x1: M.l, x2: W - M.r, y1: Y(t), y2: Y(t), stroke: COLORS.line, 'stroke-width': t === 0 ? 1.1 : 0.7, 'stroke-dasharray': t === 0 ? '6 4' : 'none', opacity: t === 0 ? 0.9 : 0.6 }, g);
-      svgEl('text', { x: M.l - 8, y: Y(t) + 3.5, 'text-anchor': 'end', 'font-size': 11, fill: COLORS.ink3, 'font-family': 'var(--font-mono, monospace)' }, g).textContent = t.toFixed(1);
+      svgEl('text', { x: M.l - 8, y: Y(t) + 3.5, 'text-anchor': 'end', 'font-size': 11, fill: COLORS.ink3, 'font-family': 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif' }, g).textContent = t.toFixed(1);
     }
     for (const t of [-4, -2, -1, 0, 1, 2, 4]) {
       const isGuide = Math.abs(t) === 1;
       svgEl('line', { x1: X(t), x2: X(t), y1: M.t, y2: Hh - M.b, stroke: isGuide ? COLORS.ink3 : COLORS.line, 'stroke-width': isGuide ? 1.1 : 0.7, 'stroke-dasharray': isGuide ? '6 4' : 'none', opacity: isGuide ? 0.9 : 0.5 }, g);
-      svgEl('text', { x: X(t), y: Hh - M.b + 18, 'text-anchor': 'middle', 'font-size': 11, fill: isGuide ? COLORS.ink : COLORS.ink3, 'font-family': 'var(--font-mono, monospace)', 'font-weight': isGuide ? 600 : 400 }, g).textContent = String(t);
-      if (isGuide) svgEl('text', { x: X(t), y: Hh - M.b + 32, 'text-anchor': 'middle', 'font-size': 10, fill: '#2a5db0', 'font-family': 'var(--font-mono, monospace)' }, g).textContent = 'log₂FC = ' + (t > 0 ? '1' : '-1');
+      svgEl('text', { x: X(t), y: Hh - M.b + 18, 'text-anchor': 'middle', 'font-size': 11, fill: isGuide ? COLORS.ink : COLORS.ink3, 'font-family': 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif', 'font-weight': isGuide ? 600 : 400 }, g).textContent = String(t);
+      if (isGuide) svgEl('text', { x: X(t), y: Hh - M.b + 32, 'text-anchor': 'middle', 'font-size': 9.5, fill: '#2a5db0', 'font-family': 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif' }, g).textContent = 'log₂FC = ' + (t > 0 ? '1' : '-1');
     }
     svgEl('line', { x1: M.l, x2: W - M.r, y1: Hh - M.b, y2: Hh - M.b, stroke: COLORS.ink, 'stroke-width': 1.3 }, g);
     svgEl('line', { x1: M.l, x2: M.l, y1: M.t, y2: Hh - M.b, stroke: COLORS.ink, 'stroke-width': 1.3 }, g);
-    svgEl('text', { x: (M.l + W - M.r) / 2, y: Hh - 6, 'text-anchor': 'middle', 'font-size': 13, fill: COLORS.ink, 'font-family': 'var(--font-body, sans-serif)', 'font-weight': 600 }, g).textContent = 'Quantitative effect: log₂ Fold Change (quantitative analysis)';
-    const yLab = svgEl('text', { x: 14, y: (M.t + Hh - M.b) / 2, 'text-anchor': 'middle', 'font-size': 13, fill: COLORS.ink, 'font-family': 'var(--font-body, sans-serif)', 'font-weight': 600, transform: 'rotate(-90 14 ' + ((M.t + Hh - M.b) / 2) + ')' }, g);
+    svgEl('text', { x: (M.l + W - M.r) / 2, y: Hh - 6, 'text-anchor': 'middle', 'font-size': 13, fill: COLORS.ink, 'font-family': 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif', 'font-weight': 600 }, g).textContent = 'Quantitative effect: log₂ Fold Change (quantitative analysis)';
+    const yLab = svgEl('text', { x: 14, y: (M.t + Hh - M.b) / 2, 'text-anchor': 'middle', 'font-size': 13, fill: COLORS.ink, 'font-family': 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif', 'font-weight': 600, transform: 'rotate(-90 14 ' + ((M.t + Hh - M.b) / 2) + ')' }, g);
     yLab.textContent = 'Qualitative effect: Δ Presence  (P_cond1 − P_cond2)';
-    svgEl('text', { x: W / 2, y: 16, 'text-anchor': 'middle', 'font-size': 15, fill: COLORS.ink, 'font-family': 'var(--font-body, sans-serif)', 'font-weight': 700 }, g).textContent = 'Hybrid significance scatter plot';
-    svgEl('text', { x: W / 2, y: 30, 'text-anchor': 'middle', 'font-size': 13, fill: COLORS.ink2, 'font-family': 'var(--font-body, sans-serif)', 'font-style': 'italic' }, g).textContent = '(Quantitative vs. Qualitative)';
+    svgEl('text', { x: W / 2, y: 16, 'text-anchor': 'middle', 'font-size': 15, fill: COLORS.ink, 'font-family': 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif', 'font-weight': 700 }, g).textContent = 'Hybrid significance scatter plot';
+    svgEl('text', { x: W / 2, y: 30, 'text-anchor': 'middle', 'font-size': 12.5, fill: COLORS.ink2, 'font-family': 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif', 'font-style': 'italic' }, g).textContent = '(Quantitative vs. Qualitative)';
     const counts = { both_conc: 0, both_disc: 0, quant: 0, qual: 0, ns: 0 };
     for (const pt of pts) counts[pt.cat]++;
     const box = (cx, cy, w, h, fill, stroke, title, n) => {
       const rx = 6;
-      svgEl('rect', { x: cx - w / 2, y: cy - h / 2, width: w, height: h, fill: '#ffffff', stroke, 'stroke-width': 1.1, rx, ry: rx, opacity: 0.96 }, g);
-      svgEl('text', { x: cx, y: cy - 8, 'text-anchor': 'middle', 'font-size': 10, fill: stroke, 'font-family': 'var(--font-body, sans-serif)', 'font-weight': 700 }, g).textContent = title;
-      svgEl('text', { x: cx, y: cy + 6, 'text-anchor': 'middle', 'font-size': 10, fill: COLORS.ink2, 'font-family': 'var(--font-body, sans-serif)' }, g).textContent = n === 1 ? 'n = 1' : 'n = ' + n;
+      svgEl('rect', { x: cx - w / 2, y: cy - h / 2, width: w, height: h, fill: fill, stroke, 'stroke-width': 1.1, rx, ry: rx, opacity: 0.96 }, g);
+      svgEl('text', { x: cx, y: cy - 8, 'text-anchor': 'middle', 'font-size': 9.5, fill: stroke, 'font-family': 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif', 'font-weight': 700 }, g).textContent = title;
+      svgEl('text', { x: cx, y: cy + 6, 'text-anchor': 'middle', 'font-size': 8.5, fill: COLORS.ink2, 'font-family': 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif' }, g).textContent = n === 1 ? 'n = 1' : 'n = ' + n;
     };
-    box(X(-2.5), Y(0.65), 118, 36, '#fff', '#2a5db0', 'Qualitative-only', counts.qual);
-    box(X(2.5), Y(0.65), 118, 36, '#fff', '#2e7b5f', 'Both significant', counts.both_conc);
-    box(X(-2.5), Y(-0.65), 118, 36, '#fff', '#e67e22', 'Both significant', counts.both_disc);
-    box(X(2.5), Y(-0.65), 118, 36, '#fff', '#c94a3d', 'Quantitative-only', counts.quant);
-    box((M.l + W - M.r) / 2, Y(0.02), 108, 32, '#fff', COLORS.ink3, 'Not significant', counts.ns);
+    box(X(-2.5), Y(0.65), 118, 36, COLORS.paper, '#2a5db0', 'Qualitative-only', counts.qual);
+    box(X(2.5), Y(0.65), 118, 36, COLORS.paper, '#2e7b5f', 'Both significant', counts.both_conc);
+    box(X(-2.5), Y(-0.65), 118, 36, COLORS.paper, '#e67e22', 'Both significant', counts.both_disc);
+    box(X(2.5), Y(-0.65), 118, 36, COLORS.paper, '#c94a3d', 'Quantitative-only', counts.quant);
+    box((M.l + W - M.r) / 2, Y(0.02), 108, 32, COLORS.paper, COLORS.ink3, 'Not significant', counts.ns);
     const thrL = svgEl('g', {}, g);
-    svgEl('text', { x: W - M.r + 14, y: Y(0.3) + 3, 'font-size': 10, fill: '#2a5db0', 'font-family': 'var(--font-mono, monospace)' }, thrL).textContent = 'ΔP = 0.3';
-    svgEl('text', { x: W - M.r + 14, y: Y(-0.3) + 3, 'font-size': 10, fill: '#2a5db0', 'font-family': 'var(--font-mono, monospace)' }, thrL).textContent = 'ΔP = -0.3';
+    svgEl('text', { x: W - M.r + 14, y: Y(0.3) + 3, 'font-size': 8.5, fill: '#2a5db0', 'font-family': 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif' }, thrL).textContent = 'ΔP = 0.3';
+    svgEl('text', { x: W - M.r + 14, y: Y(-0.3) + 3, 'font-size': 8.5, fill: '#2a5db0', 'font-family': 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif' }, thrL).textContent = 'ΔP = -0.3';
     const ordered = pts.slice().sort((a, b) => (a.cat === 'ns') - (b.cat === 'ns'));
     const drawn = [];
     for (const pt of ordered) {
@@ -1097,18 +1094,18 @@
     }
     if (legEl) {
       legEl.innerHTML =
-        '<div style="border:1px solid var(--line);background:#fbf9f4;padding:10px 12px;min-width:168px">' +
-        '<div style="font-family:var(--font-mono);font-size:var(--fs-xs);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px">Significant thresholds</div>' +
-        '<div style="font-size:var(--fs-sm);color:var(--ink-2);line-height:1.5"><span style="border-bottom:2px dashed #57503f">&nbsp;&nbsp;&nbsp;&nbsp;</span> Quantitative:<br>FDR &lt; 0.05<br>(|log₂FC| ≥ 1)</div>' +
-        '<div style="font-size:var(--fs-sm);color:var(--ink-2);line-height:1.5;margin-top:6px"><span style="border-bottom:2px dashed #2a5db0">&nbsp;&nbsp;&nbsp;&nbsp;</span> Qualitative:<br>FDR &lt; 0.05<br>(|ΔP| ≥ 0.3)</div></div>' +
-        '<div style="border:1px solid var(--line);background:#fbf9f4;padding:10px 12px;min-width:168px;margin-top:10px">' +
-        '<div style="font-family:var(--font-mono);font-size:var(--fs-xs);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px">Point color (category)</div>' +
-        '<div style="display:grid;gap:5px;font-size:var(--fs-sm);color:var(--ink-2);line-height:1.4">' +
+        '<div style="border:1px solid var(--line);background:var(--fig);padding:10px 12px;min-width:168px">' +
+        '<div style="font-family:var(--font-mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px">Significant thresholds</div>' +
+        '<div style="font-size:12px;color:var(--ink-2);line-height:1.5"><span style="border-bottom:2px dashed #57503f">&nbsp;&nbsp;&nbsp;&nbsp;</span> Quantitative:<br>FDR &lt; 0.05<br>(|log₂FC| ≥ 1)</div>' +
+        '<div style="font-size:12px;color:var(--ink-2);line-height:1.5;margin-top:6px"><span style="border-bottom:2px dashed #2a5db0">&nbsp;&nbsp;&nbsp;&nbsp;</span> Qualitative:<br>FDR &lt; 0.05<br>(|ΔP| ≥ 0.3)</div></div>' +
+        '<div style="border:1px solid var(--line);background:var(--fig);padding:10px 12px;min-width:168px;margin-top:10px">' +
+        '<div style="font-family:var(--font-mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px">Point color (category)</div>' +
+        '<div style="display:grid;gap:5px;font-size:11.5px;color:var(--ink-2);line-height:1.4">' +
         '<span><span style="display:inline-block;width:10px;height:10px;background:#2e7b5f;border-radius:50%;vertical-align:1px;margin-right:6px"></span>Both significant<br><span style="margin-left:16px;color:var(--ink-3)">(Q Sig, P Sig) concordant</span></div>' +
-        '<div style="font-size:var(--fs-sm)"><span style="display:inline-block;width:10px;height:10px;background:#c94a3d;border-radius:50%;vertical-align:1px;margin-right:6px"></span>Quantitative-only<br><span style="margin-left:16px;color:var(--ink-3)">(Q Sig, P NS)</span></div>' +
-        '<div style="font-size:var(--fs-sm)"><span style="display:inline-block;width:10px;height:10px;background:#2a5db0;border-radius:50%;vertical-align:1px;margin-right:6px"></span>Qualitative-only<br><span style="margin-left:16px;color:var(--ink-3)">(Q NS, P Sig)</span></div>' +
-        '<div style="font-size:var(--fs-sm)"><span style="display:inline-block;width:10px;height:10px;background:#e67e22;border-radius:50%;vertical-align:1px;margin-right:6px"></span>Both significant<br><span style="margin-left:16px;color:var(--ink-3)">(Q Sig, P Sig) opposite</span></div>' +
-        '<div style="font-size:var(--fs-sm)"><span style="display:inline-block;width:10px;height:10px;background:#b8b3a3;border-radius:50%;vertical-align:1px;margin-right:6px"></span>Not significant<br><span style="margin-left:16px;color:var(--ink-3)">(Q NS, P NS)</span></div>' +
+        '<div style="font-size:11.5px"><span style="display:inline-block;width:10px;height:10px;background:#c94a3d;border-radius:50%;vertical-align:1px;margin-right:6px"></span>Quantitative-only<br><span style="margin-left:16px;color:var(--ink-3)">(Q Sig, P NS)</span></div>' +
+        '<div style="font-size:11.5px"><span style="display:inline-block;width:10px;height:10px;background:#2a5db0;border-radius:50%;vertical-align:1px;margin-right:6px"></span>Qualitative-only<br><span style="margin-left:16px;color:var(--ink-3)">(Q NS, P Sig)</span></div>' +
+        '<div style="font-size:11.5px"><span style="display:inline-block;width:10px;height:10px;background:#e67e22;border-radius:50%;vertical-align:1px;margin-right:6px"></span>Both significant<br><span style="margin-left:16px;color:var(--ink-3)">(Q Sig, P Sig) opposite</span></div>' +
+        '<div style="font-size:11.5px"><span style="display:inline-block;width:10px;height:10px;background:#b8b3a3;border-radius:50%;vertical-align:1px;margin-right:6px"></span>Not significant<br><span style="margin-left:16px;color:var(--ink-3)">(Q NS, P NS)</span></div>' +
         '</div></div>';
       const figEl = document.getElementById('figHybridScatter') || document.getElementById('hybFigHybridScatterWrap') || document.getElementById('hybFigHybridScatter');
       if (figEl) figEl.style.position = 'relative';
@@ -1122,7 +1119,7 @@
       if (container) container.style.position = 'relative';
     }
     if (cardsEl) {
-      const card = (title, desc, bgc, bc) => '<div style="flex:1 1 140px;min-width:132px;border:1px solid ' + bc + ';background:' + bgc + ';padding:10px 10px 9px;line-height:1.4"><div style="font-size:var(--fs-sm);font-weight:700;color:' + bc + ';text-align:center">' + title + '</div><div style="font-size:var(--fs-xs);color:var(--ink-2);text-align:center;margin-top:4px">' + desc + '</div></div>';
+      const card = (title, desc, bgc, bc) => '<div style="flex:1 1 140px;min-width:132px;border:1px solid ' + bc + ';background:' + bgc + ';padding:10px 10px 9px;line-height:1.4"><div style="font-size:11.5px;font-weight:700;color:' + bc + ';text-align:center">' + title + '</div><div style="font-size:11px;color:var(--ink-2);text-align:center;margin-top:4px">' + desc + '</div></div>';
       cardsEl.innerHTML =
         card('Both significant<br>(concordant)', 'Significant in both analyses<br>with consistent direction<br><span style="color:var(--ink-3)">(upper-right &amp; lower-left)</span>', '#eaf3ec', '#2e7b5f') +
         card('Quantitative-only', 'Significant in quantitative<br>analysis only<br><span style="color:var(--ink-3)">(abundance changes but<br>presence frequency similar)</span>', '#fde8e8', '#c94a3d') +
@@ -1132,7 +1129,7 @@
     }
     if (noteEl) noteEl.textContent = pts.length + ' feature groups · ' + counts.both_conc + ' both-concordant · ' + counts.both_disc + ' both-discordant · ' + counts.quant + ' quant-only · ' + counts.qual + ' qual-only · ' + counts.ns + ' NS · FDR ' + (res.options ? res.options.targetFdr : '0.05');
     const tip = document.createElement('div');
-    tip.style.cssText = 'position:absolute;pointer-events:none;background:#211d17;color:#f6f2ea;font-family:var(--font-mono);font-size:var(--fs-xs);padding:7px 10px;line-height:1.5;opacity:0;transition:opacity .12s ease;z-index:30;white-space:nowrap;';
+    tip.style.cssText = 'position:absolute;pointer-events:none;background:#211d17;color:#f6f2ea;font-family:Inter,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;font-size:11px;padding:7px 10px;line-height:1.5;opacity:0;transition:opacity .12s ease;z-index:30;white-space:nowrap;';
     container.appendChild(tip);
     const overlay = svgEl('rect', { x: 0, y: 0, width: '100%', height: '100%', fill: 'transparent' }, svg);
     let last = null;
@@ -1637,6 +1634,9 @@
           seed: 42
         });
         state.result = res;
+        if (typeof window.refreshGseaGeneSourceOptions === 'function') {
+          try { window.refreshGseaGeneSourceOptions(); } catch (e) {}
+        }
         $('#emptyState').style.display = 'none';
         const body = $('#resultsBody');
         body.style.display = 'block';
@@ -1712,7 +1712,7 @@
       canvas.width = svg.viewBox.baseVal.width * scale;
       canvas.height = svg.viewBox.baseVal.height * scale;
       const ctx = canvas.getContext('2d');
-      ctx.fillStyle = '#fbf9f4';
+      ctx.fillStyle = nebulaFigBg();
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.scale(scale, scale);
       ctx.drawImage(img, 0, 0);

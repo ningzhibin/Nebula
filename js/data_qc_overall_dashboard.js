@@ -238,20 +238,20 @@
             height: h,
             autosize: false,
             margin: { t: 14, r: 20, b: 56, l: marginL },
-            paper_bgcolor: '#fbf9f4',
-            plot_bgcolor: '#fbf9f4',
-            font: { family: (window.NebulaFonts && window.NebulaFonts.body), size: 11, color: '#1f2937' },
+            paper_bgcolor: nebulaFigBg(),
+            plot_bgcolor: nebulaFigBg(),
+            font: { family: 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif', size: 11, color: nebulaFigFg() },
             showlegend: false,
             xaxis: {
-                title: { text: 'log10(1 + I), I > 0', font: { size: 11, color: '#4b5563' } },
+                title: { text: 'log10(1 + I), I > 0', font: { size: 11, color: nebulaFigFg() } },
                 range: [lo - (hi - lo) * 0.08, hi + (hi - lo) * 0.1],
-                gridcolor: '#e5e7eb',
-                zerolinecolor: '#d1d5db',
+                gridcolor: nebulaFigGrid(),
+                zerolinecolor: nebulaFigZero(),
                 automargin: true
             },
             yaxis: { automargin: true, tickfont: { size: n > 48 ? 10 : n > 28 ? 11 : 12 } },
             annotations: caption
-                ? [{ xref: 'paper', yref: 'paper', x: 0, y: -0.09, xanchor: 'left', showarrow: false, text: caption, font: { size: 10, color: '#6b7280' } }]
+                ? [{ xref: 'paper', yref: 'paper', x: 0, y: -0.09, xanchor: 'left', showarrow: false, text: caption, font: { size: 10, color: nebulaFigFg() } }]
                 : []
         };
         global.Plotly.newPlot(host, traces, layout, Object.assign({}, OVERALL_PLOTLY_CONFIG));
@@ -282,20 +282,20 @@
             height: h,
             autosize: false,
             margin: { t: 14, r: 20, b: 52, l: marginL },
-            paper_bgcolor: '#fbf9f4',
-            plot_bgcolor: '#fbf9f4',
-            font: { family: (window.NebulaFonts && window.NebulaFonts.body), size: 11, color: '#1f2937' },
+            paper_bgcolor: nebulaFigBg(),
+            plot_bgcolor: nebulaFigBg(),
+            font: { family: 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif', size: 11, color: nebulaFigFg() },
             showlegend: false,
             xaxis: {
-                title: { text: 'Σ log10(1+I)', font: { size: 11, color: '#4b5563' } },
+                title: { text: 'Σ log10(1+I)', font: { size: 11, color: nebulaFigFg() } },
                 range: [0, maxV * 1.05],
-                gridcolor: '#e5e7eb',
-                zerolinecolor: '#d1d5db',
+                gridcolor: nebulaFigGrid(),
+                zerolinecolor: nebulaFigZero(),
                 automargin: true
             },
             yaxis: { automargin: true, tickfont: { size: n > 48 ? 10 : n > 28 ? 11 : 12 } },
             annotations: caption
-                ? [{ xref: 'paper', yref: 'paper', x: 0, y: -0.09, xanchor: 'left', showarrow: false, text: caption, font: { size: 10, color: '#6b7280' } }]
+                ? [{ xref: 'paper', yref: 'paper', x: 0, y: -0.09, xanchor: 'left', showarrow: false, text: caption, font: { size: 10, color: nebulaFigFg() } }]
                 : []
         };
         global.Plotly.newPlot(host, [trace], layout, Object.assign({}, OVERALL_PLOTLY_CONFIG));
@@ -350,22 +350,22 @@
             height: h,
             autosize: false,
             margin: { t: 14, r: 24, b: 56, l: marginL },
-            paper_bgcolor: '#fbf9f4',
-            plot_bgcolor: '#fbf9f4',
-            font: { family: (window.NebulaFonts && window.NebulaFonts.body), size: 11, color: '#1f2937' },
+            paper_bgcolor: nebulaFigBg(),
+            plot_bgcolor: nebulaFigBg(),
+            font: { family: 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif', size: 11, color: nebulaFigFg() },
             showlegend: false,
             xaxis: {
-                title: { text: sumYTitle, font: { size: 11, color: '#4b5563' } },
+                title: { text: sumYTitle, font: { size: 11, color: nebulaFigFg() } },
                 range: [x0, x1],
                 tickformat: countMode ? ',.0f' : '',
                 nticks: Math.max(4, Math.min(8, Math.floor((w - marginL - 24) / 95))),
-                gridcolor: '#e5e7eb',
-                zerolinecolor: '#d1d5db',
+                gridcolor: nebulaFigGrid(),
+                zerolinecolor: nebulaFigZero(),
                 automargin: true
             },
             yaxis: { automargin: true, autorange: 'reversed', tickfont: { size: n > 48 ? 10 : n > 28 ? 11 : 12 } },
             annotations: [
-                { xref: 'paper', yref: 'paper', x: 0, y: -0.09, xanchor: 'left', showarrow: false, text: foot, font: { size: 10, color: '#6b7280' } }
+                { xref: 'paper', yref: 'paper', x: 0, y: -0.09, xanchor: 'left', showarrow: false, text: foot, font: { size: 10, color: nebulaFigFg() } }
             ]
         };
         global.Plotly.newPlot(host, [trace], layout, Object.assign({}, OVERALL_PLOTLY_CONFIG));

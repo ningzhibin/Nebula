@@ -371,8 +371,9 @@ function runPhosphoNormalization() {
                 });
             }
             applyPhosphoProfileFilter('');
-            select.style.display = 'block';
-            document.getElementById('phosphoProfileSearch').style.display = 'block';
+            document.getElementById('phosphoNormMainEmpty').style.display = 'none';
+            document.getElementById('phosphoNormMainCols').style.display = 'flex';
+            renderPhosphoNormTable();
             document.getElementById('phosphoSendBtn').style.display = 'block';
 
         }).catch(function (err) {
@@ -501,7 +502,18 @@ function plotPhosphoProfile(rowIndexStr) {
         legend: { orientation: 'h', y: -0.3 }
     };
     
-    document.getElementById('phosphoProfilePlotContainer').style.display = 'block';
+    var plotHost = document.getElementById('phosphoProfilePlotContainer');
+    plotHost.style.display = 'block';
+    var plotHint = document.getElementById('phosphoProfilePlotHint');
+    if (plotHint) plotHint.style.display = 'none';
+    var plotH = plotHost.clientHeight || 400;
+    if (plotH < 400) plotH = 400;
+    try {
+        var plotTop = plotHost.getBoundingClientRect().top;
+        var maxH = window.innerHeight - plotTop - 24;
+        if (maxH >= 400 && plotH > maxH) plotH = maxH;
+    } catch (_) {}
+    layout.height = plotH;
     Plotly.newPlot('phosphoProfilePlotContainer', [traceP, tracePr, traceN], layout, {responsive: true});
 }
 
@@ -546,7 +558,7 @@ function sendPhosphoToMain() {
     refreshPhosphoDataView();
 
     if (typeof switchTab === 'function') {
-        switchTab('dataQc');
+        switchTab('dataPrep');
     }
 }
 
@@ -629,6 +641,8 @@ function switchPhosphoSubTab(subTab) {
     });
     if (phosphoCurrentSubTab === 'data') {
         setTimeout(refreshPhosphoDataView, 30);
+    } else {
+        togglePhosphoKnnOpts();
     }
 }
 
@@ -686,15 +700,15 @@ function phosphoViewRowIds(data) {
     return ids;
 }
 
-function renderPhosphoDataview(data, hostId) {
+function renderPhosphoDataview(data, hostId, fixedH) {
     var host = document.getElementById(hostId);
     if (!host) return;
     if (!data || !data.dataMatrix || !data.dataMatrix.length) {
-        host.innerHTML = '<p style="padding:14px; color:#555; font-size:var(--fs-sm);">No data loaded yet.</p>';
+        host.innerHTML = '<p style="padding:14px; color:#555; font-size:12px;">No data loaded yet.</p>';
         return;
     }
     if (!window.TableDisplay || typeof window.TableDisplay.renderMatrixPreview !== 'function') {
-        host.innerHTML = '<p style="padding:14px; color:#555; font-size:var(--fs-sm);">Table module not loaded.</p>';
+        host.innerHTML = '<p style="padding:14px; color:#555; font-size:12px;">Table module not loaded.</p>';
         return;
     }
     var rowIds = phosphoViewRowIds(data);
@@ -705,7 +719,7 @@ function renderPhosphoDataview(data, hostId) {
         rows: data.dataMatrix,
         sortedIndices: sortedIndices,
         pageLength: 50,
-        maxHeightPx: 400
+        maxHeightPx: (typeof fixedH === 'number' && fixedH > 0) ? fixedH : 400
     });
 }
 
@@ -718,10 +732,10 @@ function showPhosphoDataview(kind) {
     var n = document.getElementById('phosphoDataviewNormalized');
     var nTab = document.getElementById('phosphoDataviewTabNormalized');
     if (!p || !pr || !pTab || !prTab) return;
-    if (n) n.style.display = kind === 'normalized' ? 'block' : 'none';
+    if (n) n.style.display = kind === 'normalized' ? 'flex' : 'none';
     if (nTab) nTab.style.display = kind === 'normalized' || normalizedPhosphoData ? 'inline-block' : 'none';
-    p.style.display = kind === 'phospho' ? 'block' : 'none';
-    pr.style.display = kind === 'proteome' ? 'block' : 'none';
+    p.style.display = kind === 'phospho' ? 'flex' : 'none';
+    pr.style.display = kind === 'proteome' ? 'flex' : 'none';
     pTab.style.background = kind === 'phospho' ? 'var(--md-accent)' : 'var(--md-btn-muted-bg)';
     prTab.style.background = kind === 'proteome' ? 'var(--md-accent)' : 'var(--md-btn-muted-bg)';
     if (nTab) nTab.style.background = kind === 'normalized' ? 'var(--md-btn-success)' : 'var(--md-btn-muted-bg)';
@@ -735,9 +749,113 @@ function refreshPhosphoDataView() {
     if (!section) return;
     var hasData = (phosphoData && phosphoData.dataMatrix && phosphoData.dataMatrix.length) ||
         (proteomeData && proteomeData.dataMatrix && proteomeData.dataMatrix.length);
-    section.style.display = hasData ? 'block' : 'none';
-    renderPhosphoDataview(phosphoData, 'phosphoDataviewPhosphoHost');
-    renderPhosphoDataview(proteomeData, 'phosphoDataviewProteomeHost');
-    renderPhosphoDataview(normalizedPhosphoData, 'phosphoDataviewNormalizedHost');
+    section.style.display = hasData ? 'flex' : 'none';
+    var kindHostId = phosphoDataviewKind === 'normalized' ? 'phosphoDataviewNormalizedHost' : (phosphoDataviewKind === 'proteome' ? 'phosphoDataviewProteomeHost' : 'phosphoDataviewPhosphoHost');
+    var sharedH = 400;
+    try {
+        var kindHost = document.getElementById(kindHostId);
+        var availH = (kindHost && kindHost.clientHeight) || 0;
+        if (availH > 520) sharedH = availH - 110;
+    } catch (_) {}
+    renderPhosphoDataview(phosphoData, 'phosphoDataviewPhosphoHost', sharedH);
+    renderPhosphoDataview(proteomeData, 'phosphoDataviewProteomeHost', sharedH);
+    renderPhosphoDataview(normalizedPhosphoData, 'phosphoDataviewNormalizedHost', sharedH);
     showPhosphoDataview(phosphoDataviewKind);
+}
+
+function togglePhosphoKnnOpts() {
+    var box = document.getElementById('phosphoEnableKnn');
+    var opts = document.getElementById('phosphoKnnOpts');
+    if (!box || !opts) return;
+    opts.style.display = box.checked ? '' : 'none';
+}
+
+var phosphoNormSelectedIdx = null;
+var phosphoNormDtApi = null;
+
+function phosphoNormEsc(s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function phosphoNormHighlight() {
+    var api = phosphoNormDtApi;
+    if (!api) return;
+    try {
+        api.rows().every(function () {
+            var d = this.data();
+            var node = this.node();
+            if (!node) return;
+            if (d && d._origRowIndex === phosphoNormSelectedIdx) {
+                node.style.background = 'var(--md-accent)';
+                node.style.color = '#fff';
+            } else {
+                node.style.background = '';
+                node.style.color = '';
+            }
+        });
+    } catch (_) { /* ignore */ }
+}
+
+function renderPhosphoNormTable() {
+    var wrap = document.getElementById('phosphoNormTableWrap');
+    if (!wrap || !normalizedPhosphoData) return;
+    if (!window.TableDisplay || typeof window.TableDisplay.renderMatrixPreview !== 'function') {
+        wrap.innerHTML = '<p style="padding:14px; color:#555; font-size:12px;">Table module not loaded.</p>';
+        return;
+    }
+    var headers = normalizedPhosphoData.dataHeaders || [];
+    var n = normalizedPhosphoData.dataMatrix ? normalizedPhosphoData.dataMatrix.length : 0;
+    var siteRowIds = phosphoViewRowIds(normalizedPhosphoData);
+    var pCol = normalizedPhosphoData.phosphoMatchCol;
+    var rowIds = [];
+    var sortedIndices = [];
+    for (var i = 0; i < n; i++) {
+        rowIds.push(siteRowIds[i] || normalizedPhosphoData.metaMatrix[i][pCol] || ('Row ' + i));
+        sortedIndices.push(i);
+    }
+    phosphoNormSelectedIdx = null;
+    phosphoNormDtApi = null;
+    var fixedTableH = 0;
+    try {
+        var availH = wrap.clientHeight || 0;
+        if (availH > 320) fixedTableH = availH - 110;
+    } catch (_) { fixedTableH = 0; }
+    if (!wrap._phosphoClickBound) {
+        wrap._phosphoClickBound = true;
+        wrap.addEventListener('click', function (ev) {
+            var tr = ev.target && ev.target.closest ? ev.target.closest('tbody tr') : null;
+            if (!tr || !phosphoNormDtApi) return;
+            var rowData = null;
+            try { rowData = phosphoNormDtApi.row(tr).data(); } catch (_) { rowData = null; }
+            var idx = rowData && typeof rowData._origRowIndex === 'number' ? rowData._origRowIndex : null;
+            if (idx == null) return;
+            phosphoNormSelectedIdx = idx;
+            phosphoNormHighlight();
+            plotPhosphoProfile(String(idx));
+        });
+    }
+    window.TableDisplay.renderMatrixPreview(wrap, {
+        rowIds: rowIds,
+        columnHeaders: headers,
+        rows: normalizedPhosphoData.dataMatrix,
+        sortedIndices: sortedIndices,
+        pageLength: 50,
+        escapeHtml: phosphoNormEsc,
+        // Fixed height measured once here: the module otherwise re-measures
+        // available space on init/rAF/timeout/redraw, which shows as a
+        // large-to-small height settle on first render.
+        maxHeightPx: fixedTableH
+    }).then(function (api) {
+        phosphoNormDtApi = api;
+        try { api.on('draw', phosphoNormHighlight); } catch (_) { /* ignore */ }
+        try {
+            var first = wrap.querySelector('tbody tr');
+            var d = (first && phosphoNormDtApi) ? phosphoNormDtApi.row(first).data() : null;
+            if (d && typeof d._origRowIndex === 'number') {
+                phosphoNormSelectedIdx = d._origRowIndex;
+                phosphoNormHighlight();
+                plotPhosphoProfile(String(d._origRowIndex));
+            }
+        } catch (_) { /* ignore */ }
+    });
 }

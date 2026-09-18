@@ -75,7 +75,11 @@
         { id: 'enrichrPlotBubble', type: 'plotly', title: 'Enrichr bubble plot', report: 'enrichr_bubble' },
         { id: 'enrichrPlotTermSim', type: 'plotly', title: 'Term similarity (Jaccard) heatmap' },
         { id: 'enrichrHeatmapPlot', type: 'plotly', title: 'Enrichr results heatmap', report: 'enrichr_heatmap',
-          headParent: '.enrichr-heatmap-main', headBefore: '.enrichr-heatmap-plot-card' }
+          headParent: '.enrichr-heatmap-main', headBefore: '.enrichr-heatmap-plot-card' },
+        // Downstream → GSEA
+        { id: 'gseaPlotEnrichment', type: 'plotly', title: 'GSEA enrichment plot', report: 'gsea_enrichment' },
+        // Downstream → GSVA
+        { id: 'gsvaScoreHeatmap', type: 'plotly', title: 'GSVA score heatmap', report: 'gsva_heatmap' }
     ];
 
     var POPOUT_SVG =

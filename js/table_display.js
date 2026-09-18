@@ -206,7 +206,7 @@
 
         var wrap = document.createElement('label');
         wrap.className = 'qc-dt-scale-mode-wrap';
-        wrap.style.cssText = 'display:inline-flex;align-items:center;gap:6px;margin-left:12px;font-size:var(--fs-sm);';
+        wrap.style.cssText = 'display:inline-flex;align-items:center;gap:6px;margin-left:12px;font-size:12px;';
         wrap.innerHTML =
             '<span>Bar scale:</span>' +
             '<select class="qc-dt-scale-mode-select">' +
@@ -277,7 +277,7 @@
         var st = document.createElement('style');
         st.id = 'qc-dt-export-css';
         st.textContent =
-            '.qc-dt-export-btn{font-size:var(--fs-xs);line-height:1.4;padding:3px 10px;margin:0 0 0 10px;' +
+            '.qc-dt-export-btn{font-size:11px;line-height:1.4;padding:3px 10px;margin:0 0 0 10px;' +
             'border:1px solid var(--md-accent,#98927c);border-radius:6px;' +
             'background:transparent;color:var(--md-accent-dark,#6e6a5d);' +
             'font-family:inherit;cursor:pointer;flex-shrink:0;white-space:nowrap;' +
@@ -464,7 +464,7 @@
         var rootClassName = opt.rootClassName || 'qc-generic-table-root';
         var escapeHtml = typeof opt.escapeHtml === 'function' ? opt.escapeHtml : function (s) { return String(s); };
         var pageLength = typeof opt.pageLength === 'number' ? opt.pageLength : 100;
-        var lengthMenu = opt.lengthMenu || [[50, 100, 250, 500, -1], [50, 100, 250, 500, 'All']];
+        var lengthMenu = opt.lengthMenu || [[25, 50, 100, 250, 500, -1], [25, 50, 100, 250, 500, 'All']];
         var displayStart = typeof opt.displayStart === 'number' ? opt.displayStart : 0;
         var onSync = typeof opt.onSync === 'function' ? opt.onSync : function () {};
         var onInit = typeof opt.onInit === 'function' ? opt.onInit : function () {};
@@ -677,7 +677,7 @@
             th.style.position = 'sticky';
             th.style.top = '0';
             th.style.zIndex = '30';
-            th.style.background = '#667eea';
+            th.style.background = nebulaCssVar('--md-btn-primary-bg', '#667eea');
             th.style.color = '#fff';
             th.style.boxShadow = '0 2px 2px -1px rgba(0, 0, 0, 0.12)';
         }
@@ -711,7 +711,7 @@
         var initialOrder = opt.initialOrder || [[0, 'asc']];
         var displayStart = typeof opt.displayStart === 'number' ? opt.displayStart : 0;
         var pageLength = typeof opt.pageLength === 'number' ? opt.pageLength : 100;
-        var lengthMenu = opt.lengthMenu || [[50, 100, 250, 500, -1], [50, 100, 250, 500, 'All']];
+        var lengthMenu = opt.lengthMenu || [[25, 50, 100, 250, 500, -1], [25, 50, 100, 250, 500, 'All']];
         var fixedMaxHeightPx = (opt.maxHeightPx && Number.isFinite(opt.maxHeightPx)) ? Math.max(120, Math.floor(opt.maxHeightPx)) : 0;
 
         return ensureLibsLoaded().then(function () {
@@ -744,7 +744,7 @@
             var notice = document.createElement('div');
             notice.id = 'qcDtSearchNotice';
             notice.className = 'qc-dt-search-notice';
-            notice.style.cssText = 'display:none;padding:6px 8px;font-size:var(--fs-sm);color:#92400e;background:#fffbeb;border:1px solid #fcd34d;border-radius:6px;margin-bottom:8px;flex-shrink:0;';
+            notice.style.cssText = 'display:none;padding:6px 8px;font-size:12px;color:#92400e;background:#fffbeb;border:1px solid #fcd34d;border-radius:6px;margin-bottom:8px;flex-shrink:0;';
             notice.textContent = 'Search is active: DIANN and Name mapping tabs follow full-dataset order until you clear the search box.';
 
             var host = document.createElement('div');

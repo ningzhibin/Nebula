@@ -133,16 +133,34 @@
       "group": "Downstream"
     },
     {
+      "id": "gsea",
+      "title": "23. GSEA (preranked)",
+      "file": "gsea.md",
+      "group": "Downstream"
+    },
+    {
+      "id": "gsva",
+      "title": "24. GSVA (single-sample pathways)",
+      "file": "gsva.md",
+      "group": "Downstream"
+    },
+    {
       "id": "report",
-      "title": "23. Report export",
+      "title": "25. Report export",
       "file": "report.md",
       "group": "Report"
     },
     {
       "id": "faq",
-      "title": "24. FAQ",
+      "title": "26. FAQ",
       "file": "faq.md",
       "group": "About Nebula"
+    },
+    {
+      "id": "moretools",
+      "title": "27. More Tools (DIA-NN Result Explorer)",
+      "file": "moretools.md",
+      "group": "More Tools"
     }
   ]
 }

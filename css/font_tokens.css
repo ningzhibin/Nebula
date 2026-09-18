@@ -16,11 +16,12 @@
    canvas measurement) must use window.NebulaFonts (js/nebula_fonts.js).
    ============================================================= */
 :root {
-    /* Type system (Journal style: Fraunces display · IBM Plex Sans body ·
-       IBM Plex Mono data) */
-    --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+    /* Type system: one IBM Plex Sans typeface for the whole app (display,
+       body, and the legacy data/mono role). The --font-mono token name stays
+       for source compatibility; it resolves to the same IBM Plex Sans stack. */
+    --font-display: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
     --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
-    --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Consolas, monospace;
+    --font-mono: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
 
     /* rem anchor (keeps rem math stable; also the anti-Bootstrap pin) */
     --fs-root: 16px;

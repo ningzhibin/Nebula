@@ -1,6 +1,6 @@
 ### 18. Meta table & Sankey
 
-The **Data PreProcess > Meta Table** sub-tab shows and edits the sample metadata, and visualizes its hierarchical structure as a **Sankey** diagram. The meta table is auto-generated from matrix column names (see *5. Replicate parsing*); you can override it by uploading your own in Data Preparation.
+The **Data Preparation > Meta Table** sub-tab shows and edits the sample metadata, and visualizes its hierarchical structure as a **Sankey** diagram. The meta table is auto-generated from matrix column names (see *5. Replicate parsing*); you can override it by uploading your own in the sidebar of the same tab.
 
 #### Inner tabs
 
@@ -8,7 +8,7 @@ The **Data PreProcess > Meta Table** sub-tab shows and edits the sample metadata
 
 #### Table tab
 
-- **Open Data Preparation** - shortcut back to the upload panel.
+- **Uploads** - the tab sidebar holds the example/paste/file meta uploaders (same tab, no navigation needed).
 - **Export meta table (TSV)...** - downloads the current meta table.
 - **+ Add New Column** - appends a new meta column (empty cells to fill in).
 - **Batch Edit Selected Cells** - type a value, select cells, and **Apply To Selection** writes it to all selected cells. Ctrl/Cmd+click multi-selects cells in one column, Shift+click selects a range, and **Select All Visible (Same Column)** selects a whole column; **Clear Selection** deselects.

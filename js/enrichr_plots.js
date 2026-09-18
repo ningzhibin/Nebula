@@ -91,8 +91,8 @@
                 categoryarray: labels.slice(),
                 autorange: 'reversed'
             },
-            paper_bgcolor: '#fff',
-            plot_bgcolor: '#fafafa'
+            paper_bgcolor: nebulaFigBg(),
+            plot_bgcolor: nebulaFigBg()
         };
         Plotly.newPlot(el, [trace], layout, plotlyConfig('enrichr_bar'));
     }
@@ -169,8 +169,8 @@
                 autorange: 'reversed'
             },
             height: plotHeight,
-            paper_bgcolor: '#fff',
-            plot_bgcolor: '#fafafa'
+            paper_bgcolor: nebulaFigBg(),
+            plot_bgcolor: nebulaFigBg()
         };
         Plotly.newPlot(el, [trace], layout, plotlyConfig('enrichr_bubble'));
     }
@@ -225,7 +225,7 @@
             margin: { l: 160, r: 80, t: 48, b: 160 },
             xaxis: { tickangle: -45 },
             yaxis: { autorange: 'reversed' },
-            paper_bgcolor: '#fff'
+            paper_bgcolor: nebulaFigBg()
         };
         Plotly.newPlot(el, [trace], layout, plotlyConfig('enrichr_term_similarity'));
     }

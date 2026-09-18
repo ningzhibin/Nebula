@@ -17,7 +17,11 @@
     binary: '#2e6b5c',
     intensity: '#3c5f8f',
     hybrid: '#bc4421',
-    ink: '#211d17', ink2: '#57503f', ink3: '#8a816c', line: '#d5cdb9', paper: '#f6f2ea'
+    get ink() { return (typeof nebulaCssVar === 'function') ? nebulaCssVar('--hyb-ink', '#211d17') : '#211d17'; },
+    get ink2() { return (typeof nebulaCssVar === 'function') ? nebulaCssVar('--hyb-ink-2', '#57503f') : '#57503f'; },
+    get ink3() { return (typeof nebulaCssVar === 'function') ? nebulaCssVar('--hyb-ink-3', '#8a816c') : '#8a816c'; },
+    get line() { return (typeof nebulaCssVar === 'function') ? nebulaCssVar('--hyb-line', '#d5cdb9') : '#d5cdb9'; },
+    get paper() { return (typeof nebulaCssVar === 'function') ? nebulaCssVar('--hyb-paper', '#f6f2ea') : '#f6f2ea'; }
   };
 
   window.hybridState = {
@@ -93,7 +97,7 @@
   }
   function attachHover(container, svg, seriesDefs) {
     const tip = document.createElement('div');
-    tip.style.cssText = 'position:absolute;pointer-events:none;background:#211d17;color:#f6f2ea;font-family:monospace;font-size:11px;padding:7px 10px;line-height:1.5;opacity:0;transition:opacity .12s ease;z-index:30;white-space:nowrap;';
+    tip.style.cssText = 'position:absolute;pointer-events:none;background:#211d17;color:#f6f2ea;font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:11px;padding:7px 10px;line-height:1.5;opacity:0;transition:opacity .12s ease;z-index:30;white-space:nowrap;';
     container.style.position = 'relative';
     container.appendChild(tip);
     const overlay = svgEl('rect', { x: 0, y: 0, width: '100%', height: '100%', fill: 'transparent' }, svg);
@@ -468,12 +472,12 @@
     const xL=v=> c.m.l + (Math.log10(v)-lxMin)/(lxMax-lxMin)*(W-M.l-M.r);
     const xTicks=[]; for(let e=Math.ceil(lxMin); e<=Math.floor(lxMax); e++) xTicks.push(Math.pow(10,e));
     const Yt=niceTicks(0,yMax,5);
-    for(const t of Yt){ svgEl('line',{x1:M.l,x2:W-M.r,y1:c.y(t),y2:c.y(t),stroke:COLORS.line,'stroke-width':0.7},c.g); svgEl('text',{x:M.l-7,y:c.y(t)+3.5,'text-anchor':'end','font-size':10.5,fill:COLORS.ink3,'font-family':'monospace'},c.g).textContent=String(Math.round(t)); }
-    for(const t of xTicks){ if(t < xMin*0.99 || t > xMax*1.01) continue; svgEl('line',{x1:xL(t),x2:xL(t),y1:Hh-M.b,y2:Hh-M.b+4,stroke:COLORS.ink3,'stroke-width':0.7},c.g); svgEl('text',{x:xL(t),y:Hh-M.b+16,'text-anchor':'middle','font-size':10.5,fill:COLORS.ink3,'font-family':'monospace'},c.g).textContent=fmtTick(t,true); }
+    for(const t of Yt){ svgEl('line',{x1:M.l,x2:W-M.r,y1:c.y(t),y2:c.y(t),stroke:COLORS.line,'stroke-width':0.7},c.g); svgEl('text',{x:M.l-7,y:c.y(t)+3.5,'text-anchor':'end','font-size':10.5,fill:COLORS.ink3,'font-family':'Inter,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif'},c.g).textContent=String(Math.round(t)); }
+    for(const t of xTicks){ if(t < xMin*0.99 || t > xMax*1.01) continue; svgEl('line',{x1:xL(t),x2:xL(t),y1:Hh-M.b,y2:Hh-M.b+4,stroke:COLORS.ink3,'stroke-width':0.7},c.g); svgEl('text',{x:xL(t),y:Hh-M.b+16,'text-anchor':'middle','font-size':10.5,fill:COLORS.ink3,'font-family':'Inter,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif'},c.g).textContent=fmtTick(t,true); }
     svgEl('line',{x1:M.l,x2:W-M.r,y1:Hh-M.b,y2:Hh-M.b,stroke:COLORS.ink,'stroke-width':1.2},c.g);
     svgEl('line',{x1:M.l,x2:M.l,y1:M.t,y2:Hh-M.b,stroke:COLORS.ink,'stroke-width':1.2},c.g);
-    svgEl('text',{x:(M.l+W-M.r)/2,y:Hh-3,'text-anchor':'middle','font-size':11.5,fill:COLORS.ink2,'font-family':'sans-serif'},c.g).textContent='estimated FDR';
-    const yl=svgEl('text',{x:13,y:(M.t+Hh-M.b)/2,'text-anchor':'middle','font-size':11.5,fill:COLORS.ink2,'font-family':'sans-serif',transform:`rotate(-90 13 ${(M.t+Hh-M.b)/2})`},c.g); yl.textContent='# selected proteins';
+    svgEl('text',{x:(M.l+W-M.r)/2,y:Hh-3,'text-anchor':'middle','font-size':11.5,fill:COLORS.ink2,'font-family':'Inter,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif'},c.g).textContent='estimated FDR';
+    const yl=svgEl('text',{x:13,y:(M.t+Hh-M.b)/2,'text-anchor':'middle','font-size':11.5,fill:COLORS.ink2,'font-family':'Inter,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif',transform:`rotate(-90 13 ${(M.t+Hh-M.b)/2})`},c.g); yl.textContent='# selected proteins';
     const hoverPts=[];
     for(const s of series){
       const pts=s.pts.slice().sort((a,b)=>a.x-b.x).map(p=>[p.x,p.y]);
@@ -486,7 +490,7 @@
     }
     if(targetFdr>=xMin && targetFdr<=xMax){
       svgEl('line',{x1:xL(targetFdr),x2:xL(targetFdr),y1:c.m.t,y2:c.h-c.m.b,stroke:COLORS.ink,'stroke-width':1.1,'stroke-dasharray':'5 4',opacity:0.75},c.g);
-      const t=svgEl('text',{x:xL(targetFdr)+5,y:c.m.t+12,'font-size':10.5,fill:COLORS.ink2,'font-family':'sans-serif'},c.g); t.textContent='target FDR = '+targetFdr;
+      const t=svgEl('text',{x:xL(targetFdr)+5,y:c.m.t+12,'font-size':10.5,fill:COLORS.ink2,'font-family':'Inter,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif'},c.g); t.textContent='target FDR = '+targetFdr;
     }
     const ops=[{s:res.binary.operatingPoint,color:COLORS.binary,name:'presence/absence'},{s:res.intensity.operatingPoint,color:COLORS.intensity,name:'intensity'},{s:res.hybrid.operatingPoint,color:COLORS.hybrid,name:'hybrid'}];
     for(const o of ops){
@@ -509,12 +513,12 @@
     datasets.forEach((d,di)=>{ for(const p of d.pts){ if(!isFinite(p)||p<=0||p>1) continue; const e=Math.min(eMax-1, Math.floor(Math.log10(p))); const idx=e-eMin; if(idx>=0&&idx<nB) bins[di][idx]++; } });
     const yMax=Math.max(1, ...bins.flat())*1.15;
     const c=baseChart(container,W,Hh,{l:M.l,r:M.r,t:M.t,b:M.b,xmin:eMin,xmax:eMax,ymin:0,ymax:yMax}); if(!c) return;
-    for(const t of niceTicks(0,yMax,5)){ svgEl('line',{x1:M.l,x2:W-M.r,y1:c.y(t),y2:c.y(t),stroke:COLORS.line,'stroke-width':0.7},c.g); svgEl('text',{x:M.l-7,y:c.y(t)+3.5,'text-anchor':'end','font-size':10.5,fill:COLORS.ink3,'font-family':'monospace'},c.g).textContent=String(Math.round(t)); }
+    for(const t of niceTicks(0,yMax,5)){ svgEl('line',{x1:M.l,x2:W-M.r,y1:c.y(t),y2:c.y(t),stroke:COLORS.line,'stroke-width':0.7},c.g); svgEl('text',{x:M.l-7,y:c.y(t)+3.5,'text-anchor':'end','font-size':10.5,fill:COLORS.ink3,'font-family':'Inter,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif'},c.g).textContent=String(Math.round(t)); }
     svgEl('line',{x1:M.l,x2:W-M.r,y1:Hh-M.b,y2:Hh-M.b,stroke:COLORS.ink,'stroke-width':1.2},c.g); svgEl('line',{x1:M.l,x2:M.l,y1:M.t,y2:Hh-M.b,stroke:COLORS.ink,'stroke-width':1.2},c.g);
     const bw=(W-M.l-M.r)/nB; const nD=datasets.length;
     datasets.forEach((d,di)=>{ for(let i=0;i<nB;i++){ const v=bins[di][i]; if(!v) continue; svgEl('rect',{x:c.x(i+eMin)+bw*(di/nD)*0.86+bw*0.07,y:c.y(v),width:Math.max(1,bw*0.86/nD-1.5),height:c.y(0)-c.y(v),fill:d.color,opacity:0.85},c.g); } });
-    for(let e=eMin;e<=eMax;e++){ const v=Math.pow(10,e); svgEl('line',{x1:c.x(e-eMin),x2:c.x(e-eMin),y1:Hh-M.b,y2:Hh-M.b+4,stroke:COLORS.ink3,'stroke-width':0.7},c.g); svgEl('text',{x:c.x(e-eMin),y:Hh-M.b+16,'text-anchor':'middle','font-size':10.5,fill:COLORS.ink3,'font-family':'monospace'},c.g).textContent=v<1?'1e'+e:'1'; }
-    svgEl('text',{x:(M.l+W-M.r)/2,y:Hh-2,'text-anchor':'middle','font-size':11.5,fill:COLORS.ink2,'font-family':'sans-serif'},c.g).textContent='p-value (log scale)';
+    for(let e=eMin;e<=eMax;e++){ const v=Math.pow(10,e); svgEl('line',{x1:c.x(e-eMin),x2:c.x(e-eMin),y1:Hh-M.b,y2:Hh-M.b+4,stroke:COLORS.ink3,'stroke-width':0.7},c.g); svgEl('text',{x:c.x(e-eMin),y:Hh-M.b+16,'text-anchor':'middle','font-size':10.5,fill:COLORS.ink3,'font-family':'Inter,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif'},c.g).textContent=v<1?'1e'+e:'1'; }
+    svgEl('text',{x:(M.l+W-M.r)/2,y:Hh-2,'text-anchor':'middle','font-size':11.5,fill:COLORS.ink2,'font-family':'Inter,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif'},c.g).textContent='p-value (log scale)';
     const leg=document.getElementById(legendId);
     if(leg) leg.innerHTML=datasets.map(d=> '<span class="hybrid-legend-item"><span class="hybrid-swatch" style="background:'+d.color+'"></span>'+d.name+' <span style="color:'+COLORS.ink3+'">(n='+d.pts.filter(isFinite).length+')</span></span>').join('');
   }
@@ -527,8 +531,8 @@
     const c=baseChart(container,W,Hh,{l:M.l,r:M.r,t:M.t,b:M.b,xmin:0,xmax:1,ymin:0,ymax:yMax}); if(!c) return;
     // axes
     const X=niceTicks(0,1,6), Y=niceTicks(0,yMax,4);
-    for(const t of Y){ svgEl('line',{x1:M.l,x2:W-M.r,y1:c.y(t),y2:c.y(t),stroke:COLORS.line,'stroke-width':0.7},c.g); svgEl('text',{x:M.l-7,y:c.y(t)+3.5,'text-anchor':'end','font-size':10.5,fill:COLORS.ink3,'font-family':'monospace'},c.g).textContent=String(Math.round(t*100)/100); }
-    for(const t of X){ svgEl('line',{x1:c.x(t),x2:c.x(t),y1:Hh-M.b,y2:Hh-M.b+4,stroke:COLORS.ink3,'stroke-width':0.7},c.g); svgEl('text',{x:c.x(t),y:Hh-M.b+16,'text-anchor':'middle','font-size':10.5,fill:COLORS.ink3,'font-family':'monospace'},c.g).textContent=String(t); }
+    for(const t of Y){ svgEl('line',{x1:M.l,x2:W-M.r,y1:c.y(t),y2:c.y(t),stroke:COLORS.line,'stroke-width':0.7},c.g); svgEl('text',{x:M.l-7,y:c.y(t)+3.5,'text-anchor':'end','font-size':10.5,fill:COLORS.ink3,'font-family':'Inter,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif'},c.g).textContent=String(Math.round(t*100)/100); }
+    for(const t of X){ svgEl('line',{x1:c.x(t),x2:c.x(t),y1:Hh-M.b,y2:Hh-M.b+4,stroke:COLORS.ink3,'stroke-width':0.7},c.g); svgEl('text',{x:c.x(t),y:Hh-M.b+16,'text-anchor':'middle','font-size':10.5,fill:COLORS.ink3,'font-family':'Inter,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif'},c.g).textContent=String(t); }
     svgEl('line',{x1:M.l,x2:W-M.r,y1:Hh-M.b,y2:Hh-M.b,stroke:COLORS.ink,'stroke-width':1.2},c.g); svgEl('line',{x1:M.l,x2:M.l,y1:M.t,y2:Hh-M.b,stroke:COLORS.ink,'stroke-width':1.2},c.g);
     svgEl('text',{x:(M.l+W-M.r)/2,y:Hh-2,'text-anchor':'middle','font-size':11.5,fill:COLORS.ink2},c.g).textContent='λ (p-value threshold)'; const yl=svgEl('text',{x:13,y:(M.t+Hh-M.b)/2,'text-anchor':'middle','font-size':11.5,fill:COLORS.ink2,transform:`rotate(-90 13 ${(M.t+Hh-M.b)/2})`},c.g); yl.textContent='π̂₀(λ)';
     for(const [x,yv] of curve) svgEl('circle',{cx:c.x(x),cy:c.y(yv),r:2.2,fill:COLORS.binary,opacity:0.5},c.g);
@@ -539,9 +543,9 @@
       if(q){
         const pts=[]; for(let i=0;i<=40;i++){ const x=tail[0][0]+(1-tail[0][0])*i/40; const yv=q.a+q.b*x+q.c*x*x; if(yv>1.2||yv<-0.2) continue; pts.push([x,Math.max(0,yv)]); }
         if(pts.length>1){ const d=pts.map((p,i)=>(i?'L':'M')+c.x(p[0]).toFixed(1)+' '+c.y(p[1]).toFixed(1)).join(' '); svgEl('path',{d,fill:'none',stroke:COLORS.hybrid,'stroke-width':2.2},c.g); }
-        const t=svgEl('text',{x:c.x(1)-8,y:c.y(Math.max(0,Math.min(1,q.a+q.b+q.c)))-8,'font-size':11,fill:COLORS.hybrid,'font-family':'sans-serif','text-anchor':'end'},c.g); t.textContent='π̂₀ = '+pi0.toFixed(3);
+        const t=svgEl('text',{x:c.x(1)-8,y:c.y(Math.max(0,Math.min(1,q.a+q.b+q.c)))-8,'font-size':11,fill:COLORS.hybrid,'font-family':'Inter,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif','text-anchor':'end'},c.g); t.textContent='π̂₀ = '+pi0.toFixed(3);
       } else {
-        const t=svgEl('text',{x:c.x(1)-8,y:c.y(pi0)-8,'font-size':11,fill:COLORS.hybrid,'font-family':'sans-serif','text-anchor':'end'},c.g); t.textContent='π̂₀ = '+pi0.toFixed(3);
+        const t=svgEl('text',{x:c.x(1)-8,y:c.y(pi0)-8,'font-size':11,fill:COLORS.hybrid,'font-family':'Inter,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif','text-anchor':'end'},c.g); t.textContent='π̂₀ = '+pi0.toFixed(3);
       }
     }
   }
@@ -565,23 +569,23 @@
     const X=v=> M.l + (v + xMax)/(2*xMax)*(W-M.l-M.r);
     const Y=v=> Hh-M.b - (v / yMax)*(Hh-M.t-M.b);
     const xTicks=niceTicks(-xMax,xMax,7);
-    for(const t of xTicks){ svgEl('line',{x1:X(t),x2:X(t),y1:Hh-M.b,y2:Hh-M.b+4,stroke:COLORS.ink3,'stroke-width':0.7},g); svgEl('text',{x:X(t),y:Hh-M.b+16,'text-anchor':'middle','font-size':10.5,fill:COLORS.ink3,'font-family':'monospace'},g).textContent=String(Math.round(t*10)/10); }
-    for(const t of niceTicks(0,yMax,5)){ if(t>yMax) continue; svgEl('line',{x1:M.l,x2:W-M.r,y1:Y(t),y2:Y(t),stroke:COLORS.line,'stroke-width':0.7},g); svgEl('text',{x:M.l-7,y:Y(t)+3.5,'text-anchor':'end','font-size':10.5,fill:COLORS.ink3,'font-family':'monospace'},g).textContent=String(Math.round(t)); }
+    for(const t of xTicks){ svgEl('line',{x1:X(t),x2:X(t),y1:Hh-M.b,y2:Hh-M.b+4,stroke:COLORS.ink3,'stroke-width':0.7},g); svgEl('text',{x:X(t),y:Hh-M.b+16,'text-anchor':'middle','font-size':10.5,fill:COLORS.ink3,'font-family':'Inter,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif'},g).textContent=String(Math.round(t*10)/10); }
+    for(const t of niceTicks(0,yMax,5)){ if(t>yMax) continue; svgEl('line',{x1:M.l,x2:W-M.r,y1:Y(t),y2:Y(t),stroke:COLORS.line,'stroke-width':0.7},g); svgEl('text',{x:M.l-7,y:Y(t)+3.5,'text-anchor':'end','font-size':10.5,fill:COLORS.ink3,'font-family':'Inter,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif'},g).textContent=String(Math.round(t)); }
     svgEl('line',{x1:M.l,x2:W-M.r,y1:Hh-M.b,y2:Hh-M.b,stroke:COLORS.ink,'stroke-width':1.2},g); svgEl('line',{x1:M.l,x2:M.l,y1:M.t,y2:Hh-M.b,stroke:COLORS.ink,'stroke-width':1.2},g); svgEl('line',{x1:X(0),x2:X(0),y1:M.t,y2:Hh-M.b,stroke:COLORS.line,'stroke-width':1},g);
-    svgEl('text',{x:(M.l+W-M.r)/2,y:Hh-3,'text-anchor':'middle','font-size':11.5,fill:COLORS.ink2,'font-family':'sans-serif'},g).textContent=def.xLabel;
-    const yl=svgEl('text',{x:13,y:(M.t+Hh-M.b)/2,'text-anchor':'middle','font-size':11.5,fill:COLORS.ink2,'font-family':'sans-serif',transform:`rotate(-90 13 ${(M.t+Hh-M.b)/2})`},g); yl.textContent='−log₁₀ p';
+    svgEl('text',{x:(M.l+W-M.r)/2,y:Hh-3,'text-anchor':'middle','font-size':11.5,fill:COLORS.ink2,'font-family':'Inter,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif'},g).textContent=def.xLabel;
+    const yl=svgEl('text',{x:13,y:(M.t+Hh-M.b)/2,'text-anchor':'middle','font-size':11.5,fill:COLORS.ink2,'font-family':'Inter,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif',transform:`rotate(-90 13 ${(M.t+Hh-M.b)/2})`},g); yl.textContent='−log₁₀ p';
     const pCut=-Math.log10(res.options.targetFdr); const fcL=X(-1), fcR=X(1);
     svgEl('rect',{x:Math.min(fcL,X(0)),y:M.t,width:Math.abs(X(0)-fcL),height:Math.max(0,Y(Math.min(pCut,yMax))-M.t),fill:def.color,opacity:0.05},g);
     svgEl('rect',{x:Math.min(X(0),fcR),y:M.t,width:Math.abs(fcR-X(0)),height:Math.max(0,Y(Math.min(pCut,yMax))-M.t),fill:def.color,opacity:0.05},g);
     svgEl('line',{x1:fcL,x2:fcL,y1:M.t,y2:Hh-M.b,stroke:COLORS.ink3,'stroke-width':1,'stroke-dasharray':'4 3'},g);
     svgEl('line',{x1:fcR,x2:fcR,y1:M.t,y2:Hh-M.b,stroke:COLORS.ink3,'stroke-width':1,'stroke-dasharray':'4 3'},g);
-    if(pCut<=yMax){ const yCut=Y(pCut); svgEl('line',{x1:M.l,x2:W-M.r,y1:yCut,y2:yCut,stroke:COLORS.ink3,'stroke-width':1,'stroke-dasharray':'4 3'},g); svgEl('text',{x:W-M.r-4,y:yCut-5,'text-anchor':'end','font-size':10.5,fill:COLORS.ink3,'font-family':'monospace'},g).textContent='target FDR '+fmtP(res.options.targetFdr); }
+    if(pCut<=yMax){ const yCut=Y(pCut); svgEl('line',{x1:M.l,x2:W-M.r,y1:yCut,y2:yCut,stroke:COLORS.ink3,'stroke-width':1,'stroke-dasharray':'4 3'},g); svgEl('text',{x:W-M.r-4,y:yCut-5,'text-anchor':'end','font-size':10.5,fill:COLORS.ink3,'font-family':'Inter,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif'},g).textContent='target FDR '+fmtP(res.options.targetFdr); }
     const drawn=[];
     const place=(p,r,fill,stroke,sw,op)=>{ const ex=isFinite(p.xv)? p.xv : def.xEdge(p.x)*xMax*0.985; const px=X(ex), py=Y(Math.min(p.yv,yMax)); const el=svgEl('circle',{cx:px.toFixed(1),cy:py.toFixed(1),r,fill,stroke,'stroke-width':sw,opacity:op},g); drawn.push({px,py,p,el}); };
     let nSelUp=0,nSelDown=0,nEdge=0;
-    for(const p of pts) if(!p.sel) place(p,3.4,'#cdc4ae',COLORS.paper,0.8,0.7);
+    for(const p of pts) if(!p.sel) place(p,3.4,(nebulaIsDarkTheme() ? '#3b4a63' : '#cdc4ae'),COLORS.paper,0.8,0.7);
     for(const p of pts){ if(!p.sel) continue; place(p,4.6,def.color,'#ffffff',1.5,0.95); if(!isFinite(p.xv)) nEdge++; else if(p.xv>1) nSelUp++; else if(p.xv<-1) nSelDown++; }
-    const svg=c.svg; const tip=document.createElement('div'); tip.style.cssText='position:absolute;pointer-events:none;background:#211d17;color:#f6f2ea;font-family:monospace;font-size:11px;padding:7px 10px;line-height:1.5;opacity:0;transition:opacity .12s ease;z-index:30;white-space:nowrap;'; container.style.position='relative'; container.appendChild(tip);
+    const svg=c.svg; const tip=document.createElement('div'); tip.style.cssText='position:absolute;pointer-events:none;background:#211d17;color:#f6f2ea;font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:11px;padding:7px 10px;line-height:1.5;opacity:0;transition:opacity .12s ease;z-index:30;white-space:nowrap;'; container.style.position='relative'; container.appendChild(tip);
     const overlay=svgEl('rect',{x:0,y:0,width:'100%',height:'100%',fill:'transparent'},svg); let lastEl=null;
     const clearLast=()=>{ if(!lastEl) return; lastEl.setAttribute('r', lastEl.getAttribute('data-r')); lastEl.setAttribute('stroke', lastEl.getAttribute('data-stroke')); lastEl=null; };
     overlay.addEventListener('mousemove',ev=>{
@@ -693,11 +697,11 @@
     } else {
       // Fallback: simple html table with nebula-like styling (no DataTables)
       let html = '<div class="app-table-scroll" style="max-height:560px;overflow:auto;border:1px solid var(--line);background:#fbf9f4;"><table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr>';
-      tdCols.forEach(c=>{ html += '<th style="font-family:monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#8a816c;text-align:left;padding:7px 10px;border-bottom:1.5px solid #211d17;position:sticky;top:0;background:#fbf9f4;z-index:1;">'+esc(c.title)+'</th>'; });
+      tdCols.forEach(c=>{ html += '<th style="font-family:\'Inter\',-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#8a816c;text-align:left;padding:7px 10px;border-bottom:1.5px solid #211d17;position:sticky;top:0;background:#fbf9f4;z-index:1;">'+esc(c.title)+'</th>'; });
       html += '</tr></thead><tbody>';
       rows.forEach(r=>{
         html += '<tr>';
-        tdCols.forEach(col=>{ const v=r[col.key]; html += '<td style="padding:6px 10px;border-bottom:1px solid #d5cdb9;font-family:monospace;font-size:12px;text-align:left;white-space:nowrap;">'+esc(String(v==null?'':v))+'</td>'; });
+        tdCols.forEach(col=>{ const v=r[col.key]; html += '<td style="padding:6px 10px;border-bottom:1px solid #d5cdb9;font-family:\'Inter\',-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;font-size:12px;text-align:left;white-space:nowrap;">'+esc(String(v==null?'':v))+'</td>'; });
         html += '</tr>';
       });
       html += '</tbody></table></div>';
@@ -806,6 +810,9 @@
           seed: 42
         });
         state.result=res;
+        if (typeof window.refreshGseaGeneSourceOptions === 'function') {
+          try { window.refreshGseaGeneSourceOptions(); } catch (e) {}
+        }
         const emptyEl2 = hyEl('hybEmpty','hybridEmptyState') || document.getElementById('hybridEmptyState');
         if(emptyEl2) emptyEl2.style.display='none';
         const body=hyEl('hybResults','hybridResultsBody') || document.getElementById('hybridResultsBody');
@@ -850,7 +857,7 @@
     const img=new Image();
     img.onload=()=>{
       const canvas=document.createElement('canvas'); const scale=2; canvas.width=svg.viewBox.baseVal.width*scale; canvas.height=svg.viewBox.baseVal.height*scale;
-      const ctx=canvas.getContext('2d'); ctx.fillStyle='#fbf9f4'; ctx.fillRect(0,0,canvas.width,canvas.height); ctx.scale(scale,scale); ctx.drawImage(img,0,0);
+      const ctx=canvas.getContext('2d'); ctx.fillStyle=nebulaFigBg(); ctx.fillRect(0,0,canvas.width,canvas.height); ctx.scale(scale,scale); ctx.drawImage(img,0,0);
       canvas.toBlob(b=>{ const url=URL.createObjectURL(b); const a=document.createElement('a'); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),2000); });
     };
     img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(data);
@@ -959,77 +966,77 @@
   // --- inject minimal styles scoped to hybridTab --------------------------------
   const style=document.createElement('style');
   style.textContent=`
-  #hybridTab .hybrid-stat-strip{display:flex;flex-wrap:wrap;gap:0;border-top:1px solid #d5cdb9;border-bottom:1px solid #d5cdb9;margin:0 0 22px}
-  #hybridTab .hybrid-stat{padding:12px 22px 12px 0;margin-right:22px;border-right:1px solid #d5cdb9}
+  #hybridTab .hybrid-stat-strip{display:flex;flex-wrap:wrap;gap:0;border-top:1px solid var(--hyb-line);border-bottom:1px solid var(--hyb-line);margin:0 0 22px}
+  #hybridTab .hybrid-stat{padding:12px 22px 12px 0;margin-right:22px;border-right:1px solid var(--hyb-line)}
   #hybridTab .hybrid-stat:last-child{border-right:0}
-  #hybridTab .hybrid-stat .k{font-size:10.5px;font-family:monospace;letter-spacing:.12em;text-transform:uppercase;color:#8a816c}
-  #hybridTab .hybrid-stat .v{font-family:Georgia,serif;font-size:23px;font-weight:600;line-height:1.15;font-variant-numeric:tabular-nums}
-  #hybridTab .hybrid-stat .v small{font-size:13px;color:#57503f;font-weight:400;font-style:italic}
-  #hybridTab .hybrid-fig{margin:0 0 26px;border:1px solid #d5cdb9;background:#fbf9f4;padding:16px 16px 12px}
+  #hybridTab .hybrid-stat .k{font-size:10.5px;font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--hyb-ink-3)}
+  #hybridTab .hybrid-stat .v{font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:23px;font-weight:600;line-height:1.15;font-variant-numeric:tabular-nums}
+  #hybridTab .hybrid-stat .v small{font-size:13px;color:var(--hyb-ink-2);font-weight:400;font-style:italic}
+  #hybridTab .hybrid-fig{margin:0 0 26px;border:1px solid var(--hyb-line);background:var(--hyb-fig);padding:16px 16px 12px}
   #hybridTab .hybrid-fig svg{display:block;width:100%;height:auto}
-  #hybridTab .hybrid-fig figcaption{font-size:12.5px;color:#57503f;margin-top:10px;line-height:1.5}
+  #hybridTab .hybrid-fig figcaption{font-size:12.5px;color:var(--hyb-ink-2);margin-top:10px;line-height:1.5}
   #hybridTab .hybrid-legend{display:flex;gap:18px;flex-wrap:wrap;margin:2px 0 8px}
-  #hybridTab .hybrid-legend .hybrid-legend-item{display:flex;align-items:center;gap:7px;font-size:12px;color:#57503f}
+  #hybridTab .hybrid-legend .hybrid-legend-item{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--hyb-ink-2)}
   #hybridTab .hybrid-swatch{width:18px;height:3px;display:inline-block}
-  #hybridTab .hybrid-table-wrap{overflow-x:auto;border:1px solid #d5cdb9;background:#fbf9f4}
+  #hybridTab .hybrid-table-wrap{overflow-x:auto;border:1px solid var(--hyb-line);background:var(--hyb-fig)}
   #hybridTab table.hybrid-data{width:100%;border-collapse:collapse;font-size:13px}
-  #hybridTab table.hybrid-data th{font-family:monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#8a816c;text-align:right;padding:7px 10px;border-bottom:1.5px solid #211d17;cursor:pointer;user-select:none;white-space:nowrap}
+  #hybridTab table.hybrid-data th{font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--hyb-ink-3);text-align:right;padding:7px 10px;border-bottom:1.5px solid var(--hyb-ink);cursor:pointer;user-select:none;white-space:nowrap}
   #hybridTab table.hybrid-data th:first-child, #hybridTab table.hybrid-data td:first-child{text-align:left}
-  #hybridTab table.hybrid-data td{text-align:right;padding:6px 10px;border-bottom:1px solid #d5cdb9;font-family:monospace;font-size:12px;white-space:nowrap}
-  #hybridTab table.hybrid-data tr:hover td{background:rgba(188,68,33,.04)}
-  #hybridTab table.hybrid-data td.protein{font-family:sans-serif;font-size:13px;font-weight:500}
-  #hybridTab .hybrid-badge{display:inline-block;font-family:monospace;font-size:10px;letter-spacing:.06em;padding:1.5px 7px;border:1px solid;vertical-align:1px;white-space:nowrap}
-  #hybridTab .hybrid-badge.b{color:#2e6b5c;border-color:#2e6b5c;background:#e0ebe4}
-  #hybridTab .hybrid-badge.i{color:#3c5f8f;border-color:#3c5f8f;background:#e1e7f0}
-  #hybridTab .hybrid-badge.h{color:#93321a;border-color:#bc4421;background:#f3e2da;font-weight:500}
-  #hybridTab .hybrid-badge.s{color:#8a816c;border-color:#c3b99f;background:transparent}
+  #hybridTab table.hybrid-data td{text-align:right;padding:6px 10px;border-bottom:1px solid var(--hyb-line);font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:12px;white-space:nowrap}
+  #hybridTab table.hybrid-data tr:hover td{background:rgba(var(--md-accent-rgb), 0.04)}
+  #hybridTab table.hybrid-data td.protein{font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:13px;font-weight:500}
+  #hybridTab .hybrid-badge{display:inline-block;font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:10px;letter-spacing:.06em;padding:1.5px 7px;border:1px solid;vertical-align:1px;white-space:nowrap}
+  #hybridTab .hybrid-badge.b{color:var(--hyb-binary);border-color:var(--hyb-binary);background:var(--hyb-binary-soft)}
+  #hybridTab .hybrid-badge.i{color:var(--hyb-intensity);border-color:var(--hyb-intensity);background:var(--hyb-intensity-soft)}
+  #hybridTab .hybrid-badge.h{color:var(--hyb-vermilion-deep);border-color:var(--hyb-vermilion);background:var(--md-accent-soft-bg);font-weight:500}
+  #hybridTab .hybrid-badge.s{color:var(--hyb-ink-3);border-color:var(--hyb-line-2);background:transparent}
   #hybridTab .hybrid-badge.onest{color:#fff;background:#211d17;border-color:#211d17}
   #hybridTab .hybrid-wide-wrap{max-height:600px;overflow:auto}
   #hybridTab .hybrid-wide-wrap thead{position:sticky;top:0;z-index:3}
-  #hybridTab .hybrid-wide-wrap thead th{background:#fbf9f4;padding:5px 9px 6px}
-  #hybridTab .hybrid-wide-wrap thead tr:nth-child(2) th{background:#fbf9f4;font-size:9px;letter-spacing:.05em;text-transform:none;padding:2px 9px 5px;border-bottom:1.5px solid #211d17}
+  #hybridTab .hybrid-wide-wrap thead th{background:var(--hyb-fig);padding:5px 9px 6px}
+  #hybridTab .hybrid-wide-wrap thead tr:nth-child(2) th{background:var(--hyb-fig);font-size:9px;letter-spacing:.05em;text-transform:none;padding:2px 9px 5px;border-bottom:1.5px solid var(--hyb-ink)}
   #hybridTab table.hybrid-wide th{cursor:default}
   #hybridTab table.hybrid-wide td{padding:4px 9px;font-size:11.5px}
-  #hybridTab table.hybrid-wide th:first-child, #hybridTab table.hybrid-wide td:first-child{position:sticky;left:0;z-index:1;background:#fbf9f4;min-width:118px;max-width:118px}
-  #hybridTab table.hybrid-wide.grp th:nth-child(2), #hybridTab table.hybrid-wide.grp td:nth-child(2){position:sticky;left:118px;z-index:1;background:#fbf9f4;min-width:88px;max-width:88px}
+  #hybridTab table.hybrid-wide th:first-child, #hybridTab table.hybrid-wide td:first-child{position:sticky;left:0;z-index:1;background:var(--hyb-fig);min-width:118px;max-width:118px}
+  #hybridTab table.hybrid-wide.grp th:nth-child(2), #hybridTab table.hybrid-wide.grp td:nth-child(2){position:sticky;left:118px;z-index:1;background:var(--hyb-fig);min-width:88px;max-width:88px}
   #hybridTab table.hybrid-wide thead th:first-child{z-index:4}
   #hybridTab table.hybrid-wide thead tr:nth-child(2) th:first-child{z-index:4}
   #hybridTab table.hybrid-wide.grp thead th:nth-child(2){z-index:4}
   #hybridTab table.hybrid-wide.grp thead tr:nth-child(2) th:nth-child(2){z-index:4}
-  #hybridTab table.hybrid-wide td.miss{color:#d5cdb9}
-  #hybridTab table.hybrid-wide th.g0{background:linear-gradient(180deg,#e0ebe4 30%,#fbf9f4 100%)}
-  #hybridTab table.hybrid-wide th.g1{background:linear-gradient(180deg,#e1e7f0 30%,#fbf9f4 100%)}
-  #hybridTab table.hybrid-wide th.sep{border-left:1px solid #c3b99f}
-  #hybridTab table.hybrid-wide td.sep{border-left:1px solid #c3b99f}
+  #hybridTab table.hybrid-wide td.miss{color:var(--hyb-line)}
+  #hybridTab table.hybrid-wide th.g0{background:linear-gradient(180deg,var(--hyb-binary-soft) 30%,var(--hyb-fig) 100%)}
+  #hybridTab table.hybrid-wide th.g1{background:linear-gradient(180deg,var(--hyb-intensity-soft) 30%,var(--hyb-fig) 100%)}
+  #hybridTab table.hybrid-wide th.sep{border-left:1px solid var(--hyb-line-2)}
+  #hybridTab table.hybrid-wide td.sep{border-left:1px solid var(--hyb-line-2)}
   #hybridTab .hybrid-section{margin-bottom:32px}
-  #hybridTab .hybrid-sec-head{display:flex;align-items:baseline;gap:14px;border-bottom:1px solid #211d17;padding-bottom:10px;margin-bottom:18px}
-  #hybridTab .hybrid-sec-no{font-family:monospace;font-size:12px;color:#93321a;letter-spacing:.1em}
-  #hybridTab .hybrid-sec-head h2{font-family:Georgia,serif;font-weight:600;font-size:20px;margin:0;letter-spacing:-.01em}
-  #hybridTab .hybrid-sec-head .tag{margin-left:auto;font-family:monospace;font-size:10.5px;color:#8a816c;letter-spacing:.08em;text-transform:uppercase}
-  #hybridTab .hybrid-lead{font-family:Georgia,serif;font-style:italic;color:#57503f;font-size:14.5px;max-width:74ch;margin:0 0 18px}
-  #hybridTab .hybrid-lead code{font-family:monospace;font-style:normal;font-size:.85em;background:#efe9dc;padding:1px 4px;color:#211d17}
-  #hybridTab .hybrid-empty{border:1px solid #d5cdb9;background:repeating-linear-gradient(-45deg,transparent 0 14px, rgba(213,205,185,.28) 14px 15px), #fbf9f4;padding:32px}
-  #hybridTab .hybrid-empty h3{font-family:Georgia,serif;font-size:20px;font-weight:600;margin:0 0 10px}
-  #hybridTab .hybrid-run-status{margin-top:10px;font-family:monospace;font-size:11px;color:#57503f;min-height:16px}
-  #hybridTab .hybrid-run-status.ok{color:#2e6b5c}
-  #hybridTab .hybrid-run-status.err{color:#a03020}
-  #hybridTab .hybrid-pill{display:inline-flex;align-items:center;gap:6px;font-family:monospace;font-size:11px;color:#57503f;border:1px solid #c3b99f;background:#efe9dc;padding:4px 10px;margin:0 6px 6px 0}
-  #hybridTab .hybrid-diag-card{border:1px solid #d5cdb9;background:#fbf9f4;display:grid;grid-template-columns:150px 1fr auto;gap:0;align-items:center;margin-bottom:10px;padding:12px 16px}
+  #hybridTab .hybrid-sec-head{display:flex;align-items:baseline;gap:14px;border-bottom:1px solid var(--hyb-ink);padding-bottom:10px;margin-bottom:18px}
+  #hybridTab .hybrid-sec-no{font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:12px;color:var(--hyb-vermilion-deep);letter-spacing:.1em}
+  #hybridTab .hybrid-sec-head h2{font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-weight:600;font-size:20px;margin:0;letter-spacing:-.01em}
+  #hybridTab .hybrid-sec-head .tag{margin-left:auto;font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:10.5px;color:var(--hyb-ink-3);letter-spacing:.08em;text-transform:uppercase}
+  #hybridTab .hybrid-lead{font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-style:italic;color:var(--hyb-ink-2);font-size:14.5px;max-width:74ch;margin:0 0 18px}
+  #hybridTab .hybrid-lead code{font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-style:normal;font-size:.85em;background:var(--hyb-paper-2);padding:1px 4px;color:var(--hyb-ink)}
+  #hybridTab .hybrid-empty{border:1px solid var(--hyb-line);background:var(--hyb-fig);padding:32px}
+  #hybridTab .hybrid-empty h3{font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:20px;font-weight:600;margin:0 0 10px}
+  #hybridTab .hybrid-run-status{margin-top:10px;font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:11px;color:var(--hyb-ink-2);min-height:16px}
+  #hybridTab .hybrid-run-status.ok{color:var(--hyb-binary)}
+  #hybridTab .hybrid-run-status.err{color:var(--hyb-bad)}
+  #hybridTab .hybrid-pill{display:inline-flex;align-items:center;gap:6px;font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:11px;color:var(--hyb-ink-2);border:1px solid var(--hyb-line-2);background:var(--hyb-paper-2);padding:4px 10px;margin:0 6px 6px 0}
+  #hybridTab .hybrid-diag-card{border:1px solid var(--hyb-line);background:var(--hyb-fig);display:grid;grid-template-columns:150px 1fr auto;gap:0;align-items:center;margin-bottom:10px;padding:12px 16px}
   #hybridTab .hybrid-diag-card .name{font-size:13px;font-weight:500}
-  #hybridTab .hybrid-diag-card .detail{font-family:monospace;font-size:11.5px;color:#57503f;overflow-wrap:anywhere}
-  #hybridTab .hybrid-diag-card .verdict{font-family:monospace;font-size:11px;letter-spacing:.1em}
-  #hybridTab .hybrid-diag-card.pass .verdict{color:#2e6b5c}
-  #hybridTab .hybrid-diag-card.fail .verdict{color:#a03020}
-  #hybridTab .hybrid-table-note{font-size:11px;color:#8a816c;margin-top:8px;font-family:monospace}
-  #hybridTab .hybrid-tabs{display:flex;gap:4px;border-bottom:1.5px solid #211d17;margin:0 0 24px;flex-wrap:wrap}
-  #hybridTab .hybrid-tab-btn{appearance:none;background:none;border:none;cursor:pointer;font-family:monospace;font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:#8a816c;padding:9px 16px 11px;position:relative;white-space:nowrap}
-  #hybridTab .hybrid-tab-btn::after{content:"";position:absolute;left:16px;right:16px;bottom:-1.5px;height:2.5px;background:#bc4421;transform:scaleX(0);transition:transform .25s ease;transform-origin:left}
-  #hybridTab .hybrid-tab-btn:hover{color:#211d17}
-  #hybridTab .hybrid-tab-btn.active{color:#211d17;font-weight:500}
+  #hybridTab .hybrid-diag-card .detail{font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:11.5px;color:var(--hyb-ink-2);overflow-wrap:anywhere}
+  #hybridTab .hybrid-diag-card .verdict{font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:11px;letter-spacing:.1em}
+  #hybridTab .hybrid-diag-card.pass .verdict{color:var(--hyb-binary)}
+  #hybridTab .hybrid-diag-card.fail .verdict{color:var(--hyb-bad)}
+  #hybridTab .hybrid-table-note{font-size:11px;color:var(--hyb-ink-3);margin-top:8px;font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  #hybridTab .hybrid-tabs{display:flex;gap:4px;border-bottom:1.5px solid var(--hyb-ink);margin:0 0 24px;flex-wrap:wrap}
+  #hybridTab .hybrid-tab-btn{appearance:none;background:none;border:none;cursor:pointer;font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--hyb-ink-3);padding:9px 16px 11px;position:relative;white-space:nowrap}
+  #hybridTab .hybrid-tab-btn::after{content:"";position:absolute;left:16px;right:16px;bottom:-1.5px;height:2.5px;background:var(--hyb-vermilion);transform:scaleX(0);transition:transform .25s ease;transform-origin:left}
+  #hybridTab .hybrid-tab-btn:hover{color:var(--hyb-ink)}
+  #hybridTab .hybrid-tab-btn.active{color:var(--hyb-ink);font-weight:500}
   #hybridTab .hybrid-tab-btn.active::after{transform:scaleX(1)}
   #hybridTab .hybrid-tab-panel{display:none}
   #hybridTab .hybrid-tab-panel.active{display:block;animation:fadeSwap .4s ease}
-  #hybridTab .hybrid-spin{display:inline-block;width:11px;height:11px;border:2px solid #fbf9f4;border-top-color:#211d17;border-radius:50%;animation:hybridSpin .7s linear infinite}
+  #hybridTab .hybrid-spin{display:inline-block;width:11px;height:11px;border:2px solid var(--hyb-fig);border-top-color:var(--hyb-ink);border-radius:50%;animation:hybridSpin .7s linear infinite}
   @keyframes hybridSpin{to{transform:rotate(360deg)}}
   #hybridTab .hybrid-reveal{opacity:0;transform:translateY(10px)}
   #hybridTab .hybrid-reveal.in{opacity:1;transform:none;transition:opacity .55s ease,transform .55s cubic-bezier(.22,.9,.28,1)}

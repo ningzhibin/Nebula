@@ -458,7 +458,7 @@ function refreshImputationAllSamples() {
     for (var t = 0; t < cols; t++) { tickvals.push(t); ticktext.push(headers[t] || ('Sample ' + (t + 1))); }
     var layout = {
         title: 'Per-sample log10 intensity distribution' + (hasImputation ? ' — before vs after imputation' : ''),
-        xaxis: { title: 'log10(intensity)', showgrid: true, gridcolor: '#e8e8e8', zeroline: false },
+        xaxis: { title: 'log10(intensity)', showgrid: true, gridcolor: nebulaFigGrid(), zeroline: false },
         yaxis: { tickmode: 'array', tickvals: tickvals, ticktext: ticktext,
             range: [-0.5, cols + 0.5], showgrid: false, zeroline: false },
         showlegend: true, legend: { orientation: 'h', x: 1, xanchor: 'right', y: 1.02, yanchor: 'bottom' },
@@ -524,11 +524,14 @@ function refreshImputationOverview() {
     var before = imputationApplied && imputationBeforeStats ? imputationBeforeStats : (matrix ? _countMissing(matrix, zeroIsMissing) : null);
     var after = imputationApplied && imputationAfterStats ? imputationAfterStats : (matrix ? _countMissing(matrix, zeroIsMissing) : null);
     var summaryEl = document.getElementById('imputationSummary');
+    var tabsRow = document.querySelector('#tableImputationPanel .data-filter-inner-tabs-row');
     if (!matrix) {
-        host.innerHTML = '<p class="small" style="padding:14px;color:#555;">No data matrix loaded. Use Data Preparation to load a matrix first.</p>';
+        host.innerHTML = '<div class="nebula-empty" style="text-align:left;"><h3>No data to impute yet</h3><p>Fill missing values (Sequential KNN, MinProb, median/mean and more) before downstream analysis.</p><div class="steps"><div class="step"><b>01</b><span>Load a matrix in <b>Data Preparation</b>.</span></div><div class="step"><b>02</b><span>Pick a method and tune parameters in the sidebar.</span></div><div class="step"><b>03</b><span>Click <b>Apply imputation</b>.</span></div></div></div>';
+        if (tabsRow) tabsRow.style.display = 'none';
         if (summaryEl) summaryEl.innerHTML = '';
         return;
     }
+    if (tabsRow) tabsRow.style.display = '';
     var methodLabel = imputationApplied ? imputationAppliedMethod : '(none)';
     var missingBefore = before ? before.missingCells + ' (' + (before.missingFraction * 100).toFixed(1) + '%)' : 'N/A';
     var missingAfter = after ? after.missingCells + ' (' + (after.missingFraction * 100).toFixed(1) + '%)' : 'N/A';

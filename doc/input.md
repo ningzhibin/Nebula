@@ -1,12 +1,12 @@
 ### 2. Data Preparation
 
-The **Data Preparation** tab is where data enters Nebula. It has three columns: the **Data matrix** upload panel, the **Meta table** panel, and a live **preview column** showing the currently loaded matrix and meta table. Everything else in the app (Data PreProcess, Data QC, Clustering, Downstream) works on the matrix and meta table that you load here.
+The **Data Preparation** tab is where data enters Nebula. It has two sub-tabs: **Data Matrix** (upload sidebar + loaded-matrix view) and **Meta Table** (meta upload sidebar + meta editor with Table and Sankey views). Everything else in the app (Data PreProcess, Data QC, Clustering, Downstream) works on the matrix and meta table that you load here.
 
 #### Layout
 
-- Left column - **Data matrix**: example-data buttons, copy & paste, and file upload with a format selector.
-- Middle column - **Meta table**: example metadata, upload/paste of your own meta table.
-- Right column - **Loaded data matrix** and **Loaded meta table**: two live DataTables previews (search, sort, paging, scroll, bar-style numeric cells) that always reflect the current matrix and meta table. They update automatically when you load, paste, upload, or edit data, and re-render when the tab is opened.
+- **Data Matrix** sub-tab - sidebar: example-data buttons, copy & paste, and file upload with a format selector. Main area: the loaded data matrix preview.
+- **Meta Table** sub-tab - sidebar: example metadata, upload/paste of your own meta table. Main area: the meta table editor (editable cells, batch edit, export) with Table and Sankey inner tabs.
+- Both previews are live DataTables views (search, sort, paging, scroll, bar-style numeric cells) that always reflect the current matrix and meta table. They update automatically when you load, paste, upload, or edit data, and re-render when the tab is opened.
 
 #### Try example data
 
@@ -56,7 +56,7 @@ The status line under the file input reports what was loaded: parser, ID column 
 
 - **Load Example Meta Data** - fills the meta table with a small demonstration meta table.
 - **Upload Meta Table** - paste or upload your own meta table (first row = headers, first column = `Sample_ID`). Uploading replaces the auto-generated meta table.
-- Note: the meta table is auto-generated from matrix column names when you load a data matrix; uploading here overrides it. Edit cells later under **Data PreProcess > Meta Table** (see *17. Meta table & Sankey*).
+- Note: the meta table is auto-generated from matrix column names when you load a data matrix; uploading here overrides it. Edit cells in the **Meta Table** sub-tab's Table view (see *18. Meta table & Sankey*).
 
 #### Phospho / total protein paired analysis
 

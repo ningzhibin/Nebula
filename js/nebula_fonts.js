@@ -26,10 +26,10 @@
     global.NebulaFonts = {
         /** Body/figure text stack (e.g. `"IBM Plex Sans", "Segoe UI", system-ui, sans-serif`) */
         body: cssVar('--font-body', '"IBM Plex Sans", "Segoe UI", system-ui, sans-serif'),
-        /** Data/mono stack */
-        mono: cssVar('--font-mono', '"IBM Plex Mono", ui-monospace, "SF Mono", Consolas, monospace'),
+        /** Data/mono role (resolves to the IBM Plex Sans stack — single typeface) */
+        mono: cssVar('--font-mono', '"IBM Plex Sans", "Segoe UI", system-ui, sans-serif'),
         /** Display/heading stack */
-        display: cssVar('--font-display', 'Fraunces, Georgia, "Times New Roman", serif'),
+        display: cssVar('--font-display', '"IBM Plex Sans", "Segoe UI", system-ui, sans-serif'),
         /**
          * Raw CSS custom-property value for a token (e.g. css('--fs-sm') → "12px").
          * Used to bake literal token values into standalone exported HTML.

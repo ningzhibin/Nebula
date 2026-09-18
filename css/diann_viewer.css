@@ -1,0 +1,1235 @@
+/* DIA-NN Result Explorer styles, scoped to #diannExplorerTab - ported from
+   0266_diann-parquet-parser/css/styles.css. All selectors are panel-scoped;
+   do not add unscoped rules here. */
+/* Inter is loaded once for the whole app in index.html; this panel's own
+   JetBrains Mono face is retired so the studio matches the shell typeface. */
+/* DIA-NN Parquet Studio stylesheet - source of truth, edit me. Copied from src/index.css. Linked by index.html as css/styles.css. */
+#diannExplorerTab {
+  /* Light palette = Nebula shell tokens (tracks Warm/Sage/Slate/Contrast). */
+  --bg-primary: var(--md-bg-app);
+  --bg-secondary: var(--md-bg-elevated);
+  --bg-tertiary: var(--md-bg-surface-muted);
+  --bg-sidebar: var(--md-bg-surface);
+  --border-color: var(--md-border);
+  --border-subtle: var(--md-border-subtle);
+
+  --text-primary: var(--md-text-primary);
+  --text-secondary: var(--md-text-secondary);
+  --text-muted: var(--hyb-ink-3);
+
+  --accent-primary: var(--md-accent);
+  --accent-primary-hover: var(--md-accent-hover);
+  --accent-secondary: var(--md-accent-dark);
+  --accent-gradient: linear-gradient(135deg, var(--md-accent) 0%, var(--md-accent-hover) 100%);
+  --accent-glow: rgba(var(--md-accent-rgb), 0.15);
+
+  --badge-bg: var(--md-accent-soft-bg);
+  --badge-text: var(--md-accent-dark);
+  --badge-success-bg: var(--md-ok-soft-bg);
+  --badge-success-text: var(--md-ok-soft-fg);
+
+  --card-bg: var(--md-bg-elevated);
+  --card-border: var(--md-border);
+  --card-shadow: var(--md-elevation-1);
+
+  --table-header-bg: var(--md-bg-surface-muted);
+  --table-row-hover: var(--md-bg-surface-muted);
+  --table-row-selected: var(--md-accent-soft-bg);
+  --table-row-stripe: var(--md-bg-surface);
+  --table-border: var(--md-border);
+
+  --scroll-thumb: var(--md-border-strong);
+}
+#diannExplorerTab[data-theme="dark"] {
+  /* Dark Theme Palette (Sleek Obsidian / Deep Midnight) */
+  --bg-primary: #090d16;
+  --bg-secondary: #101726;
+  --bg-tertiary: #161f33;
+  --bg-sidebar: #0d1322;
+  --border-color: #1e293b;
+  --border-subtle: #172033;
+  
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  
+  --accent-primary: #6366f1;
+  --accent-primary-hover: #818cf8;
+  --accent-secondary: #38bdf8;
+  --accent-gradient: linear-gradient(135deg, #6366f1 0%, #38bdf8 100%);
+  --accent-glow: rgba(99, 102, 241, 0.25);
+
+  --badge-bg: rgba(99, 102, 241, 0.18);
+  --badge-text: #a5b4fc;
+  --badge-success-bg: rgba(16, 185, 129, 0.18);
+  --badge-success-text: #6ee7b7;
+  
+  --card-bg: rgba(16, 23, 38, 0.8);
+  --card-border: rgba(255, 255, 255, 0.07);
+  --card-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+
+  --table-header-bg: #0f172a;
+  --table-row-hover: #1e293b;
+  --table-row-selected: rgba(99, 102, 241, 0.22);
+  --table-row-stripe: #0c1220;
+  --table-border: #1e293b;
+
+  --scroll-thumb: #334155;
+}
+#diannExplorerTab * {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+/* Page-level layout from the standalone studio retargeted to the inner host:
+   the outer #diannExplorerTab panel itself must stay under Nebula's
+   .tab-content show/hide rules (an ID selector here would outrank them and the
+   panel would leak onto every tab). */
+#diannExplorerTab .diann-explorer-host {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+#diannExplorerTab .diann-explorer-host {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  height: 100vh;
+  max-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+/* App Header */
+#diannExplorerTab .app-header {
+  height: 60px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  z-index: 20;
+  backdrop-filter: blur(12px);
+  flex-shrink: 0;
+}
+#diannExplorerTab .brand-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+#diannExplorerTab .brand-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--accent-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 0 15px var(--accent-glow);
+}
+#diannExplorerTab .brand-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+#diannExplorerTab .brand-subtitle {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-left: 6px;
+  font-weight: 500;
+}
+#diannExplorerTab .header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+/* Theme Toggle Button */
+#diannExplorerTab .theme-btn {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+#diannExplorerTab .theme-btn:hover {
+  background: var(--table-row-hover);
+  border-color: var(--accent-primary);
+}
+/* App Container Layout */
+#diannExplorerTab .app-container {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  height: calc(100vh - 60px);
+  max-height: calc(100vh - 60px);
+  overflow: hidden;
+}
+/* Sidebar Styles */
+#diannExplorerTab .sidebar {
+  width: 330px;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  overflow-y: auto;
+  user-select: none;
+}
+/* Filter panels inside the Summary tab */
+#diannExplorerTab .filter-panels {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  flex-shrink: 0;
+}
+#diannExplorerTab .filter-panels .sidebar-section {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  user-select: none;
+}
+/* Summary tab inner sidebar layout */
+#diannExplorerTab .summary-body {
+  display: flex;
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+#diannExplorerTab .summary-sidebar {
+  width: 300px;
+  flex-shrink: 0;
+  min-height: 0;
+  overflow-y: auto;
+}
+#diannExplorerTab .summary-main {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+#diannExplorerTab #diann-summary-tab .kpi-banner, #diannExplorerTab #diann-summary-tab h4 {
+  flex-shrink: 0;
+}
+@media (max-width: 1100px) {#diannExplorerTab .summary-body {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+#diannExplorerTab .summary-sidebar {
+    width: 100%;
+    overflow: visible;
+  }}
+#diannExplorerTab .sidebar-section {
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+#diannExplorerTab .sidebar-section-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+/* File Upload Box */
+#diannExplorerTab .file-upload-box {
+  border: 2px dashed var(--border-color);
+  border-radius: 10px;
+  padding: 16px;
+  text-align: center;
+  background: var(--bg-tertiary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+#diannExplorerTab .file-upload-box:hover, #diannExplorerTab .file-upload-box.drag-over {
+  border-color: var(--accent-primary);
+  background: var(--accent-glow);
+}
+#diannExplorerTab .file-upload-box input[type="file"] {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+#diannExplorerTab .file-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: var(--badge-bg);
+  color: var(--badge-text);
+  margin-top: 8px;
+}
+#diannExplorerTab .file-status-badge.success {
+  background: var(--badge-success-bg);
+  color: var(--badge-success-text);
+}
+/* Form Controls */
+#diannExplorerTab .control-group {
+  margin-bottom: 16px;
+}
+#diannExplorerTab .control-group:last-child {
+  margin-bottom: 0;
+}
+#diannExplorerTab .control-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+#diannExplorerTab .control-val-tag {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: var(--accent-primary);
+  font-weight: 600;
+  background: var(--bg-tertiary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+}
+#diannExplorerTab .range-slider {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--border-color);
+  outline: none;
+  accent-color: var(--accent-primary);
+  cursor: pointer;
+}
+#diannExplorerTab .text-input {
+  width: 100%;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-primary);
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+#diannExplorerTab .text-input:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px var(--accent-glow);
+}
+#diannExplorerTab .select-input {
+  width: 100%;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-primary);
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  outline: none;
+  cursor: pointer;
+}
+#diannExplorerTab .select-input:focus {
+  border-color: var(--accent-primary);
+}
+#diannExplorerTab .toggle-switch-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+}
+#diannExplorerTab .btn-secondary {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 7px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+#diannExplorerTab .btn-secondary:hover {
+  background: var(--table-row-hover);
+  color: var(--text-primary);
+}
+#diannExplorerTab .btn-primary {
+  background: var(--accent-primary);
+  border: none;
+  color: #ffffff;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background-color 0.2s;
+}
+#diannExplorerTab .btn-primary:hover {
+  background: var(--accent-primary-hover);
+}
+/* Main Area */
+#diannExplorerTab .main-content {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg-primary);
+}
+/* KPI Banner */
+#diannExplorerTab .kpi-banner {
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+  overflow-x: auto;
+}
+#diannExplorerTab #diann-summary-tab .kpi-banner {
+  background: transparent;
+  border-bottom: none;
+  padding: 0 0 8px 0;
+}
+#diannExplorerTab .kpi-card {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 8px 16px;
+  min-width: 140px;
+  display: flex;
+  flex-direction: column;}
+#diannExplorerTab .kpi-card-title {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+#diannExplorerTab .kpi-card-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  margin-top: 2px;
+}
+/* Tabs Bar */
+#diannExplorerTab .tabs-bar {
+  padding: 0 24px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+#diannExplorerTab .tab-buttons {
+  display: flex;
+  gap: 4px;
+}
+#diannExplorerTab .diann-tab-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 14px 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+#diannExplorerTab .diann-tab-btn:hover {
+  color: var(--text-primary);
+}
+#diannExplorerTab .diann-tab-btn.active {
+  color: var(--accent-primary);
+  border-bottom-color: var(--accent-primary);
+}
+#diannExplorerTab .tab-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+/* Tab Content */
+#diannExplorerTab .diann-tab-content {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 16px 24px;
+}
+#diannExplorerTab .diann-tab-content.active {
+  display: flex;
+}
+/* Data Matrix Explorer sub-navigation */
+#diannExplorerTab .matrix-subnav {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+#diannExplorerTab .diann-subtab-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 10px 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+#diannExplorerTab .diann-subtab-btn:hover {
+  color: var(--text-primary);
+}
+#diannExplorerTab .diann-subtab-btn.active {
+  color: var(--accent-primary);
+  border-bottom-color: var(--accent-primary);
+}
+#diannExplorerTab .diann-matrix-panel {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+}
+#diannExplorerTab .diann-matrix-panel.active {
+  display: flex;
+}
+/* Table Controls Bar */
+#diannExplorerTab .table-controls-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  gap: 12px;
+  flex-shrink: 0;
+}
+#diannExplorerTab .search-box-wrapper {
+  position: relative;
+  width: 320px;
+}
+#diannExplorerTab .selected-protein-badge {
+  background: var(--accent-glow);
+  border: 1px solid var(--accent-primary);
+  border-radius: 8px;
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85rem;
+}
+/* Data Table Container */
+#diannExplorerTab .table-container {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow-x: auto;
+  overflow-y: auto;
+  border: 1px solid var(--table-border);
+  border-radius: 10px;
+  background: var(--bg-secondary);
+  position: relative;
+  -webkit-overflow-scrolling: touch;
+}
+#diannExplorerTab .data-table {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+#diannExplorerTab .data-table th {
+  position: sticky;
+  top: 0;
+  background: var(--table-header-bg);
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 10px 14px;
+  border-bottom: 2px solid var(--table-border);
+  z-index: 10;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.15s;
+}
+#diannExplorerTab .data-table th:hover {
+  color: var(--text-primary);
+}
+#diannExplorerTab .data-table th.sorted-asc::after {
+  content: ' ▲';
+  color: var(--accent-primary);
+}
+#diannExplorerTab .data-table th.sorted-desc::after {
+  content: ' ▼';
+  color: var(--accent-primary);
+}
+#diannExplorerTab .data-table td {
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+}
+#diannExplorerTab .data-table tr {
+  transition: background-color 0.12s;
+}
+#diannExplorerTab .data-table tbody tr:nth-child(even) {
+  background: var(--table-row-stripe);
+}
+#diannExplorerTab .data-table tbody tr:hover {
+  background: var(--table-row-hover);
+  cursor: pointer;
+}
+#diannExplorerTab .data-table tr.selected {
+  background: var(--table-row-selected) !important;
+  font-weight: 600;
+}
+#diannExplorerTab .data-table tr.total-row {
+  font-weight: 700;
+  background: var(--table-header-bg);
+}
+/* Sequence and number cells: shell typeface, with tabular figures so digit
+   columns stay aligned without a second font family. */
+#diannExplorerTab .mono-cell,
+#diannExplorerTab .intensity-cell,
+#diannExplorerTab .kpi-card-value,
+#diannExplorerTab .control-val-tag,
+#diannExplorerTab .xic-tick,
+#diannExplorerTab .frag-num,
+#diannExplorerTab .frag-lab {
+  font-variant-numeric: tabular-nums;
+}
+#diannExplorerTab .mono-cell {
+  font-family: var(--font-body);
+}
+/* Numeric sample intensity cell with mini progress bar */
+#diannExplorerTab .intensity-cell {
+  position: relative;
+  text-align: right;
+  font-family: var(--font-body);
+  padding: 9px 18px;
+}
+#diannExplorerTab .intensity-bar-bg {
+  position: absolute;
+  left: 8px;
+  top: 15%;
+  bottom: 15%;
+  max-width: calc(100% - 16px);
+  background: var(--accent-glow);
+  border-radius: 3px;
+  z-index: 1;
+  pointer-events: none;
+}
+#diannExplorerTab .intensity-val {
+  position: relative;
+  z-index: 2;
+}
+/* In-cell sparkline: per-row relative sample profile */
+#diannExplorerTab .spark-cell {
+  text-align: center;
+  white-space: nowrap;
+  min-width: 100px;
+}
+#diannExplorerTab .spark-svg {
+  display: inline-block;
+  vertical-align: middle;
+}
+#diannExplorerTab .spark-svg rect {
+  fill: var(--accent-primary);
+  opacity: 0.85;
+}
+#diannExplorerTab .spark-svg rect:hover {
+  opacity: 1;
+}
+#diannExplorerTab .spark-svg rect.spark-missing {
+  fill: var(--text-muted);
+  opacity: 0.35;
+}
+/* Sequence coverage tab */
+#diannExplorerTab .cov-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 20px;
+  margin-bottom: 8px;
+}
+#diannExplorerTab .cov-prot-label {
+  font-size: 1rem;
+}
+#diannExplorerTab .cov-stats {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+#diannExplorerTab .cov-legend {
+  display: flex;
+  gap: 16px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+#diannExplorerTab .cov-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+#diannExplorerTab .cov-swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+}
+#diannExplorerTab .cov-swatch.cov-covered {
+  background: var(--accent-primary);
+  border-color: transparent;
+}
+#diannExplorerTab .cov-sequence {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  line-height: 1.7;
+  word-break: break-all;
+  white-space: pre-wrap;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px 14px;
+  max-height: 320px;
+  overflow-y: auto;
+  margin: 0 0 4px 0;
+}
+#diannExplorerTab .cov-pos {
+  display: inline-block;
+  width: 52px;
+  color: var(--text-muted);
+  user-select: none;
+}
+#diannExplorerTab .cov-sequence .cov-covered {
+  background: color-mix(in srgb, var(--accent-primary) 30%, transparent);
+  color: var(--text-primary);
+  font-weight: 600;
+  border-radius: 3px;
+}
+#diannExplorerTab[data-theme="dark"] .cov-sequence .cov-covered, #diannExplorerTab .dark .cov-sequence .cov-covered {
+  background: rgba(245, 158, 11, 0.4);
+}
+#diannExplorerTab[data-theme="dark"] .cov-swatch.cov-covered, #diannExplorerTab .dark .cov-swatch.cov-covered {
+  background: rgba(245, 158, 11, 0.75);
+}
+#diannExplorerTab .cov-sequence .cov-selected {
+  background: #16a34a;
+  color: #fff;
+  font-weight: 700;
+  border-radius: 3px;
+}
+/* XIC fragmentation map */
+#diannExplorerTab .xic-fragmap {
+  overflow-x: auto;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 6px 10px 2px 10px;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+#diannExplorerTab .xic-fragmap svg {
+  display: block;
+}
+#diannExplorerTab .frag-aa {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  fill: var(--text-primary);
+}
+#diannExplorerTab .frag-num {
+  font-family: var(--font-body);
+  font-size: 9px;
+  fill: var(--text-muted);
+}
+#diannExplorerTab .frag-guide {
+  stroke: var(--border-color);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+#diannExplorerTab .frag-lab {
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 700;
+}
+#diannExplorerTab .xic-panel {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 4px 8px 2px 8px;
+}
+#diannExplorerTab .xic-panel-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#diannExplorerTab .xic-panel-empty {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  padding: 24px 0;
+  text-align: center;
+}
+#diannExplorerTab .xic-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+#diannExplorerTab .xic-plot {
+  height: 260px;
+}
+/* Spectra Explorer tab */
+#diannExplorerTab .explorer-grid {
+  display: flex;
+  gap: 0;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+#diannExplorerTab .explorer-col {
+  display: flex;
+  flex-direction: column;
+  flex: none;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+#diannExplorerTab .xcol-handle {
+  flex: none;
+  width: 9px;
+  margin: 0 3px;
+  cursor: col-resize;
+  border-radius: 4px;
+  touch-action: none;
+  user-select: none;
+}
+#diannExplorerTab .xcol-handle:hover, #diannExplorerTab .xcol-handle.dragging {
+  background: var(--accent-glow);
+}
+#diannExplorerTab .explorer-col-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+  flex-shrink: 0;
+}
+#diannExplorerTab .explorer-count {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-align: right;
+  margin-bottom: 2px;
+  flex-shrink: 0;
+}
+#diannExplorerTab .explorer-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-secondary);
+  padding: 2px;
+}
+#diannExplorerTab .explorer-row {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  padding: 3px 8px;
+  border-radius: 5px;
+  cursor: pointer;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+#diannExplorerTab .xrow-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#diannExplorerTab .xrow-spark {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+}
+#diannExplorerTab .xrow-spark .spark-svg {
+  height: 18px;
+  width: auto;
+}
+#diannExplorerTab .explorer-row:hover {
+  background: var(--table-row-hover);
+}
+#diannExplorerTab .explorer-row.selected {
+  background: var(--table-row-selected);
+  font-weight: 700;
+}
+#diannExplorerTab .gene-filter-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--accent-primary);
+  background: var(--accent-glow);
+  border-radius: 5px;
+  padding: 2px 8px;
+  margin-bottom: 4px;
+  cursor: pointer;
+  display: inline-block;
+}
+#diannExplorerTab .data-table tbody tr.linked td:first-child {
+  box-shadow: inset 3px 0 var(--accent-primary);
+}
+#diannExplorerTab .explorer-prompt {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  padding: 12px 8px;
+}
+#diannExplorerTab .explorer-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+#diannExplorerTab .explorer-main .xic-fragmap {
+  flex-shrink: 0;
+}
+#diannExplorerTab .explorer-plot {
+  height: 420px;
+  flex-shrink: 0;
+}
+#diannExplorerTab #explorerPlot.xic-grid-panels {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  gap: 12px;
+  height: auto;
+  align-content: start;
+}
+#diannExplorerTab .explorer-toggles {
+  display: flex;
+  gap: 16px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  padding: 8px 2px;
+  flex-shrink: 0;
+}
+#diannExplorerTab .explorer-toggles label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+}
+#diannExplorerTab .explorer-toggles input {
+  accent-color: var(--accent-primary);
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+}
+#diannExplorerTab .btn-secondary.active {
+  background: var(--accent-primary);
+  color: #fff;
+  border-color: transparent;
+}
+@media (max-width: 1100px) {#diannExplorerTab .explorer-grid {
+    flex-wrap: wrap;
+    overflow-y: auto;
+  }
+#diannExplorerTab .explorer-col {
+    flex: 1 1 40%;
+  }
+#diannExplorerTab .xcol-handle {
+    display: none;
+  }
+#diannExplorerTab .explorer-main {
+    flex: 1 1 100%;
+  }}
+/* Plotly modebar follows app theme (specificity matches Plotly bundle) */
+#diannExplorerTab .js-plotly-plot .plotly .modebar {
+  background: var(--bg-tertiary) !important;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+}
+#diannExplorerTab .js-plotly-plot .plotly .modebar .modebar-group {
+  background: transparent !important;
+}
+#diannExplorerTab .js-plotly-plot .plotly .modebar .modebar-btn path {
+  fill: var(--text-secondary) !important;
+}
+#diannExplorerTab .js-plotly-plot .plotly .modebar .modebar-btn:hover path, #diannExplorerTab .js-plotly-plot .plotly .modebar .modebar-btn.active path {
+  fill: var(--accent-primary) !important;
+}
+#diannExplorerTab .js-plotly-plot .plotly .modebar .modebar-btn:hover {
+  background: var(--accent-glow) !important;
+}
+#diannExplorerTab .xic-axis {
+  stroke: var(--border-color);
+  stroke-width: 1;
+}
+#diannExplorerTab .xic-tick {
+  font-size: 9px;
+  fill: var(--text-muted);
+  font-family: var(--font-body);
+}
+#diannExplorerTab .xic-title {
+  font-size: 12px;
+  font-weight: 700;
+  fill: var(--text-primary);
+}
+#diannExplorerTab .xic-apex {
+  fill: var(--accent-primary);
+  stroke: var(--bg-secondary);
+  stroke-width: 1;
+}
+#diannExplorerTab .cov-view-title {
+  margin: 4px 0 6px 0;
+  font-size: 0.9rem;
+}
+#diannExplorerTab .cov-views {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  flex-shrink: 0;
+}
+#diannExplorerTab .cov-view {
+  min-width: 0;
+}
+@media (max-width: 900px) {#diannExplorerTab .cov-views {
+    grid-template-columns: 1fr;
+  }}
+#diannExplorerTab .cov-gradient {
+  display: inline-block;
+  width: 140px;
+  height: 12px;
+  border-radius: 3px;
+  background: linear-gradient(to right, transparent, var(--accent-primary));
+  border: 1px solid var(--border-color);
+}
+#diannExplorerTab #covRunPanels {
+  flex: 1;
+  min-height: 200px;
+  overflow-y: auto;
+}
+#diannExplorerTab .cov-run-block {
+  margin-bottom: 14px;
+}
+#diannExplorerTab .cov-run-block:last-child {
+  margin-bottom: 0;
+}
+#diannExplorerTab #covDetail {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+#diannExplorerTab #spectra-panel, #diannExplorerTab #coverage-panel {
+  flex-direction: column;
+  overflow-y: auto;
+}
+#diannExplorerTab #covDetailEmpty {
+  flex: 1;
+}
+/* Table Pagination Bar */
+#diannExplorerTab .pagination-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0 0 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+#diannExplorerTab .pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+#diannExplorerTab .page-btn {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+#diannExplorerTab .page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+/* Charts Grid */
+#diannExplorerTab .charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  height: 100%;
+}
+#diannExplorerTab .chart-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: var(--card-shadow);
+  display: flex;
+  flex-direction: column;
+}
+#diannExplorerTab .chart-canvas {
+  width: 100%;
+  flex: 1;
+}
+/* Empty State */
+#diannExplorerTab .empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+  text-align: center;
+}
+#diannExplorerTab .empty-state-icon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+  opacity: 0.6;
+}
+/* Toast Notifications */
+#diannExplorerTab .toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+#diannExplorerTab .toast {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 12px 18px;
+  border-radius: 8px;
+  box-shadow: var(--card-shadow);
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: diann-slide-in 0.25s ease forwards;
+  pointer-events: auto;
+}
+/* File-load progress in the Summary Data Source section. */
+#diannExplorerTab .diann-load-progress { margin-top: 8px; }
+#diannExplorerTab .diann-load-progress-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
+#diannExplorerTab .diann-progress-track { height: 8px; border-radius: 4px; background: var(--bg-tertiary); border: 1px solid var(--border-color); overflow: hidden; }
+#diannExplorerTab .diann-progress-fill { height: 100%; width: 0%; background: var(--accent-primary); border-radius: 4px; transition: width 0.15s linear; }
+#diannExplorerTab .diann-progress-fill.indeterminate { width: 40%; animation: diann-progress-slide 1.1s ease-in-out infinite; }
+@keyframes diann-progress-slide {
+  0% { margin-left: -40%; }
+  100% { margin-left: 100%; }
+}
+@keyframes diann-slide-in {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+/* Custom Scrollbars */
+#diannExplorerTab ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+#diannExplorerTab ::-webkit-scrollbar-track {
+  background: transparent;
+}
+#diannExplorerTab ::-webkit-scrollbar-thumb {
+  background: var(--scroll-thumb);
+  border-radius: 4px;
+}
+/* Compact density overrides: Nebula shell baseline (later in file wins). */
+#diannExplorerTab .app-header { height: 52px; padding: 0 16px; }
+#diannExplorerTab .brand-icon { width: 28px; height: 28px; }
+#diannExplorerTab .brand-title { font-size: 1rem; }
+#diannExplorerTab .tabs-bar { padding: 0 16px; }
+#diannExplorerTab .diann-tab-btn { padding: 8px 14px; font-size: 13px; }
+#diannExplorerTab .diann-tab-content { padding: 12px 16px; }
+#diannExplorerTab .matrix-subnav { margin-bottom: 8px; }
+#diannExplorerTab .diann-subtab-btn { padding: 6px 12px; font-size: 12px; }
+#diannExplorerTab .table-controls-bar { margin-bottom: 8px; }
+#diannExplorerTab .sidebar-section { padding: 12px 14px; }
+#diannExplorerTab .control-group { margin-bottom: 10px; }
+#diannExplorerTab .text-input, #diannExplorerTab .select-input { padding: 5px 10px; font-size: 12px; }
+#diannExplorerTab .btn-primary { padding: 5px 12px; font-size: 12px; }
+#diannExplorerTab .btn-secondary { padding: 4px 10px; font-size: 12px; }
+#diannExplorerTab .kpi-banner { padding: 10px 16px; gap: 12px; }
+#diannExplorerTab .kpi-card { padding: 6px 12px; min-width: 120px; }
+#diannExplorerTab .kpi-card-value { font-size: 1.1rem; }
+#diannExplorerTab .data-table { font-size: 12px; }
+#diannExplorerTab .data-table th { padding: 5px 10px; font-size: 11px; }
+#diannExplorerTab .data-table td { padding: 4px 10px; }
+#diannExplorerTab .intensity-cell { padding: 4px 10px; }
+#diannExplorerTab .pagination-bar { padding: 8px 0 0 0; font-size: 12px; }
+#diannExplorerTab .page-btn { padding: 4px 8px; font-size: 12px; }
+#diannExplorerTab .chart-card { padding: 12px; }
+#diannExplorerTab .empty-state { padding: 40px 20px; }
+#diannExplorerTab .empty-state-icon { font-size: 2rem; margin-bottom: 12px; }
+#diannExplorerTab .toast { padding: 10px 14px; font-size: 12px; }
+/* Native form controls keep a UA font-family (Arial) instead of inheriting, so
+   make them inherit the shell face and leave no non-Inter stack in the panel. */
+#diannExplorerTab input,
+#diannExplorerTab select,
+#diannExplorerTab textarea,
+#diannExplorerTab button {
+  font-family: inherit;
+}

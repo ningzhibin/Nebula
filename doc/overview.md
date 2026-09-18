@@ -11,9 +11,9 @@
 
 #### The main tabs
 
-- **Data preparation** - load/upload the intensity matrix and meta table, try the built-in examples, and manage session snapshots. See *2. Data Preparation*.
+- **Data preparation** - load/upload the intensity matrix and meta table, edit the meta table (Table + Sankey views), try the built-in examples, and manage session snapshots. See *2. Data Preparation*.
 - **Data QC** - Overall dashboard, Row profile, Column profile, Column correlation, and UpSet/Venn/K-map. See sections *6-10*.
-- **Data preprocess** - Data Filter (row/column), Imputation, Batch Effect, Name mapping, and the Meta table (with its Sankey view). See sections *11-17*.
+- **Data preprocess** - Data Filter (row/column), Imputation, Batch Effect, and Name mapping. See sections *11-17*.
 - **Clustering** - Heatmap, Clustergrammer, PCA, PCoA, t-SNE, and K-means. See *18. Clustering*.
 - **Downstream** - Differential analysis, SAINT, and Enrichr. See sections *19-21*.
 - **Report** - assemble figures into a preview and a self-contained HTML report. See *22. Report export*.
@@ -24,6 +24,7 @@
 - **Coffee icon** - optional donation link (PayPal).
 - **Download icon** - opens the **Session snapshot** dialog (export/import JSON or `qc_session.js`; see *2. Data Preparation*).
 - **Version number** - the app version.
+- **Color theme** - `Warm` / `Sage` / `Slate` / `Contrast` / **`Dark`**: the Dark option re-skins the whole app (Obsidian family) including figure canvases; regenerate a figure after switching themes to restyle it. Saved reports stay light by design.
 - **?** - opens this Documentation (the Document tab).
 - **+/-** - toggles the **Analysis Status** log panel (recent analysis messages).
 
