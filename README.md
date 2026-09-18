@@ -110,7 +110,7 @@ pathway enrichment → export.
   and per-sample intensity annotation.
 - **GSEA** — preranked enrichment (Subramanian 2005) with the full human **MSigDB v2026.1**
   collection tree plus custom `.gmt` upload, leading-edge analysis and the official 3-panel plot.
-- **GSVA** — single-sample pathway scoring (`gsva`, `ssgsea`, `plage`, `zscore`).
+- **GSVA** — feature aggrigation onto geneset level for downstream analysis (`gsva`, `ssgsea`, `plage`, `zscore`).
 
 ### 6 · Reporting & sessions
 
