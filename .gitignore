@@ -1,1 +1,7 @@
 node_modules/
+
+# Raw MSigDB source download (build-time input only, ~98 MB). The app loads the
+# converted collections from js/msigdb/*.js and never reads this folder. It also
+# contains KEGG Legacy / KEGG Medicus / BioCarta sets, which are NOT covered by
+# MSigDB's CC-BY grant and must not be redistributed.
+MSigDB/

@@ -8,6 +8,10 @@
 
 No install. No build step. No backend. Your data never leaves your machine.
 
+![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)
+![No build step](https://img.shields.io/badge/build-none-informational)
+![Client-side only](https://img.shields.io/badge/data-stays%20local-success)
+
 </div>
 
 ---
@@ -110,7 +114,7 @@ pathway enrichment → export.
   and per-sample intensity annotation.
 - **GSEA** — preranked enrichment (Subramanian 2005) with the full human **MSigDB v2026.1**
   collection tree plus custom `.gmt` upload, leading-edge analysis and the official 3-panel plot.
-- **GSVA** — feature aggrigation onto geneset level for downstream analysis (`gsva`, `ssgsea`, `plage`, `zscore`).
+- **GSVA** — single-sample pathway scoring (`gsva`, `ssgsea`, `plage`, `zscore`).
 
 ### 6 · Reporting & sessions
 
@@ -284,15 +288,15 @@ Kim et al. 2004 for SeqKNN; Hänzelmann et al. 2013 for GSVA).
 
 ## Licence
 
-> **Not yet specified.** This repository has no `LICENSE` file.
+Nebula is **free and open-source software**, released under the **MIT License** — see
+[`LICENSE`](LICENSE). You may use, modify, and redistribute it freely, including commercially.
 
-Before publishing, add one. Two things worth deciding first:
-
-- **UpSet.js is AGPL-3.0.** It is loaded from a CDN at runtime rather than vendored, but its
-  licence is worth reviewing for how you intend to distribute the project.
-- **MSigDB collections are CC-BY-4.0**, which requires attribution (already credited above).
-
-If you want a permissive default, MIT or Apache-2.0 are the usual choices for a project like this.
+Third-party components keep their own licences. [`NOTICE.md`](NOTICE.md) lists every bundled
+and runtime dependency with its licence, and records the attribution required for the bundled
+**MSigDB** gene sets (CC-BY 4.0, © Broad Institute). It also explains the one **AGPL-3.0**
+dependency (UpSet.js): Nebula uses it under the AGPL open-source grant, which is all a
+non-commercial open-source project needs — the note there is only relevant if you go on to
+redistribute Nebula commercially.
 
 ---
 
