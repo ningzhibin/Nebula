@@ -6,7 +6,7 @@
 
 **Browser-based QC, statistics and visualisation for omics intensity matrices.**
 
-No install. No build step. No backend. Your data never leaves your machine.
+No install. No build step. No backend(server). Your data never leaves your machine.
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)
 ![No build step](https://img.shields.io/badge/build-none-informational)
@@ -16,7 +16,7 @@ No install. No build step. No backend. Your data never leaves your machine.
 
 ---
 
-Nebula is a single-page web application for quality control and exploration of quantitative
+Nebula is a single-page vanila web application for quality control and exploration of quantitative
 omics data — built with proteomics in mind (DIA-NN, MaxQuant) but format-agnostic: any
 features × samples intensity matrix works.
 
@@ -37,8 +37,8 @@ pathway enrichment → export.
 - **Built for real matrices** — heavy work runs in Web Workers with chunked, yielding preprocessing, so tens of thousands of features × hundreds of samples stay interactive.
 - **End-to-end, not a one-trick tool** — filtering, imputation, batch correction, clustering, differential testing and enrichment share one data pipeline, so each step feeds the next.
 - **Interactive, publication-ready figures** — Plotly and D3 charts that zoom, pan, hover and export; figures can be added to a self-contained HTML report.
-- **Reproducible sessions** — export the full session (matrix, metadata, settings, results) and reload it later, or bundle it as an auto-loading report.
-- **One consistent design system** — a single typeface, type scale and token-based palette across every tab and tool, with five colour themes.
+- **Reproducible sessions** — export the full session (matrix, metadata, settings, results) and reload it later, or bundle it as an auto-loading report. keep a copy for your repropducibibility purose. 
+- **Hybrid differntial analysis**, calculate p values both quantitvatively and qualitatively and use one fdr for filtering. 
 
 ---
 
@@ -137,21 +137,26 @@ pathway enrichment → export.
 
 ## Quick start
 
+### simply open and use it via this link: https://ningzhibin.github.io/Nebula/
+
+### or clone the files to your local drive
+
+downloawd the latest release manually: https://github.com/ningzhibin/Nebula/releases
+
+or by git:
+
 ```bash
-git clone https://github.com/<your-username>/<your-repo>.git
-cd <your-repo>
+git clone https://github.com/ningzhibin/Nebula/.git
+cd nebula
 
 # any static server works — Python is just the simplest
 python -m http.server 8123
 ```
 
-Then open **http://127.0.0.1:8123/index.html**
+Then open **http://127.0.0.1:8123/index.html*
 
-### Why a server (and not just double-clicking the file)?
+Or double click the index.html
 
-Opening `index.html` directly as `file://` blocks `fetch()`, which several features rely on
-(in-app documentation, MyGene name mapping, Enrichr). The core application still boots, but
-serving over `http://` is recommended.
 
 Useful URL flags:
 
