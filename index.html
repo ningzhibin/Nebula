@@ -72,25 +72,25 @@
     <script src="https://cdn.jsdelivr.net/npm/umap-js@1.4.0/lib/umap-js.min.js"></script>
     <!-- Clustergrammer deps (incl. Bootstrap 3) are lazy-loaded; see css/clustergrammer_bootstrap_restore.css appended after those sheets -->
     <!-- Cache-busting: local css/js includes carry ?v=<app version>. On each release, bump the
-         version everywhere with a project-wide replace of "?v=0.699" -> new version (keep it in
+         version everywhere with a project-wide replace of "?v=0.703" -> new version (keep it in
          sync with the appVersion span near the header) so browsers fetch fresh assets. -->
-    <link rel="stylesheet" href="css/main.css?v=0.699">
-    <link rel="stylesheet" href="css/diann_viewer.css?v=0.699">
+    <link rel="stylesheet" href="css/main.css?v=0.703">
+    <link rel="stylesheet" href="css/diann_viewer.css?v=0.703">
     <script>
         try { document.documentElement.setAttribute('data-theme', localStorage.getItem('nebulaTheme') || 'warm'); } catch (e) {}
     </script>
     <!-- Worker source files — loaded as regular scripts (file:// compatible) -->
-    <script src="js/clustering.worker.js?v=0.699"></script>
-    <script src="js/pca.worker.js?v=0.699"></script>
-    <script src="js/tsne.worker.js?v=0.699"></script>
-    <script src="js/kmeans.worker.js?v=0.699"></script>
-    <script src="js/gsea.worker.js?v=0.699"></script>
-    <script src="js/data_qc_overall_dashboard.js?v=0.699"></script>
-    <script src="js/pca3d_report_embed.js?v=0.699"></script>
+    <script src="js/clustering.worker.js?v=0.703"></script>
+    <script src="js/pca.worker.js?v=0.703"></script>
+    <script src="js/tsne.worker.js?v=0.703"></script>
+    <script src="js/kmeans.worker.js?v=0.703"></script>
+    <script src="js/gsea.worker.js?v=0.703"></script>
+    <script src="js/data_qc_overall_dashboard.js?v=0.703"></script>
+    <script src="js/pca3d_report_embed.js?v=0.703"></script>
     <script>
         (function () {
             if (typeof location !== 'undefined' && location.protocol === 'file:') return;
-            var url = 'js/pca3d_report_embed.js?v=0.699';
+            var url = 'js/pca3d_report_embed.js?v=0.703';
             try {
                 var xhr = new XMLHttpRequest();
                 xhr.open('GET', url, false);
@@ -106,10 +106,10 @@
             }
         })();
     </script>
-    <script src="js/nebula_report.js?v=0.699"></script>
+    <script src="js/nebula_report.js?v=0.703"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-    <script src="js/phospho_normalization.js?v=0.699"></script>
+    <script src="js/phospho_normalization.js?v=0.703"></script>
 </head>
 <body>
     <!-- Progress Indicator -->
@@ -159,7 +159,7 @@
                     <button type="button" id="dataPrepSessionExportBtn" class="header-icon-btn" onclick="openDataPrepSession()" title="Export session snapshot (JSON / report JS) in a pop-out window" aria-label="Export session snapshot">
                         <svg class="donate-btn-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                     </button>
-                    <span class="app-version" id="appVersion">v0.699</span>
+                    <span class="app-version" id="appVersion">v0.703</span>
                     <select id="nebulaThemeSelect" class="theme-select" onchange="applyNebulaTheme(this.value)" title="Color theme (light family — figure canvases stay white)" aria-label="Color theme">
                         <option value="warm">Warm</option>
                         <option value="sage">Sage</option>
@@ -174,6 +174,9 @@
                         <div id="analysisLogContent" style="max-height: 180px; overflow-y: auto; font-size: 0.85em; line-height: 1.35; color: var(--md-text-secondary);"></div>
                     </div>
                 </div>
+                <button type="button" id="headerToolsBtn" class="header-icon-btn" onclick="toggleHeaderToolsMenu(event)" title="App tools: theme, session export, documentation, analysis status" aria-label="App tools" aria-expanded="false">
+                    <svg class="donate-btn-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+                </button>
             </div>
 
             <!-- Data Preparation Tab: 3 columns — data matrix | meta table | live preview of loaded matrix + meta (session snapshot moved to a pop-out modal) -->
@@ -3828,8 +3831,8 @@
                 </div>
             </div>
             <!-- hybrid UI wiring (needs the DOM above; loads the core first) -->
-            <script src="js/hybrid_core.js?v=0.699"></script>
-            <script src="js/hybrid_tab.js?v=0.699"></script>
+            <script src="js/hybrid_core.js?v=0.703"></script>
+            <script src="js/hybrid_tab.js?v=0.703"></script>
             <script>
             (function(){
                 var map={table:'hybPanelTable',analysis:'hybPanelAnalysis',volcano:'hybPanelVolcano',hybridScatter:'hybPanelHybridScatter',diag:'hybPanelDiag'};
@@ -4355,6 +4358,154 @@
             document.addEventListener('keydown', function (ev) {
                 if (ev.key === 'Escape') closeMoreToolsMenu();
             });
+            /* Mobile header tools menu (<=720px): the right-hand tool cluster collapses into the
+               single #headerToolsBtn and opens as a bottom sheet. Mirrors the More Tools rules. */
+            function toggleHeaderToolsMenu(ev) {
+                if (ev) ev.stopPropagation();
+                var panel = document.querySelector('.header-right');
+                var btn = document.getElementById('headerToolsBtn');
+                if (!panel) return;
+                var open = panel.classList.toggle('open');
+                if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+            }
+            function closeHeaderToolsMenu() {
+                var panel = document.querySelector('.header-right');
+                var btn = document.getElementById('headerToolsBtn');
+                if (!panel) return;
+                panel.classList.remove('open');
+                if (btn) btn.setAttribute('aria-expanded', 'false');
+            }
+            document.addEventListener('click', function (ev) {
+                var panel = document.querySelector('.header-right');
+                var btn = document.getElementById('headerToolsBtn');
+                if (!panel || !panel.classList.contains('open')) return;
+                if (!panel.contains(ev.target) && !(btn && btn.contains(ev.target))) {
+                    closeHeaderToolsMenu();
+                    return;
+                }
+                /* Choosing any tool dismisses the sheet; the analysis-status toggle keeps it
+                   open because its log renders inside the sheet. */
+                if (ev.target.closest && ev.target.closest('#analysisToggleBtn')) return;
+                if (ev.target.closest && ev.target.closest('a, button')) closeHeaderToolsMenu();
+            });
+            document.addEventListener('keydown', function (ev) {
+                if (ev.key === 'Escape') closeHeaderToolsMenu();
+            });
+
+            /* Stage strip on phones: keep the active stage centred, and expose which way the strip
+               can still slide (the can-scroll-* classes drive the fade + chevron in css/main.css).
+               A one-off peek nudge on load shows that the strip slides at all. */
+            (function () {
+                var row = document.querySelector('.tabs-row');
+                var tabs = document.querySelector('.tabs');
+                if (!row || !tabs) return;
+                function syncStrip() {
+                    var maxScroll = tabs.scrollWidth - tabs.clientWidth;
+                    row.classList.toggle('can-scroll-left', tabs.scrollLeft > 1);
+                    row.classList.toggle('can-scroll-right', maxScroll > 1 && tabs.scrollLeft < maxScroll - 1);
+                }
+                function centerActiveTab() {
+                    var tab = tabs.querySelector('.tab.active');
+                    if (!tab || tabs.scrollWidth <= tabs.clientWidth + 1) return;
+                    var t = tab.getBoundingClientRect();
+                    var c = tabs.getBoundingClientRect();
+                    tabs.scrollLeft += (t.left - c.left) - (c.width - t.width) / 2;
+                    syncStrip();
+                }
+                function peekNudge() {
+                    if (tabs.scrollWidth <= tabs.clientWidth + 1) return;
+                    try { if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return; } catch (e) {}
+                    var start = tabs.scrollLeft;
+                    if (tabs.scrollTo) tabs.scrollTo({ left: start + 34, behavior: 'smooth' });
+                    setTimeout(function () {
+                        if (tabs.scrollTo) tabs.scrollTo({ left: start, behavior: 'smooth' });
+                    }, 620);
+                }
+                tabs.addEventListener('scroll', syncStrip, { passive: true });
+                window.addEventListener('resize', syncStrip);
+                new MutationObserver(function (records) {
+                    for (var i = 0; i < records.length; i++) {
+                        var el = records[i].target;
+                        if (el.classList && el.classList.contains('tab') && el.classList.contains('active')) {
+                            centerActiveTab();
+                            return;
+                        }
+                    }
+                }).observe(tabs, { subtree: true, attributes: true, attributeFilter: ['class'] });
+                syncStrip();
+                setTimeout(syncStrip, 400);
+                setTimeout(peekNudge, 900);
+            })();
+
+            /* Small-screen rails: the bar injected here collapses a tall control rail so the main
+               section is not pushed below the fold. The choice is remembered per tab, and rails
+               mounted later (the app mounts panels lazily) are picked up by the observer. */
+            (function () {
+                var STORE_KEY = 'nebulaSidebarCollapsed';
+                function readStore() {
+                    try { return JSON.parse(localStorage.getItem(STORE_KEY) || '{}') || {}; } catch (e) { return {}; }
+                }
+                function writeStore(map) {
+                    try { localStorage.setItem(STORE_KEY, JSON.stringify(map)); } catch (e) {}
+                }
+                function sidebarKey(sb) {
+                    if (sb.id) return sb.id;
+                    var host = sb.closest ? sb.closest('.tab-content') : null;
+                    return (host && host.id) ? host.id : 'default';
+                }
+                function toggleBtnOf(sb) {
+                    for (var c = sb.firstElementChild; c; c = c.nextElementSibling) {
+                        if (c.classList && c.classList.contains('sidebar-collapse-btn')) return c;
+                    }
+                    return null;
+                }
+                function applyState(sb, collapsed) {
+                    sb.classList.toggle('sidebar-collapsed', !!collapsed);
+                    var btn = toggleBtnOf(sb);
+                    if (!btn) return;
+                    btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+                    var text = btn.firstElementChild;
+                    if (text) text.textContent = collapsed ? 'Show controls' : 'Hide controls';
+                }
+                function ensureToggles() {
+                    var rails = document.querySelectorAll('.tab-sidebar:not([data-sb-toggle]), .table-data-sidebar:not([data-sb-toggle])');
+                    if (!rails.length) return;
+                    var stored = readStore();
+                    for (var i = 0; i < rails.length; i++) {
+                        var sb = rails[i];
+                        sb.setAttribute('data-sb-toggle', '1');
+                        var btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'sidebar-collapse-btn';
+                        btn.setAttribute('aria-expanded', 'true');
+                        btn.innerHTML = '<span>Hide controls</span><span class="sidebar-collapse-chevron" aria-hidden="true"></span>';
+                        sb.appendChild(btn);
+                        if (stored[sidebarKey(sb)]) applyState(sb, true);
+                    }
+                }
+                document.addEventListener('click', function (ev) {
+                    var t = ev.target;
+                    var btn = (t && t.closest) ? t.closest('.sidebar-collapse-btn') : null;
+                    if (!btn) return;
+                    var sb = btn.parentNode;
+                    if (!sb || !sb.classList) return;
+                    if (!sb.classList.contains('tab-sidebar') && !sb.classList.contains('table-data-sidebar')) return;
+                    ev.preventDefault();
+                    var collapsed = !sb.classList.contains('sidebar-collapsed');
+                    applyState(sb, collapsed);
+                    var map = readStore();
+                    map[sidebarKey(sb)] = collapsed;
+                    writeStore(map);
+                    /* Figures are drawn with explicit pixel sizes, so nudge the resize listeners */
+                    setTimeout(function () { window.dispatchEvent(new Event('resize')); }, 60);
+                }, true);
+                ensureToggles();
+                var pending = null;
+                new MutationObserver(function () {
+                    if (pending) return;
+                    pending = setTimeout(function () { pending = null; ensureToggles(); }, 250);
+                }).observe(document.body, { childList: true, subtree: true });
+            })();
             /* The DIA-NN Result Explorer follows the Nebula shell theme (no own toggle):
                Nebula Dark -> dark studio, any light theme -> light studio. Runs before the
                tool scripts load and on every theme switch, so the panel is correct on open. */
@@ -4375,7 +4526,7 @@
                     for (var i = 0; i < files.length; i++) {
                         await new Promise(function (resolve, reject) {
                             var s = document.createElement('script');
-                            s.src = 'js/' + files[i] + '?v=0.699';
+                            s.src = 'js/' + files[i] + '?v=0.703';
                             s.onload = resolve;
                             s.onerror = function () { reject(new Error('Failed to load ' + files[i])); };
                             document.head.appendChild(s);
@@ -4453,7 +4604,7 @@
         </div>
     </div>
 
-    <script src="js/scatter_label_optimize.js?v=0.699"></script>
+    <script src="js/scatter_label_optimize.js?v=0.703"></script>
     <script>
         let currentHeatmapSubTab = 'plotly';
         let currentDocumentSection = 'overview';
@@ -17723,7 +17874,7 @@ zmid: 0,
             if (!__batchEffectExampleLoading) {
                 __batchEffectExampleLoading = new Promise((resolve, reject) => {
                     const s = document.createElement('script');
-                    s.src = 'js/example_batch_effect_data.js?v=0.699';
+                    s.src = 'js/example_batch_effect_data.js?v=0.703';
                     s.onload = resolve;
                     s.onerror = () => reject(new Error('Failed to load example_batch_effect_data.js'));
                     document.head.appendChild(s);
@@ -28347,25 +28498,25 @@ function onMatrixFormatChange() {
     <script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script src="doc/docs_bundle.js"></script>
-    <script src="js/doc_viewer.js?v=0.699"></script>
-    <script src="js/heatmap_core.js?v=0.699"></script>
-    <script src="js/table_display.js?v=0.699"></script>
-<script src="js/stats_utils.js?v=0.699"></script>
-<script src="js/moderated_t.js?v=0.699"></script>
-    <script src="js/kmeans_analysis.js?v=0.699"></script>
-    <script src="js/gsea_analysis.js?v=0.699"></script>
-    <script src="js/gsva.worker.js?v=0.699"></script>
-    <script src="js/gsva_analysis.js?v=0.699"></script>
-    <script src="js/figure_popout_buttons.js?v=0.699"></script>
-    <script src="js/feature_name_mapping.js?v=0.699"></script>
-    <script src="js/enrichr_matrix_context.js?v=0.699"></script>
-    <script src="js/enrichr_results_parse.js?v=0.699"></script>
-    <script src="js/enrichr_plots.js?v=0.699"></script>
-    <script src="js/saint_algorithm.js?v=0.699"></script>
-    <script src="js/saint_embed.js?v=0.699"></script>
-    <script src="js/imputation.worker.js?v=0.699"></script>
-    <script src="js/missing_value_imputation.js?v=0.699"></script>
-    <script src="js/batch_effect.js?v=0.699"></script>
+    <script src="js/doc_viewer.js?v=0.703"></script>
+    <script src="js/heatmap_core.js?v=0.703"></script>
+    <script src="js/table_display.js?v=0.703"></script>
+<script src="js/stats_utils.js?v=0.703"></script>
+<script src="js/moderated_t.js?v=0.703"></script>
+    <script src="js/kmeans_analysis.js?v=0.703"></script>
+    <script src="js/gsea_analysis.js?v=0.703"></script>
+    <script src="js/gsva.worker.js?v=0.703"></script>
+    <script src="js/gsva_analysis.js?v=0.703"></script>
+    <script src="js/figure_popout_buttons.js?v=0.703"></script>
+    <script src="js/feature_name_mapping.js?v=0.703"></script>
+    <script src="js/enrichr_matrix_context.js?v=0.703"></script>
+    <script src="js/enrichr_results_parse.js?v=0.703"></script>
+    <script src="js/enrichr_plots.js?v=0.703"></script>
+    <script src="js/saint_algorithm.js?v=0.703"></script>
+    <script src="js/saint_embed.js?v=0.703"></script>
+    <script src="js/imputation.worker.js?v=0.703"></script>
+    <script src="js/missing_value_imputation.js?v=0.703"></script>
+    <script src="js/batch_effect.js?v=0.703"></script>
     <script>
         (function () {
             function tryLoadBundledSessionScript() {

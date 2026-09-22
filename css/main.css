@@ -889,6 +889,14 @@
             height: 16px;
             flex: 0 0 auto;
         }
+        /* Phone-only trigger for the collapsed header tool sheet (shown in the max-width:720px block) */
+        #headerToolsBtn {
+            display: none;
+        }
+        /* Phone-only rail collapse bar (shown in the max-width:720px block) */
+        .sidebar-collapse-btn {
+            display: none;
+        }
         .theme-select {
             flex: 0 0 auto;
             height: 26px;
@@ -5535,6 +5543,291 @@
                 border-right: 0;
                 border-bottom: 1px solid var(--hyb-line);
                 max-height: none;
+            }
+        }
+
+        /* ---- responsive: compact swipeable top nav on small screens ----
+           At <=720px the header used to wrap into one row per stage (~280px tall, ~40%
+           of a phone screen) because `.tabs{flex-wrap:wrap}` was squeezed by the
+           non-shrinking `.app-brand` and `.header-right`. Keep it a single 44px row and
+           let the stages scroll horizontally.
+           `100vh` is the LARGEST mobile viewport (measured with the browser toolbar
+           hidden), so the shell extended behind the browser chrome with no way to scroll
+           to the bottom — pin it to `dvh` (dynamic viewport) instead. */
+        @media (max-width: 720px) {
+            body {
+                min-height: 100vh; /* fallback for browsers without dvh */
+                min-height: 100dvh;
+            }
+            .main-container {
+                height: 100vh; /* fallback */
+                height: 100dvh;
+            }
+            .tabs-row {
+                min-height: 44px;
+            }
+            .app-brand {
+                padding: 4px 2px 4px 10px;
+                gap: 6px;
+            }
+            .app-brand-name {
+                display: none;
+            }
+            .app-version {
+                display: none;
+            }
+            .theme-select {
+                max-width: 84px;
+                font-size: 10px;
+            }
+            /* The right-hand tool cluster collapses into one ellipsis button that opens the whole
+               cluster as a bottom sheet, handing the freed width back to the stage strip. */
+            #headerToolsBtn {
+                display: inline-flex;
+                align-self: center;
+                margin-left: auto;
+                margin-right: 8px;
+            }
+            .header-right {
+                display: none;
+            }
+            .header-right.open {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                position: fixed;
+                left: 10px;
+                right: 10px;
+                bottom: 10px;
+                padding: 12px;
+                background: var(--md-bg-elevated);
+                border: 1px solid var(--hyb-line);
+                border-radius: 10px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.24);
+                z-index: 1200;
+            }
+            .header-right.open .header-icon-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+            .header-right.open .header-icon-btn .donate-btn-icon {
+                width: 20px;
+                height: 20px;
+            }
+            .header-right.open .app-version {
+                display: block;
+                flex: 1 1 100%;
+                padding: 0;
+                text-align: center;
+            }
+            .header-right.open .theme-select {
+                flex: 1 1 100%;
+                max-width: none;
+                height: 36px;
+                font-size: 12px;
+            }
+            .header-right.open .analysis-log-panel {
+                position: static;
+                flex: 1 1 100%;
+                width: auto;
+                max-width: none;
+                margin-top: 0;
+                max-height: 40vh;
+                overflow-y: auto;
+            }
+            /* One swipeable row of stages instead of seven wrapped rows. The 3px bottom
+               padding keeps the active tab's vermilion underline (`.tab::after` at
+               bottom:-2.5px) inside the scroll container so it is not clipped. */
+            .tabs {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                overflow-y: hidden;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                padding: 0 8px 3px;
+                gap: 2px;
+            }
+            .tabs::-webkit-scrollbar {
+                display: none;
+            }
+            .tabs .tab {
+                flex: 0 0 auto;
+                padding: 9px 10px 8px;
+                letter-spacing: 0.08em;
+            }
+            /* Slide affordance: the fade marks the edge the strip can still scroll towards, and a
+               sticky chevron rides the scrollport edge while more strip remains. */
+            .tabs-row.can-scroll-left .tabs {
+                -webkit-mask-image: linear-gradient(to right, transparent 0, #000 30px);
+                mask-image: linear-gradient(to right, transparent 0, #000 30px);
+            }
+            .tabs-row.can-scroll-right .tabs {
+                -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 30px), transparent 100%);
+                mask-image: linear-gradient(to right, #000 calc(100% - 30px), transparent 100%);
+            }
+            .tabs-row.can-scroll-left.can-scroll-right .tabs {
+                -webkit-mask-image: linear-gradient(to right, transparent 0, #000 30px, #000 calc(100% - 30px), transparent 100%);
+                mask-image: linear-gradient(to right, transparent 0, #000 30px, #000 calc(100% - 30px), transparent 100%);
+            }
+            .tabs-row.can-scroll-right .tabs::after {
+                content: '\203A';
+                position: sticky;
+                right: 0;
+                flex: 0 0 auto;
+                align-self: center;
+                padding-left: 2px;
+                font-size: 20px;
+                line-height: 1;
+                color: var(--hyb-ink-3);
+                pointer-events: none;
+            }
+            /* `.tabs` is now a scroll container, which would clip the absolutely
+               positioned More Tools dropdown — float it as a fixed bottom sheet so it
+               escapes the clip (no JS change needed). */
+            .more-tools-menu {
+                position: fixed;
+                top: auto;
+                bottom: 10px;
+                left: 10px;
+                right: 10px;
+                min-width: 0;
+                z-index: 1200;
+            }
+            .more-tools-item {
+                padding: 12px 14px;
+                font-size: 12px;
+            }
+            /* Stacked panels: once `.table-data-workspace` turns into a column the rail and
+               the preview no longer fit the fixed-height shell, and the preview
+               (`overflow:hidden`) was clipped with no way to scroll to it. Let the panel
+               scroll instead and give the preview a usable height.
+               These ID-scoped rails (Data Preparation and Data Preprocess) outrank the
+               `.table-data-sidebar{width:100%}` rule above on specificity, so they have to
+               be restated here or the rail stays 320-520px wide and overflows the phone. */
+            .table-data-workspace {
+                overflow-y: auto;
+            }
+            #dataPrepMatrixPanel > .table-data-sidebar,
+            #dataPrepMetaPanel > .table-data-sidebar,
+            #dataFilterRowSidebar,
+            #dataFilterColumnSidebar {
+                width: 100%;
+                min-width: 0;
+                max-width: 100%;
+            }
+            .table-data-main {
+                min-height: 420px;
+            }
+            /* ---- stacked rails ----
+               Every rail goes full-width above its main section. `.tab-content` covers the plain
+               panels; the ID-scoped rails below must be restated because they outrank
+               `.tab-sidebar` on specificity, and gsea/gsva carry an inline `flex-direction:row`
+               that only `!important` can override. */
+            .tab-content,
+            .column-profile-workspace,
+            .meta-table-workspace {
+                flex-direction: column;
+            }
+            /* Catch-all for the remaining rail containers (data-qc-overall-workspace, saint-sub-panel,
+               the enrichr sub-panels, the anonymous wrapper around #enrichrMainSidebar) and for any
+               added later: whatever directly holds a rail stacks it. Inline `flex-direction` still
+               wins, which is why gsea/gsva below carry `!important`.
+               They also scroll (`overflow-y`) and may be capped (`min-height:0`), because a tall rail
+               plus the main section exceeds the fixed-height shell: without this the panel clipped its
+               own overflow, leaving the results unreachable at every scroll position. The main section
+               needs the floor below or `flex:1` collapses it to 0 height beside a full-height rail. */
+            *:has(> .tab-sidebar),
+            *:has(> .table-data-sidebar) {
+                flex-direction: column;
+                overflow-y: auto;
+                min-height: 0;
+            }
+            /* `!important` because several ID-scoped rules deliberately allow the main section to
+               shrink (`#heatmapTab > .tab-main-content { min-height: 0 }` and friends); beside a
+               stacked full-height rail that permission collapses the results to 0px.
+               A main that itself contains a rail (Data Preparation -> Meta Table) is excluded, so it
+               sizes to its content and the outer container carries one scroller rather than nesting
+               a second one inside it. */
+            *:has(> .tab-sidebar) > .tab-main-content,
+            *:has(> .table-data-sidebar) > .tab-main-content,
+            *:has(> .table-data-sidebar) > .table-data-main:not(:has(.tab-sidebar)) {
+                min-height: 55vh !important;
+            }
+            .tab-sidebar {
+                width: 100%;
+                min-width: 0;
+                max-width: none;
+            }
+            /* Inline `flex: 0 0 320px` rails: in a column that basis would become a fixed HEIGHT */
+            .tab-sidebar[style*="flex: 0 0"] {
+                flex: 0 0 auto;
+            }
+            #heatmapTab.tab-content > .tab-sidebar.heatmap-tab-sidebar,
+            #gseaTab .tab-sidebar,
+            #gsvaTab .tab-sidebar,
+            #diffTab.tab-content > .tab-sidebar.diff-sidebar,
+            #enrichrMainSidebar,
+            #enrichrTab .enrichr-plots-options-sidebar,
+            #enrichrTab .enrichr-heatmap-sidebar,
+            #gseaSidebar,
+            #gsvaSidebar,
+            .column-profile-workspace > .tab-sidebar,
+            #dataPrepMetaPanel .meta-table-workspace > .tab-sidebar {
+                width: 100%;
+                min-width: 0;
+                max-width: none;
+            }
+            #gseaTab,
+            #gsvaTab {
+                flex-direction: column !important;
+            }
+            /* ---- collapsible rail ----
+               The bar is appended to each rail and lifted with `order:-1`, so every existing
+               `:nth-child` rule in this file keeps its target. Collapsed, only the bar shows. */
+            .sidebar-collapse-btn {
+                order: -1;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 8px;
+                width: 100%;
+                margin: 0 0 10px;
+                padding: 9px 12px;
+                border: 1px solid var(--md-border);
+                border-radius: 6px;
+                background: var(--md-bg-elevated);
+                color: var(--md-text-secondary);
+                font-family: var(--font-mono, sans-serif);
+                font-size: 10.5px;
+                font-weight: 600;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                text-align: left;
+                cursor: pointer;
+            }
+            .sidebar-collapse-chevron {
+                width: 0.45em;
+                height: 0.45em;
+                flex: 0 0 auto;
+                border-right: 2px solid currentColor;
+                border-bottom: 2px solid currentColor;
+                transform: rotate(45deg);
+                transition: transform 0.18s ease;
+            }
+            .tab-sidebar.sidebar-collapsed {
+                padding: 6px 8px;
+                max-height: 52px;
+                min-height: 0;
+                overflow: hidden;
+            }
+            .tab-sidebar.sidebar-collapsed > .sidebar-collapse-btn {
+                margin-bottom: 0;
+            }
+            .tab-sidebar.sidebar-collapsed > .sidebar-collapse-btn .sidebar-collapse-chevron {
+                transform: rotate(-45deg);
             }
         }
 
