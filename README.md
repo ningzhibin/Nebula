@@ -307,4 +307,4 @@ redistribute Nebula commercially.
 
 ## Version
 
-Current release: **v0.703** 
+Current release: **v0.707** 

@@ -5684,16 +5684,19 @@
                 color: var(--hyb-ink-3);
                 pointer-events: none;
             }
-            /* `.tabs` is now a scroll container, which would clip the absolutely
-               positioned More Tools dropdown — float it as a fixed bottom sheet so it
-               escapes the clip (no JS change needed). */
+            /* `.tabs` is a scroll container, which would clip an absolutely positioned child, so the
+               menu is re-parented to <body> and anchored under its own button by
+               `placeMoreToolsMenu()`. These values are only the fallback before that runs. */
             .more-tools-menu {
                 position: fixed;
-                top: auto;
-                bottom: 10px;
-                left: 10px;
-                right: 10px;
+                top: 52px;
+                bottom: auto;
+                left: 8px;
+                right: auto;
                 min-width: 0;
+                /* fixed width, not max-width: `placeMoreToolsMenu()` measures this to right-align the
+                   menu with its button, so a wrap-dependent width would move the menu between opens */
+                width: min(300px, calc(100vw - 16px));
                 z-index: 1200;
             }
             .more-tools-item {

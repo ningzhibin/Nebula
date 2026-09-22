@@ -72,25 +72,25 @@
     <script src="https://cdn.jsdelivr.net/npm/umap-js@1.4.0/lib/umap-js.min.js"></script>
     <!-- Clustergrammer deps (incl. Bootstrap 3) are lazy-loaded; see css/clustergrammer_bootstrap_restore.css appended after those sheets -->
     <!-- Cache-busting: local css/js includes carry ?v=<app version>. On each release, bump the
-         version everywhere with a project-wide replace of "?v=0.703" -> new version (keep it in
+         version everywhere with a project-wide replace of "?v=0.707" -> new version (keep it in
          sync with the appVersion span near the header) so browsers fetch fresh assets. -->
-    <link rel="stylesheet" href="css/main.css?v=0.703">
-    <link rel="stylesheet" href="css/diann_viewer.css?v=0.703">
+    <link rel="stylesheet" href="css/main.css?v=0.707">
+    <link rel="stylesheet" href="css/diann_viewer.css?v=0.707">
     <script>
         try { document.documentElement.setAttribute('data-theme', localStorage.getItem('nebulaTheme') || 'warm'); } catch (e) {}
     </script>
     <!-- Worker source files — loaded as regular scripts (file:// compatible) -->
-    <script src="js/clustering.worker.js?v=0.703"></script>
-    <script src="js/pca.worker.js?v=0.703"></script>
-    <script src="js/tsne.worker.js?v=0.703"></script>
-    <script src="js/kmeans.worker.js?v=0.703"></script>
-    <script src="js/gsea.worker.js?v=0.703"></script>
-    <script src="js/data_qc_overall_dashboard.js?v=0.703"></script>
-    <script src="js/pca3d_report_embed.js?v=0.703"></script>
+    <script src="js/clustering.worker.js?v=0.707"></script>
+    <script src="js/pca.worker.js?v=0.707"></script>
+    <script src="js/tsne.worker.js?v=0.707"></script>
+    <script src="js/kmeans.worker.js?v=0.707"></script>
+    <script src="js/gsea.worker.js?v=0.707"></script>
+    <script src="js/data_qc_overall_dashboard.js?v=0.707"></script>
+    <script src="js/pca3d_report_embed.js?v=0.707"></script>
     <script>
         (function () {
             if (typeof location !== 'undefined' && location.protocol === 'file:') return;
-            var url = 'js/pca3d_report_embed.js?v=0.703';
+            var url = 'js/pca3d_report_embed.js?v=0.707';
             try {
                 var xhr = new XMLHttpRequest();
                 xhr.open('GET', url, false);
@@ -106,10 +106,10 @@
             }
         })();
     </script>
-    <script src="js/nebula_report.js?v=0.703"></script>
+    <script src="js/nebula_report.js?v=0.707"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-    <script src="js/phospho_normalization.js?v=0.703"></script>
+    <script src="js/phospho_normalization.js?v=0.707"></script>
 </head>
 <body>
     <!-- Progress Indicator -->
@@ -159,7 +159,7 @@
                     <button type="button" id="dataPrepSessionExportBtn" class="header-icon-btn" onclick="openDataPrepSession()" title="Export session snapshot (JSON / report JS) in a pop-out window" aria-label="Export session snapshot">
                         <svg class="donate-btn-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                     </button>
-                    <span class="app-version" id="appVersion">v0.703</span>
+                    <span class="app-version" id="appVersion">v0.707</span>
                     <select id="nebulaThemeSelect" class="theme-select" onchange="applyNebulaTheme(this.value)" title="Color theme (light family — figure canvases stay white)" aria-label="Color theme">
                         <option value="warm">Warm</option>
                         <option value="sage">Sage</option>
@@ -279,6 +279,7 @@
                         </div>
                         </div>
                         <div class="upload-option upload-kind-example" style="border-color:#8a2be2; background:var(--md-accent-soft-bg);">
+                            <button class="example-btn" onclick="openMoreTool('diannExplorer')" style="width:100%;" title="Filter a DIA-NN results parquet in the Result Explorer, then use its Send button to load the filtered result as a new data matrix">Re-filter from DIA-NN Parquet</button>
                             <button class="example-btn" onclick="switchTab('phospho')" style="width:100%;">Phospho/Total Proteome paired Data</button>
                         </div>
                         </aside>
@@ -3831,8 +3832,8 @@
                 </div>
             </div>
             <!-- hybrid UI wiring (needs the DOM above; loads the core first) -->
-            <script src="js/hybrid_core.js?v=0.703"></script>
-            <script src="js/hybrid_tab.js?v=0.703"></script>
+            <script src="js/hybrid_core.js?v=0.707"></script>
+            <script src="js/hybrid_tab.js?v=0.707"></script>
             <script>
             (function(){
                 var map={table:'hybPanelTable',analysis:'hybPanelAnalysis',volcano:'hybPanelVolcano',hybridScatter:'hybPanelHybridScatter',diag:'hybPanelDiag'};
@@ -4335,12 +4336,39 @@
                 if (!menu) return;
                 var open = menu.style.display === 'block';
                 closeMoreToolsMenu();
-                if (!open) menu.style.display = 'block';
+                if (!open) { menu.style.display = 'block'; placeMoreToolsMenu(); }
             }
             function closeMoreToolsMenu() {
                 var menu = document.getElementById('moreToolsMenu');
                 if (menu) menu.style.display = 'none';
             }
+            /* The phone tab strip is a masked scroll container, and a mask creates a stacking context:
+            left inside it, the menu's z-index was scoped to the header and it painted *behind* the page
+            content, so the items could not be tapped. Re-parenting the open menu to <body> on phones
+            fixes that and also lets it be anchored under the More Tools button; desktop keeps it in the
+            header. Width is measured after `display: block`, so callers show the menu first. */
+            function placeMoreToolsMenu() {
+                var menu = document.getElementById('moreToolsMenu');
+                var btn = document.getElementById('moreToolsBtn');
+                var home = document.querySelector('.more-tools-wrap');
+                if (!menu || !home) return;
+                if (window.innerWidth > 720) {
+                    if (menu.parentElement !== home) home.appendChild(menu);
+                    menu.style.left = menu.style.top = menu.style.right = menu.style.bottom = '';
+                    return;
+                }
+                if (menu.parentElement !== document.body) document.body.appendChild(menu);
+                if (!btn) return;
+                var b = btn.getBoundingClientRect();
+                var w = menu.offsetWidth || 240;
+                /* right-align the menu's edge with the button's, then keep it inside the viewport */
+                var left = Math.min(Math.round(b.right) - w, window.innerWidth - w - 8);
+                menu.style.left = Math.max(8, left) + 'px';
+                menu.style.right = 'auto';
+                menu.style.top = Math.round(b.bottom + 6) + 'px';
+                menu.style.bottom = 'auto';
+            }
+            window.addEventListener('resize', placeMoreToolsMenu);
             function openMoreTool(name) {
                 closeMoreToolsMenu();
                 var tool = MORE_TOOLS[name];
@@ -4421,7 +4449,7 @@
                         if (tabs.scrollTo) tabs.scrollTo({ left: start, behavior: 'smooth' });
                     }, 620);
                 }
-                tabs.addEventListener('scroll', syncStrip, { passive: true });
+                tabs.addEventListener('scroll', function () { syncStrip(); closeMoreToolsMenu(); }, { passive: true });
                 window.addEventListener('resize', syncStrip);
                 new MutationObserver(function (records) {
                     for (var i = 0; i < records.length; i++) {
@@ -4526,7 +4554,7 @@
                     for (var i = 0; i < files.length; i++) {
                         await new Promise(function (resolve, reject) {
                             var s = document.createElement('script');
-                            s.src = 'js/' + files[i] + '?v=0.703';
+                            s.src = 'js/' + files[i] + '?v=0.707';
                             s.onload = resolve;
                             s.onerror = function () { reject(new Error('Failed to load ' + files[i])); };
                             document.head.appendChild(s);
@@ -4604,7 +4632,7 @@
         </div>
     </div>
 
-    <script src="js/scatter_label_optimize.js?v=0.703"></script>
+    <script src="js/scatter_label_optimize.js?v=0.707"></script>
     <script>
         let currentHeatmapSubTab = 'plotly';
         let currentDocumentSection = 'overview';
@@ -17874,7 +17902,7 @@ zmid: 0,
             if (!__batchEffectExampleLoading) {
                 __batchEffectExampleLoading = new Promise((resolve, reject) => {
                     const s = document.createElement('script');
-                    s.src = 'js/example_batch_effect_data.js?v=0.703';
+                    s.src = 'js/example_batch_effect_data.js?v=0.707';
                     s.onload = resolve;
                     s.onerror = () => reject(new Error('Failed to load example_batch_effect_data.js'));
                     document.head.appendChild(s);
@@ -28498,25 +28526,25 @@ function onMatrixFormatChange() {
     <script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script src="doc/docs_bundle.js"></script>
-    <script src="js/doc_viewer.js?v=0.703"></script>
-    <script src="js/heatmap_core.js?v=0.703"></script>
-    <script src="js/table_display.js?v=0.703"></script>
-<script src="js/stats_utils.js?v=0.703"></script>
-<script src="js/moderated_t.js?v=0.703"></script>
-    <script src="js/kmeans_analysis.js?v=0.703"></script>
-    <script src="js/gsea_analysis.js?v=0.703"></script>
-    <script src="js/gsva.worker.js?v=0.703"></script>
-    <script src="js/gsva_analysis.js?v=0.703"></script>
-    <script src="js/figure_popout_buttons.js?v=0.703"></script>
-    <script src="js/feature_name_mapping.js?v=0.703"></script>
-    <script src="js/enrichr_matrix_context.js?v=0.703"></script>
-    <script src="js/enrichr_results_parse.js?v=0.703"></script>
-    <script src="js/enrichr_plots.js?v=0.703"></script>
-    <script src="js/saint_algorithm.js?v=0.703"></script>
-    <script src="js/saint_embed.js?v=0.703"></script>
-    <script src="js/imputation.worker.js?v=0.703"></script>
-    <script src="js/missing_value_imputation.js?v=0.703"></script>
-    <script src="js/batch_effect.js?v=0.703"></script>
+    <script src="js/doc_viewer.js?v=0.707"></script>
+    <script src="js/heatmap_core.js?v=0.707"></script>
+    <script src="js/table_display.js?v=0.707"></script>
+<script src="js/stats_utils.js?v=0.707"></script>
+<script src="js/moderated_t.js?v=0.707"></script>
+    <script src="js/kmeans_analysis.js?v=0.707"></script>
+    <script src="js/gsea_analysis.js?v=0.707"></script>
+    <script src="js/gsva.worker.js?v=0.707"></script>
+    <script src="js/gsva_analysis.js?v=0.707"></script>
+    <script src="js/figure_popout_buttons.js?v=0.707"></script>
+    <script src="js/feature_name_mapping.js?v=0.707"></script>
+    <script src="js/enrichr_matrix_context.js?v=0.707"></script>
+    <script src="js/enrichr_results_parse.js?v=0.707"></script>
+    <script src="js/enrichr_plots.js?v=0.707"></script>
+    <script src="js/saint_algorithm.js?v=0.707"></script>
+    <script src="js/saint_embed.js?v=0.707"></script>
+    <script src="js/imputation.worker.js?v=0.707"></script>
+    <script src="js/missing_value_imputation.js?v=0.707"></script>
+    <script src="js/batch_effect.js?v=0.707"></script>
     <script>
         (function () {
             function tryLoadBundledSessionScript() {
