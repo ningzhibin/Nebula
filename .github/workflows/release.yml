@@ -1,0 +1,55 @@
+name: Release
+
+# Publish a GitHub release whenever a version tag is pushed, e.g.
+#   git tag -a 0.717 -m "Nebula 0.717" && git push origin 0.717
+#
+# The release gets a zip of the tagged tree (Nebula_v<version>.zip) built with
+# `git archive`, so the archive contains exactly the tracked files: no .git, no
+# tool artifacts, no files ignored by .gitignore.
+#
+# Release notes come from .github/release-notes/<tag>.md when that file exists;
+# otherwise GitHub's auto-generated notes are used.
+
+on:
+  push:
+    tags:
+      - '*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the tagged tree
+        uses: actions/checkout@v4
+
+      - name: Build the release zip
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME}"
+          ver="${tag#[vV]}"
+          zip="Nebula_v${ver}.zip"
+          git archive --format=zip --prefix="Nebula_v${ver}/" -o "$zip" HEAD
+          echo "ZIP_NAME=$zip" >> "$GITHUB_ENV"
+          echo "VERSION=$ver" >> "$GITHUB_ENV"
+          ls -lh "$zip"
+          unzip -l "$zip" | tail -n 3
+
+      - name: Create the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME}"
+          notes=".github/release-notes/${tag}.md"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "Release $tag already exists - uploading the asset only."
+            gh release upload "$tag" "$ZIP_NAME" --clobber
+          elif [ -f "$notes" ]; then
+            gh release create "$tag" "$ZIP_NAME" --title "v${VERSION}" --notes-file "$notes"
+          else
+            gh release create "$tag" "$ZIP_NAME" --title "v${VERSION}" --generate-notes
+          fi
+          gh release view "$tag" --json url,assets --jq '{url: .url, assets: [.assets[] | {name, size}]}'
