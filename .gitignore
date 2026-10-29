@@ -1,7 +1,23 @@
 node_modules/
 
-# Raw MSigDB source download (build-time input only, ~98 MB). The app loads the
-# converted collections from js/msigdb/*.js and never reads this folder. It also
-# contains KEGG Legacy / KEGG Medicus / BioCarta sets, which are NOT covered by
-# MSigDB's CC-BY grant and must not be redistributed.
-MSigDB/
+# Raw MSigDB source download (build-time input only, ~98 MB), at the repo root.
+# The app loads the converted collections from js/msigdb/*.js and never reads this
+# folder. It also contains KEGG Legacy / KEGG Medicus / BioCarta sets, which are NOT
+# covered by MSigDB's CC-BY grant and must not be redistributed.
+# Anchored to the root on purpose: an unanchored "MSigDB/" also matched js/msigdb/
+# on case-insensitive filesystems (core.ignorecase=true on Windows), silently
+# marking the generated collections as ignored.
+/MSigDB/
+
+# Local agent / tool state — machine-specific, never part of the app or the
+# publishable build. .playwright-mcp/ accumulates browser screenshots and console
+# logs (~40 MB), .codegraph/ a code index (~44 MB), .omo/ and .claude/ session scratch.
+.claude/
+.codegraph/
+.omo/
+.playwright-mcp/
+
+# Report files dropped in the working folder while checking export layout. The
+# real deliverable is generated on demand from the Report tab, so any copy sitting
+# next to index.html is a throwaway artefact, not a source file.
+nebula_report_*.html
