@@ -110,7 +110,7 @@
     },
     {
       "id": "clustering",
-      "title": "19. Clustering (Heatmap · Clustergrammer · PCA · PCoA · t-SNE · UMAP · K-means)",
+      "title": "19. Clustering (Heatmap · Clustergrammer · PCA · PCoA · t-SNE · UMAP · K-means · SOM)",
       "file": "clustering.md",
       "group": "Clustering"
     },

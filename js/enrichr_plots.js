@@ -41,6 +41,56 @@
         };
     }
 
+    /**
+     * Wrap a long term label at word boundaries instead of truncating it with "…".
+     * Plotly renders "<br>" in tick labels, so the whole name stays readable even when
+     * the axis is narrow (the margins are then sized from the wrapped result).
+     */
+    function wrapTermLabel(text, perLine) {
+        var s = String(text == null ? '' : text).replace(/\s+/g, ' ').trim();
+        if (!s) return '';
+        var limit = Math.max(12, perLine || 40);
+        var words = s.split(' ');
+        var lines = [];
+        var cur = '';
+        var i;
+        for (i = 0; i < words.length; i++) {
+            var w = words[i];
+            if (!cur) { cur = w; continue; }
+            if ((cur + ' ' + w).length <= limit) cur += ' ' + w;
+            else { lines.push(cur); cur = w; }
+        }
+        if (cur) lines.push(cur);
+        /* A single token longer than the limit (e.g. a long accession) still has to fit. */
+        var hard = Math.ceil(limit * 1.6);
+        var out = [];
+        for (i = 0; i < lines.length; i++) {
+            var ln = lines[i];
+            while (ln.length > hard) {
+                out.push(ln.slice(0, hard));
+                ln = ln.slice(hard);
+            }
+            out.push(ln);
+        }
+        return out.join('<br>');
+    }
+
+    /** Line count / longest line of an already wrapped label ("a<br>b"). */
+    function labelLineStats(wrapped) {
+        var lines = String(wrapped == null ? '' : wrapped).split('<br>');
+        var maxLen = 0;
+        var i;
+        for (i = 0; i < lines.length; i++) maxLen = Math.max(maxLen, lines[i].length);
+        return { lines: lines.length, maxLen: maxLen };
+    }
+
+    function maxOf(arr, fallback) {
+        var m = fallback;
+        var i;
+        for (i = 0; i < arr.length; i++) if (arr[i] > m) m = arr[i];
+        return m;
+    }
+
     function barMetric(rows, rankBy, Pparse) {
         var nl = Pparse.negLog10;
         return rows.map(function (r) {
@@ -67,29 +117,38 @@
         }
         var rankBy = options.rankBy || 'padj';
         var vals = barMetric(rows, rankBy, Pparse);
+        /* Full term names, wrapped over as many lines as needed (never truncated). */
         var labels = rows.map(function (r) {
-            var s = r.label || '';
-            return s.length > 90 ? s.slice(0, 87) + '…' : s;
+            return wrapTermLabel(r.label || '', 52);
         });
+        var stats = labels.map(labelLineStats);
+        var maxLines = maxOf(stats.map(function (s) { return s.lines; }), 1);
+        var marginLeft = Math.min(640, Math.max(90, 24 + maxOf(stats.map(function (s) { return s.maxLen; }), 10) * 6.6));
+        /* Size the plot div, not the layout: Plotly then autosizes into it (and Plots.resize
+         * keeps working), while the host scrolls when the wrapped labels need more room. */
+        var plotHeight = Math.max(300, 140 + rows.length * (16 + 10 * (maxLines - 1)));
+        el.style.height = plotHeight + 'px';
+        el.style.minHeight = plotHeight + 'px';
+        el.style.flex = '0 0 auto';
         var trace = {
             type: 'bar',
             orientation: 'h',
             x: vals,
             y: labels,
-            marker: { color: '#6366f1' }
+            marker: { color: '#6366f1' },
+            text: rows.map(function (r) { return r.label || ''; }),
+            hovertemplate: '%{text}<br>%{x:.2f}<extra></extra>'
         };
-        var marginLeft = Math.min(480, 40 + Math.max.apply(null, labels.map(function (t) {
-            return t.length;
-        })) * 6.5);
         var layout = {
             title: 'Top enriched terms (' + barXAxisTitle(rankBy, Pparse) + ')',
             margin: { l: marginLeft, r: 24, t: 48, b: 56 },
             xaxis: { title: barXAxisTitle(rankBy, Pparse), zeroline: true },
             yaxis: {
-                automargin: false,
+                automargin: true,
                 categoryorder: 'array',
                 categoryarray: labels.slice(),
-                autorange: 'reversed'
+                autorange: 'reversed',
+                tickfont: { size: 11 }
             },
             paper_bgcolor: nebulaFigBg(),
             plot_bgcolor: nebulaFigBg()
@@ -128,10 +187,14 @@
             return Math.max(8, Math.min(48, 8 + o * 2));
         });
         var colors = bubbleColorValues(rows, colorMetric, Pparse);
+        /* Full term names on the y axis, wrapped — the old code cut them at 70 chars and
+         * kept a fixed 56px left margin, so long names were clipped. */
         var labels = rows.map(function (r) {
-            var s = r.label || '';
-            return s.length > 70 ? s.slice(0, 67) + '…' : s;
+            return wrapTermLabel(r.label || '', 40);
         });
+        var stats = labels.map(labelLineStats);
+        var maxLines = maxOf(stats.map(function (s) { return s.lines; }), 1);
+        var marginLeft = Math.min(560, Math.max(90, 24 + maxOf(stats.map(function (s) { return s.maxLen; }), 10) * 6.4));
         var idx = rows.map(function (_, i) {
             return i;
         });
@@ -154,21 +217,25 @@
             }),
             hovertemplate: '%{text}<extra></extra>'
         };
-        var plotHeight = Math.min(1400, 320 + rows.length * 22);
+        var plotHeight = Math.min(2400, 300 + rows.length * (16 + 10 * (maxLines - 1)));
+        el.style.height = plotHeight + 'px';
+        el.style.minHeight = plotHeight + 'px';
+        el.style.flex = '0 0 auto';
         var layout = {
             title: 'Bubble plot (dotplot-style)',
-            margin: { l: 56, r: 24, t: 48, b: 56 },
+            margin: { l: marginLeft, r: 24, t: 48, b: 56 },
             xaxis: {
                 title: bubbleX === 'odds' ? 'Odds ratio' : 'Overlap gene count',
                 zeroline: true
             },
             yaxis: {
+                automargin: true,
                 tickmode: 'array',
                 tickvals: idx,
                 ticktext: labels,
-                autorange: 'reversed'
+                autorange: 'reversed',
+                tickfont: { size: 11 }
             },
-            height: plotHeight,
             paper_bgcolor: nebulaFigBg(),
             plot_bgcolor: nebulaFigBg()
         };
@@ -201,9 +268,25 @@
             return;
         }
         var labels = rows.map(function (r) {
-            var s = r.label || '';
-            return s.length > 45 ? s.slice(0, 42) + '…' : s;
+            return wrapTermLabel(r.label || '', 34);
         });
+        var xLabels = rows.map(function (r) {
+            return wrapTermLabel(r.label || '', 26);
+        });
+        var yStats = labels.map(labelLineStats);
+        var xStats = xLabels.map(labelLineStats);
+        var yMaxLines = maxOf(yStats.map(function (s) { return s.lines; }), 1);
+        var yMaxLen = maxOf(yStats.map(function (s) { return s.maxLen; }), 10);
+        var xMaxLines = maxOf(xStats.map(function (s) { return s.lines; }), 1);
+        var xMaxLen = maxOf(xStats.map(function (s) { return s.maxLen; }), 10);
+        /* Margins are sized from the wrapped labels (automargin still has the last word),
+         * and the figure grows with the label stack so rows stay readable; the host scrolls. */
+        var marginLeft = Math.min(430, Math.max(120, 24 + yMaxLen * 6.4));
+        var marginBottom = Math.min(360, Math.max(150, 56 + xMaxLen * 4.8 + xMaxLines * 11));
+        var plotHeight = Math.max(430, 150 + n * (14 + 8 * yMaxLines) + marginBottom);
+        el.style.height = plotHeight + 'px';
+        el.style.minHeight = plotHeight + 'px';
+        el.style.flex = '0 0 auto';
         var z = [];
         for (var i = 0; i < n; i++) {
             z[i] = [];
@@ -214,7 +297,7 @@
         var trace = {
             type: 'heatmap',
             z: z,
-            x: labels,
+            x: xLabels,
             y: labels,
             colorscale: 'Blues',
             reversescale: false,
@@ -222,9 +305,9 @@
         };
         var layout = {
             title: 'Term–term similarity (Jaccard on overlapping genes)',
-            margin: { l: 160, r: 80, t: 48, b: 160 },
-            xaxis: { tickangle: -45 },
-            yaxis: { autorange: 'reversed' },
+            margin: { l: marginLeft, r: 80, t: 48, b: marginBottom },
+            xaxis: { tickangle: -45, automargin: true, tickfont: { size: 10 } },
+            yaxis: { autorange: 'reversed', automargin: true, tickfont: { size: 10 } },
             paper_bgcolor: nebulaFigBg()
         };
         Plotly.newPlot(el, [trace], layout, plotlyConfig('enrichr_term_similarity'));

@@ -20,6 +20,43 @@
     var PCA3D_EMBED_VERSION = '5.63';
     var pca3dEmbedScriptCache = null;
 
+    /**
+     * Library sources, fetched once so an exported report can inline Plotly/D3 instead
+     * of pulling them from a CDN when it is opened. Without this a saved report displays
+     * no figures wherever the CDN is unreachable: opened straight from Box/OneDrive/Dropbox
+     * drives (virtual filesystems + corporate proxies), offline, or behind a firewall.
+     * The app itself loads Plotly from the same URL, so the fetch normally resolves from
+     * the HTTP cache; if it fails the report falls back to the CDN script tag as before.
+     */
+    var reportLibs = { plotly: '', d3: '' };
+    var reportLibsPromise = null;
+
+    /** Escape a literal `</script>` inside library source so it cannot close our tag early. */
+    function inlineScriptSafe(text) {
+        return String(text).replace(/<\/(script)/gi, '<\\/$1');
+    }
+
+    function fetchLibText(url) {
+        if (typeof fetch !== 'function') return Promise.resolve('');
+        return fetch(url, { cache: 'force-cache' })
+            .then(function (r) { return r ? r.text() : ''; })
+            .then(function (t) { return t && t.length > 50000 ? t : ''; })
+            .catch(function () { return ''; });
+    }
+
+    /** Resolve once with whatever library sources are obtainable (never rejects). */
+    function ensureReportLibs() {
+        if (reportLibsPromise) return reportLibsPromise;
+        reportLibsPromise = Promise.all([fetchLibText(PLOTLY_CDN_URL), fetchLibText(D3_CDN_URL)])
+            .then(function (texts) {
+                reportLibs.plotly = texts[0] || '';
+                reportLibs.d3 = texts[1] || '';
+                return reportLibs;
+            });
+        return reportLibsPromise;
+    }
+
+
     /** Preload embed source so report HTML can inline it (blob iframe cannot load relative js/). */
     (function preloadPca3dEmbedScript() {
         if (typeof location !== 'undefined' && location.protocol === 'file:') return;
@@ -66,6 +103,7 @@
         umap: 'UMAP embedding of samples (Clustering → UMAP) with the n_neighbors/min_dist/spread/seed and preprocessing used on screen at export time.',
         outlier_score: 'Outlier score per sample (Data PreProcess → Outliers): max robust modified z-score across the 5 QC metrics with the flag threshold, at export time.',
         kmeans_clusters: 'K-means cluster plot: samples on the PCA projection colored by discovered cluster, with centroids (Clustering → K-means) at export time.',
+        som_map: 'Self-organizing map: samples placed on the trained lattice by their best-matching unit, colored by the cluster assigned to that unit (Clustering → SOM) at export time.',
         diff_volcano: 'Differential volcano plot (−log10 p/FDR vs log2 fold change) with the current thresholds and group labels at export time.',
         diff_ma: 'Differential MA plot (log2 fold change vs mean abundance) with the current thresholds and group labels at export time.',
         diff_group_heatmap: 'Differential group heatmap of the top features by significance (Downstream → Differential) at export time.',
@@ -135,6 +173,7 @@
         { id: 'umap', title: 'Clustering — UMAP plot', group: 'Clustering', capture: 'plotly', plotlyId: 'umapPlot' },
         { id: 'outlier_score', title: 'Data PreProcess — outlier score per sample', group: 'Data PreProcess', capture: 'plotly', plotlyId: 'outlierScorePlot' },
         { id: 'kmeans_clusters', title: 'Clustering — K-means cluster plot', group: 'Clustering', capture: 'plotly', plotlyId: 'kmClusterPlot' },
+        { id: 'som_map', title: 'Clustering — SOM sample map', group: 'Clustering', capture: 'plotly', plotlyId: 'somMapPlot' },
         { id: 'diff_volcano', title: 'Differential — volcano plot', group: 'Downstream → Differential', capture: 'plotly', plotlyId: 'diffVolcanoPlot' },
         { id: 'diff_ma', title: 'Differential — MA plot', group: 'Downstream → Differential', capture: 'plotly', plotlyId: 'diffMaPlot' },
         { id: 'diff_group_heatmap', title: 'Differential — group heatmap', group: 'Downstream → Differential', capture: 'plotly', plotlyId: 'diffGroupHeatmapPlot' },
@@ -268,14 +307,13 @@
             h +
             'px;width:' +
             w +
-            'px;min-width:' +
-            w +
-            'px;max-width:none;box-sizing:border-box;flex-shrink:0;overflow:hidden"'
+            'px;min-width:0;max-width:100%;box-sizing:border-box;flex-shrink:0;overflow:hidden"'
         );
     }
 
     /**
      * Outer &lt;figure&gt; shell for Plotly: keeps chart width when captions sit below or beside preview controls.
+     * max-width:100% lets a chart wider than the report content column shrink into it instead of spilling out.
      */
     function plotlyFigureShellStyleFromLayout(sLayout) {
         if (!sLayout || typeof sLayout !== 'object') return '';
@@ -288,9 +326,7 @@
         return (
             ' style="display:inline-block;width:' +
             w +
-            'px;min-width:' +
-            w +
-            'px;max-width:none;box-sizing:border-box;vertical-align:top"'
+            'px;min-width:0;max-width:100%;box-sizing:border-box;vertical-align:top"'
         );
     }
 
@@ -1339,12 +1375,20 @@
                 if (!pl.host) continue;
                 try {
                     var plLayout = pl.layout || {};
-                    if (pl.fullWidth || pl.fullHeight) {
+                    /* A figure captured wider than the preview box shrinks to the box width
+                     * (same rule the saved report applies), so it never spills out of its container. */
+                    var lockedW = Number(plLayout.width);
+                    var hostW = pl.host.clientWidth || 0;
+                    var shrinkW = !pl.fullWidth && lockedW > 0 && hostW > 100 && lockedW > hostW + 1;
+                    if (pl.fullWidth || pl.fullHeight || shrinkW) {
                         var l2 = {};
                         var lk;
                         for (lk in plLayout) l2[lk] = plLayout[lk];
                         if (pl.fullWidth && pl.host.clientWidth > 100) {
                             l2.width = pl.host.clientWidth;
+                        }
+                        if (shrinkW) {
+                            l2.width = hostW;
                         }
                         if (pl.fullHeight) {
                             /* Fill the visible preview box: size the host to the panel height
@@ -1432,6 +1476,7 @@
          * @param {string|null|undefined} sectionId
          */
         function isReportFullWidthSection(sectionId) {
+            if (sectionId === 'per_column_summary') return true;
             var g = reportSectionGroupName(sectionId);
             return g === 'Data QC → Row profile' || g === 'Clustering';
         }
@@ -1442,16 +1487,19 @@
          * @param {string|null|undefined} sectionId
          */
         function isReportFullHeightSection(sectionId) {
-            return sectionId === 'heatmap' || sectionId === 'row_profile';
+            return sectionId === 'heatmap' || sectionId === 'row_profile' || sectionId === 'per_column_summary';
         }
 
         /**
-         * Saved-report: heatmap and row profile stretch to fill the whole content
-         * column (full width + full viewport height) instead of the locked layout size.
+         * Saved-report: heatmap, row profile and the per-column summary stretch to fill
+         * the whole content column (full width + full viewport height) instead of the
+         * locked layout size. Every other Plotly figure keeps its locked size until it
+         * would overflow the content column, then shrinks to the column width (see
+         * __NR_PLOT_MNT__ in buildHtmlDocument).
          * @param {string|null|undefined} sectionId
          */
         function isExportFillSection(sectionId) {
-            return sectionId === 'heatmap' || sectionId === 'row_profile';
+            return sectionId === 'heatmap' || sectionId === 'row_profile' || sectionId === 'per_column_summary';
         }
 
         var REPORT_PREVIEW_SVG_SCALE = {};
@@ -1936,28 +1984,30 @@
             '.nr-toc-list a.active{background:var(--nr-accent-soft);color:var(--nr-accent-deep);border-left-color:var(--nr-accent);font-weight:600;}',
             '.nr-toc-num{flex:0 0 auto;min-width:1.7em;text-align:right;font-size:0.72rem;font-weight:700;color:var(--nr-accent);}',
             '.nr-toc-label{flex:1 1 auto;text-align:left;}',
-            '.nr-toc-back{display:block;margin:12px 4px 0;font-size:0.78rem;color:var(--nr-accent-deep);text-decoration:none;}',
             '.nr-content{background:var(--nr-card);min-width:0;padding:20px clamp(20px,4vw,48px) 56px;}',
-            '.nr-section{scroll-margin-top:96px;padding:26px 0 4px;border-bottom:1px dashed var(--nr-line);}',
+            '.nr-section{scroll-margin-top:96px;padding:14px 0 6px;border-bottom:1px dashed var(--nr-line);}',
             '.nr-section:last-child{border-bottom:none;}',
 '.nr-section--fill{display:flex;flex-direction:column;height:calc(100vh - 133px);min-height:420px;padding:14px 0 6px;border-bottom:0;}',
 '.nr-section--fill .nebula-report-figure--fill{flex:1 1 auto;min-height:0;}',
 '.nr-section--fill .nebula-report-plotly-host{flex:1 1 auto;min-height:0;max-height:100%;}',
             '.nr-section-title{display:flex;align-items:baseline;gap:12px;margin:0 0 16px;font-size:1.22rem;color:#33291f;padding-bottom:8px;border-bottom:2px solid var(--nr-accent-soft);}',
             '.nr-sec-num{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;min-width:2em;height:2em;padding:0 8px;background:var(--nr-accent);color:#fff;border-radius:9px;font-size:0.85rem;font-weight:700;}',
-            '.nr-back-top{display:inline-block;margin-top:18px;font-size:0.78rem;color:var(--nr-accent-deep);text-decoration:none;}',
-            '.nr-back-top:hover{text-decoration:underline;}',
             '.nebula-report-small{background:#fbf4ec;border:1px solid #f0ddc6;border-left:4px solid var(--nr-accent);border-radius:10px;padding:10px 14px;font-size:0.86rem;color:#7a6a56;margin:18px 0;}',
             'figure{margin:14px auto;}',
             'figure.nebula-report-figure--plotly,figure.nebula-report-figure--raster,figure.nebula-report-figure--svg,figure.nebula-report-figure--pca3d{max-width:100%;}',
+            /* One vertical rhythm for every section: the header sits 14px below the
+             * content top and the figure 16px below the header, whether the section is a
+             * fill panel or a normal one. Without this a normal section started 12px lower
+             * and its figure carried an extra 16px top margin (26+32 vs 14+16). */
+            '.nr-section:not(.nr-section--fill) .nebula-report-figure{margin-top:0;}',
             'figcaption{font-size:0.85rem;color:var(--nr-ink-6);margin-top:8px;text-align:center;}',
             '.nebula-report-table{border-collapse:collapse;margin:10px 0;}',
             '.nebula-report-table th,.nebula-report-table td{border:1px solid var(--nr-line);padding:7px 10px;text-align:left;font-size:0.9rem;}',
             '.nebula-report-table th{background:#f8f1e9;color:#4a3a33;}',
             'img{max-width:100%;height:auto;}',
             '.nebula-report-matrix-table td{vertical-align:top;word-break:break-word;}',
-'@media (max-width:1024px){.nr-layout{grid-template-columns:1fr;gap:0;padding:16px;min-height:0}.nr-toc{position:static;top:auto;height:auto;max-height:none;border:1px solid var(--nr-line);border-radius:12px;margin-bottom:14px;box-shadow:0 10px 30px rgba(60,45,30,0.07)}.nr-toc-heading,.nr-toc-back{display:none}.nr-toc-list{display:flex;flex-wrap:wrap;gap:4px}.nr-toc-list li{margin:0}.nr-toc-num{display:none}.nr-content{padding:0 18px 24px}.nr-header{padding:0 18px}.nr-section--fill{height:auto;min-height:420px}}',
-'@media print{.nr-toc,.nr-toc-back,.nr-back-top,.nr-header{display:none}body{background:#fff}.nr-layout{display:block;padding:0}.nr-content{border:none;border-radius:0;box-shadow:none;padding:0}.nr-section{display:block !important;page-break-inside:avoid}.nr-section--fill{height:auto;min-height:0}}'
+'@media (max-width:1024px){.nr-layout{grid-template-columns:1fr;gap:0;padding:16px;min-height:0}.nr-toc{position:static;top:auto;height:auto;max-height:none;border:1px solid var(--nr-line);border-radius:12px;margin-bottom:14px;box-shadow:0 10px 30px rgba(60,45,30,0.07)}.nr-toc-heading{display:none}.nr-toc-list{display:flex;flex-wrap:wrap;gap:4px}.nr-toc-list li{margin:0}.nr-toc-num{display:none}.nr-content{padding:0 18px 24px}.nr-header{padding:0 18px}.nr-section--fill{height:auto;min-height:420px}}',
+'@media print{.nr-toc,.nr-header{display:none}body{background:#fff}.nr-layout{display:block;padding:0}.nr-content{border:none;border-radius:0;box-shadow:none;padding:0}.nr-section{display:block !important;page-break-inside:avoid}.nr-section--fill{height:auto;min-height:0}}'
         ].join('');
         styleParts.push(exportLayoutStyle);
         var style = styleParts.join('');
@@ -1969,7 +2019,7 @@
         var parts = [
             '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>', escapeHtml(title), '</title><style>', style, '</style><noscript><style>.nr-section{display:block !important}</style></noscript></head><body>',
             '<header class="nr-header" id="nr-top"><div class="nr-header-inner"><h1>', escapeHtml(title), '</h1><p class="nr-meta">Generated ', escapeHtml(meta.generatedAt), ' · ', escapeHtml(meta.appVersion || ''), '</p></div></header>',
-            '<div class="nr-layout"><nav class="nr-toc" aria-label="Figures in this report (vertical tabs)"><p class="nr-toc-heading">Contents</p><ul class="nr-toc-list" role="tablist" aria-orientation="vertical">', tocItems, '</ul><a class="nr-toc-back" href="#nr-top">Back to top</a></nav><div class="nr-content">'
+            '<div class="nr-layout"><nav class="nr-toc" aria-label="Figures in this report (vertical tabs)"><p class="nr-toc-heading">Contents</p><ul class="nr-toc-list" role="tablist" aria-orientation="vertical">', tocItems, '</ul></nav><div class="nr-content">'
         ];
         var plotlyEmbedSpecs = [];
         var pca3dInteractiveSpecs = [];
@@ -2169,7 +2219,7 @@
             } else {
                 parts.push('<p class="nebula-report-muted">', escapeHtml(blk.body.reason || 'Skipped'), '</p>');
             }
-            parts.push('<a class="nr-back-top" href="#nr-top">Back to top</a></section>');
+            parts.push('</section>');
         }
         var b64P3d = null;
         if (pca3dInteractiveSpecs.length) {
@@ -2187,12 +2237,15 @@
             }
         }
         if (pca3dInteractiveSpecs.length && pca3dEmbedScriptOnce && !previewEd) {
+            var d3Inlined = !!reportLibs.d3;
             parts.splice(
                 3,
                 0,
-                '<p class="nebula-report-small">The <strong>PCA 3D</strong> figure is an <strong>interactive D3</strong> replica of the Clustering tab (drag to rotate, wheel to zoom, legend and tooltips). It loads D3 from the CDN below.</p>'
+                '<p class="nebula-report-small">The <strong>PCA 3D</strong> figure is an <strong>interactive D3</strong> replica of the Clustering tab (drag to rotate, wheel to zoom, legend and tooltips). ' +
+                (d3Inlined ? 'D3 is embedded in this file, so it works without a network connection.' : 'It loads D3 from the CDN below.') +
+                '</p>'
             );
-            parts.push('<script src="' + D3_CDN_URL + '"><\/script>');
+            parts.push(d3Inlined ? '<script>' + inlineScriptSafe(reportLibs.d3) + '<\/script>' : '<script src="' + D3_CDN_URL + '"><\/script>');
             parts.push('<script>' + pca3dEmbedScriptOnce + '<\/script>');
             if (!b64P3d && pca3dInteractiveSpecs.length) {
                 var pca3dPayloadObjExp = { v: 1, plots: pca3dInteractiveSpecs };
@@ -2218,10 +2271,13 @@
             }
         }
         if (plotlyEmbedSpecs.length) {
+            var plotlyInlined = !previewEd && !!reportLibs.plotly;
             parts.splice(
                 3,
                 0,
-                '<p class="nebula-report-small">Plotly figures in this report are <strong>interactive</strong> (zoom, pan, legend). The view matches the app when the report was generated. The page loads Plotly from the CDN URL in the script tag below.</p>'
+                '<p class="nebula-report-small">Plotly figures in this report are <strong>interactive</strong> (zoom, pan, legend). The view matches the app when the report was generated. ' +
+                (plotlyInlined ? 'The Plotly library is embedded in this file, so the report opens with no network access (Box/Dropbox drive, email attachment, offline).' : 'The page loads Plotly from the CDN URL in the script tag below.') +
+                '</p>'
             );
             var payloadObj = { v: 1, plots: plotlyEmbedSpecs };
             var jsonStr = '';
@@ -2233,14 +2289,18 @@
             if (jsonStr) {
                 var b64leg = utf8ToBase64(jsonStr);
                 if (b64leg) {
-                    parts.push('<script src="' + PLOTLY_CDN_URL + '"><\/script>');
+                    parts.push(plotlyInlined ? '<script>' + inlineScriptSafe(reportLibs.plotly) + '<\/script>' : '<script src="' + PLOTLY_CDN_URL + '"><\/script>');
                     var boot =
                         '(function(){var P=' +
                         JSON.stringify(b64leg) +
                         ';function u8(d){try{return decodeURIComponent(escape(atob(d)))}catch(e){return null}}' +
-                        'window.__NR_PLOT_MNT__=function(el,p){if(!el||!p||!p.data)return;var L=p.layout||{};if(p.fill&&L&&typeof L==="object"){try{L.autosize=true;delete L.width;delete L.height;}catch(eF){}}' +
+                        'window.__NR_PLOT_MNT__=function(el,p){if(!el||!p||!p.data)return;var L=p.layout||{};var fluid=!!p.fill;' +
+                        'if(L&&typeof L==="object"){try{' +
+                        'if(p.fill){L.autosize=true;delete L.width;delete L.height;}' +
+                        'else if(L.width!=null){var av=el.clientWidth||0;if(av>0&&Number(L.width)>av){L.autosize=true;delete L.width;fluid=true;}}' +
+                        '}catch(eF){}}' +
                         'var pr;try{pr=Plotly.newPlot(el,p.data,L,p.config||{});}catch(eN){throw eN;}' +
-                        'if(p.fill){if(pr&&pr.then){pr.then(function(){try{Plotly.Plots.resize(el);}catch(eR){}});}else{setTimeout(function(){try{Plotly.Plots.resize(el);}catch(eR){}},150);}' +
+                        'if(fluid){if(pr&&pr.then){pr.then(function(){try{Plotly.Plots.resize(el);}catch(eR){}});}else{setTimeout(function(){try{Plotly.Plots.resize(el);}catch(eR){}},150);}' +
                         'window.__NR_FILL__=window.__NR_FILL__||[];if(window.__NR_FILL__.indexOf(el)<0)window.__NR_FILL__.push(el);' +
                         'if(!window.__NR_FILL_BOUND__){window.__NR_FILL_BOUND__=1;window.addEventListener("resize",function(){var a=window.__NR_FILL__||[];for(var i=0;i<a.length;i++){try{Plotly.Plots.resize(a[i]);}catch(eW){}}});}}};' +
                         'function run(){if(typeof Plotly===\'undefined\'){setTimeout(run,60);return;}' +
@@ -2417,6 +2477,18 @@
             lastReportBlocks = blocks.map(function (b) {
                 return { sectionId: b.sectionId, title: b.title, body: b.body };
             });
+            /* Inline Plotly/D3 into the downloadable HTML so a saved report renders
+             * figures without the CDN (Box/Dropbox virtual drives, offline, firewalled
+             * networks). The fetch normally resolves from the HTTP cache, because the
+             * app already loaded Plotly from the same URL; on failure it falls back to
+             * the CDN script tag. */
+            var needsLibs = false;
+            for (var bn = 0; bn < blocks.length; bn++) {
+                var kindN = blocks[bn].body && blocks[bn].body.kind;
+                if (kindN === 'plotly_embed' || kindN === 'pca3d_interactive') needsLibs = true;
+            }
+            return (needsLibs ? ensureReportLibs() : Promise.resolve(null)).then(function () {
+            if (gen !== reportPreviewGeneration) return lastReportHtml;
             lastReportHtml = buildHtmlDocument(blocks, lastReportMeta, null);
             var pca3dKind = 'none';
             for (var bi = 0; bi < blocks.length; bi++) {
@@ -2437,6 +2509,7 @@
             }
             setStatus('Preview ready (' + blocks.length + ' section(s))' + statusSuffix + '.', false);
             return lastReportHtml;
+            });
         }).catch(function (e) {
             if (gen === reportPreviewGeneration) {
                 lastReportHtml = null;

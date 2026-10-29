@@ -23,12 +23,12 @@ The **Report** tab assembles the figures you marked with **Add to Report** into 
 
 #### Layout in the saved report
 
-The downloaded `.html` is fully self-contained (inline CSS + Plotly/D3 boot scripts; works offline) with a modern bookdown-style layout:
+The downloaded `.html` is fully self-contained (inline CSS, the Plotly library, and the figure data/boot scripts - D3 too when a PCA 3D / PCoA 3D figure is included), so it renders with **no network access**: from a Box / Dropbox / OneDrive drive, an email attachment, or offline. Most of the file size is the embedded Plotly build (~3.4 MB); if the library cannot be fetched when the report is saved, the file falls back to loading Plotly from the CDN. Layout:
 
 - A sticky dark header with the report title and generated timestamp.
-- A left sidebar of **numbered vertical figure tabs** - click a tab to show that figure in the content column (smooth scroll, "Back to top" links, active-tab highlight; on narrow screens the sidebar becomes a wrapping chip bar).
+- A left sidebar of **numbered vertical figure tabs** - click a tab to show that figure in the content column (active-tab highlight; on narrow screens the sidebar becomes a wrapping chip bar).
 - One numbered section card at a time in the content column, each with the figure and its caption.
-- **Row profile and Clustering figures stretch to the full width**; the **heatmap and row profile also fill the full viewport height**.
+- **Row profile and Clustering figures stretch to the full width**; the **heatmap, row profile and the per-column summary also fill the full viewport height**. Any other figure keeps the size it had on screen, and shrinks to the column width when it would be wider than the page.
 - Interactive figures mount lazily when their tab is first activated; **print** shows all figures.
 
 #### Captions

@@ -62,6 +62,10 @@
         { id: 'kmClusterPlot', type: 'plotly', title: 'K-means clusters', report: 'kmeans_clusters' },
         { id: 'kmElbowPlot', type: 'plotly', title: 'Elbow (WCSS vs k)' },
         { id: 'kmSilhouettePlot', type: 'plotly', title: 'Silhouette (mean vs k)' },
+        // Clustering → SOM
+        { id: 'somMapPlot', type: 'plotly', title: 'SOM sample map', report: 'som_map' },
+        { id: 'somUMatrixPlot', type: 'plotly', title: 'SOM U-matrix' },
+        { id: 'somHitPlot', type: 'plotly', title: 'SOM sample density' },
         // Downstream → Differential
         { id: 'diffVolcanoPlot', type: 'plotly', title: 'Volcano plot', report: 'diff_volcano' },
         { id: 'diffMaPlot', type: 'plotly', title: 'MA plot', report: 'diff_ma' },

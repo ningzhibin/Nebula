@@ -1,6 +1,6 @@
-### 19. Clustering (Heatmap · Clustergrammer · PCA · PCoA · t-SNE · UMAP · K-means)
+### 19. Clustering (Heatmap · Clustergrammer · PCA · PCoA · t-SNE · UMAP · K-means · SOM)
 
-The top-level **Clustering** tab groups seven unsupervised views of the loaded intensity matrix as sub-tabs: **Heatmap**, **Clustergrammer**, **PCA**, **PCoA**, **t-SNE**, **UMAP**, and **K-means**. All read the current matrix (after Data PreProcess filtering/imputation/correction) and join metadata to matrix columns by `Sample_ID` for group coloring. Most views ordinate **samples (columns)** - the usual QC question is *do replicates/conditions group as expected?*
+The top-level **Clustering** tab groups eight unsupervised views of the loaded intensity matrix as sub-tabs: **Heatmap**, **Clustergrammer**, **PCA**, **PCoA**, **t-SNE**, **UMAP**, **K-means**, and **SOM**. All read the current matrix (after Data PreProcess filtering/imputation/correction) and join metadata to matrix columns by `Sample_ID` for group coloring. Most views ordinate **samples (columns)** - the usual QC question is *do replicates/conditions group as expected?*
 
 #### Heatmap
 
@@ -9,7 +9,7 @@ Interactive **Plotly** clustered heatmap with row/column dendrograms.
 - **Clustering:** toggle **Cluster features (rows)** (checked by default) and **Cluster samples (columns)** independently. **Distance metric**: Manhattan (default), Correlation, or Euclidean. **Linkage**: Average (default), Complete, or Single. Changing any of these re-runs the clustering pipeline (a progress bar with **Cancel** shows for large matrices).
 - **Preprocessing:** **Log10 transform** (checked by default; zeros/missing become log10(1 + x)) and optional **Z-score per row** (emphasizes pattern over absolute level).
 - **Sampling:** **Max features** / **Max samples** (blank = all) cap the matrix before clustering; 2000-3000 features keeps very large matrices responsive.
-- **Colors:** several diverging/sequential scales (default **Viridis**; also RdBlkGn, RdYlBu, Plasma, Inferno, Blues, Reds, Greens, YlOrRd, Turbo, Cividis); **Reverse scale (high = cold, low = hot)** option. Color changes redraw **without** re-clustering.
+- **Colors:** eleven diverging/sequential scales - **RdYlBu (red–yellow–blue)** is the default, then RdBlkGn, Viridis, Plasma, Inferno, Blues, Reds, Greens, YlOrRd, Turbo, Cividis - plus a **Reverse scale (high = cold, low = hot)** option. Every scale is defined explicitly in the app (Plotly 2.27 does not know Plasma/Inferno/Turbo/Reds/RdYlBu and would render them all as the same fallback ramp), and the Clustergrammer sub-tab uses the same multi-stop ramp, so a scale looks the same in both heatmap renderers. Color changes redraw **without** re-clustering.
 - **Row labels:** choose the **Feature label** (matrix row ID, `Protein.Names`, `Genes`, `Protein.Group`, `First.Protein.Description`) from DIANN annotations and/or Name mapping. Changing the label redraws without re-clustering.
 - **Figure & margins** (collapsible): optional **Title** (auto if empty), **Width/Height** in px (auto), **Row dendro %** (default 20) and **Column dendro %** (default 20), and the three margins (left 50 / right 400 / bottom 100 px; increase the bottom margin if angled sample names are clipped; the framed area scrolls when the figure is larger than the panel).
 - **Sample group overlays:** when metadata is loaded, metadata columns appear as **color bars above the samples** (checkbox + color scheme per column); a legend popover summarizes them.
@@ -80,6 +80,20 @@ Exploratory clustering of **samples (columns)** by their feature profiles - reve
 - **Display:** **Show centroids** (checked), **Show sample labels**, plot width/height, optional title.
 - **Views:** **Cluster plot** - PCA projection colored by cluster with centroids; **Model selection** - the elbow (WCSS vs k) and silhouette (mean vs k) curves marking the chosen k; **Assignments** - the sample-to-cluster table with per-sample silhouette scores and **Export CSV**. Computation runs in a Web Worker.
 
+#### SOM (self-organizing map)
+
+A **topology-preserving** alternative to K-means: samples (columns) are projected onto a 2D lattice whose units learn the shape of the data, so units that end up next to each other hold similar samples. The trained units are then grouped into a few clusters, and each sample inherits the cluster of its **best-matching unit (BMU)**.
+
+- **Map size (units):** **Columns** / **Rows** (blank = **Auto**, sized from the sample count); 2-20 per side. More units = finer map, fewer samples per unit.
+- **Lattice:** **Hexagonal** (default; six neighbours per unit) or **Rectangular** (four neighbours).
+- **Choose number of clusters (k):** **Auto-select k (recommended)** scans k = 2-8 by mean **silhouette** over the trained unit vectors; **Fixed k** uses the **Fixed k** input (default 4).
+- **Training:** **Neighbourhood** (**Gaussian**, default, or **Bubble**), **Initialization** (**PCA plane**, default - initial units spread along the first two principal components - or **Random samples**), **Learning rate** (0.5), **Radius** (blank = half the shorter map side), **Epochs** (40), **Random seed** (42; fixed seed makes the map reproducible). Learning rate and radius decay over the epochs.
+- **Sampling (speed):** **Max samples** / **Max features** caps. Training cost grows with samples × features × map units, so cap features on very large matrices.
+- **Preprocessing:** **Log10 Transform** (checked), **Column-wise Z-score (per feature)** (checked - recommended), **Row-wise Z-score (per sample)**. Computation runs in a Web Worker with a progress bar.
+- **Display:** **Show sample labels**, **Show map units** (dot size = samples in that unit), plot width/height, optional title.
+- **Views:** **SOM map** - samples on the lattice coloured by cluster, over the unit grid; **Map quality** - the **U-matrix** (mean distance between neighbouring units: dark, low values mark units holding similar samples, bright ridges mark cluster boundaries) plus a **Sample density** heatmap (samples per unit); **Assignments** - sample → cluster / map unit / distance to unit table with **Export CSV**. The info line reports the map size, **quantization error** (mean sample-to-unit distance), **topographic error** (share of samples whose runner-up unit is not adjacent) and the cluster sizes.
+- **Add to Report** embeds the **SOM map** as an interactive Plotly figure; **Pop out** works on the map, U-matrix and density figures.
+
 #### Choosing a view
 
 - **Heatmap / Clustergrammer** - see feature- and sample-level clusters together.
@@ -88,6 +102,7 @@ Exploratory clustering of **samples (columns)** by their feature profiles - reve
 - **t-SNE** - many samples and you want to surface local neighborhoods/sub-clusters.
 - **UMAP** - like t-SNE but with better preservation of global relationships; good first non-linear view.
 - **K-means** - no known grouping and you want a concrete partition of the samples (with diagnostics for choosing k).
+- **SOM** - no known grouping and you want a partition *and* a map: neighbouring units show how the groups relate, and the U-matrix shows whether the lattice actually separates them.
 
 **Session JSON** stores the sidebar control values for these views; reopening a sub-tab or regenerating redraws from the restored settings. Group-annotation checkboxes are rebuilt after the metadata column list is repopulated.
 

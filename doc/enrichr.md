@@ -24,6 +24,7 @@ Plotly charts built from the full term list (not only the current results page).
 - **Top N** (default 25), **Rank / sort by** (`Adjusted P (lower first)` default, `P-value`, `Combined score (higher first)`), **Min overlap genes** (default 1), **Bubble color** (`-log10(adjusted P)` default or `Adjusted P`), **Bubble X axis** (`Overlap count` default or `Odds ratio`).
 - **Redraw plots** applies the options; **Export results TSV** downloads the parsed table.
 - The three plot views: **Bar chart** (horizontal bars ranked by the chosen metric), **Bubble plot** (overlap/odds ratio vs term, colored by significance), **Term similarity (Jaccard)** (heatmap of term-term overlap between the top terms).
+- **Long term names are never truncated**: axis labels are word-wrapped over as many lines as needed, the axis margins grow with the wrapped label (`automargin`), and each figure is sized from its label stack - when it ends up taller than the panel the plot area scrolls, so the complete term (including the `GO:` id) stays readable. Hovering still shows the full name.
 
 #### Heatmap sub-tab
 

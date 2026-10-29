@@ -72,25 +72,26 @@
     <script src="https://cdn.jsdelivr.net/npm/umap-js@1.4.0/lib/umap-js.min.js"></script>
     <!-- Clustergrammer deps (incl. Bootstrap 3) are lazy-loaded; see css/clustergrammer_bootstrap_restore.css appended after those sheets -->
     <!-- Cache-busting: local css/js includes carry ?v=<app version>. On each release, bump the
-         version everywhere with a project-wide replace of "?v=0.707" -> new version (keep it in
+         version everywhere with a project-wide replace of "?v=0.716" -> new version (keep it in
          sync with the appVersion span near the header) so browsers fetch fresh assets. -->
-    <link rel="stylesheet" href="css/main.css?v=0.707">
-    <link rel="stylesheet" href="css/diann_viewer.css?v=0.707">
+    <link rel="stylesheet" href="css/main.css?v=0.716">
+    <link rel="stylesheet" href="css/diann_viewer.css?v=0.716">
     <script>
         try { document.documentElement.setAttribute('data-theme', localStorage.getItem('nebulaTheme') || 'warm'); } catch (e) {}
     </script>
     <!-- Worker source files — loaded as regular scripts (file:// compatible) -->
-    <script src="js/clustering.worker.js?v=0.707"></script>
-    <script src="js/pca.worker.js?v=0.707"></script>
-    <script src="js/tsne.worker.js?v=0.707"></script>
-    <script src="js/kmeans.worker.js?v=0.707"></script>
-    <script src="js/gsea.worker.js?v=0.707"></script>
-    <script src="js/data_qc_overall_dashboard.js?v=0.707"></script>
-    <script src="js/pca3d_report_embed.js?v=0.707"></script>
+    <script src="js/clustering.worker.js?v=0.716"></script>
+    <script src="js/pca.worker.js?v=0.716"></script>
+    <script src="js/tsne.worker.js?v=0.716"></script>
+    <script src="js/kmeans.worker.js?v=0.716"></script>
+    <script src="js/som.worker.js?v=0.716"></script>
+    <script src="js/gsea.worker.js?v=0.716"></script>
+    <script src="js/data_qc_overall_dashboard.js?v=0.716"></script>
+    <script src="js/pca3d_report_embed.js?v=0.716"></script>
     <script>
         (function () {
             if (typeof location !== 'undefined' && location.protocol === 'file:') return;
-            var url = 'js/pca3d_report_embed.js?v=0.707';
+            var url = 'js/pca3d_report_embed.js?v=0.716';
             try {
                 var xhr = new XMLHttpRequest();
                 xhr.open('GET', url, false);
@@ -106,10 +107,10 @@
             }
         })();
     </script>
-    <script src="js/nebula_report.js?v=0.707"></script>
+    <script src="js/nebula_report.js?v=0.716"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-    <script src="js/phospho_normalization.js?v=0.707"></script>
+    <script src="js/phospho_normalization.js?v=0.716"></script>
 </head>
 <body>
     <!-- Progress Indicator -->
@@ -159,7 +160,7 @@
                     <button type="button" id="dataPrepSessionExportBtn" class="header-icon-btn" onclick="openDataPrepSession()" title="Export session snapshot (JSON / report JS) in a pop-out window" aria-label="Export session snapshot">
                         <svg class="donate-btn-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                     </button>
-                    <span class="app-version" id="appVersion">v0.707</span>
+                    <span class="app-version" id="appVersion">v0.716</span>
                     <select id="nebulaThemeSelect" class="theme-select" onchange="applyNebulaTheme(this.value)" title="Color theme (light family — figure canvases stay white)" aria-label="Color theme">
                         <option value="warm">Warm</option>
                         <option value="sage">Sage</option>
@@ -909,7 +910,7 @@
                                     <button type="button" data-action="selectAllRowsForRowProfile()" style="width: 100%; margin-bottom: 6px;">Select all rows</button>
                                     <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 6px;">
                                         <label for="rowProfileTopNInput" class="small" style="margin: 0;">Top</label>
-                                        <input type="number" id="rowProfileTopNInput" value="5" min="1" step="1" title="Number of rows to select by highest total intensity (sum of finite sample values)" style="width: 56px; padding: 4px; box-sizing: border-box;">
+                                        <input type="number" id="rowProfileTopNInput" value="10" min="1" step="1" title="Number of rows to select by highest total intensity (sum of finite sample values)" style="width: 56px; padding: 4px; box-sizing: border-box;">
                                         <span class="small" style="color: var(--md-text-secondary); margin: 0;">rows by intensity sum</span>
                                     </div>
                                     <button type="button" data-action="selectTopNRowsByRowSumForRowProfile()" style="width: 100%; margin-bottom: 6px;">Select top N</button>
@@ -956,6 +957,10 @@
                                 <label style="display:flex; align-items:flex-start; gap:6px; font-weight:500; margin-top:10px;" title="Highlight contaminant protein groups (accession starts with Cont_ / CON__) in the checklist and plot, and in the Column profile plots.">
                                     <input type="checkbox" id="rowProfileMarkContam" checked onchange="onMarkContaminantsToggle('row')" style="margin-top:2px;">
                                     <span>Mark contaminant proteins (Cont_) — flags them here and in the Column profile plots so per-sample contamination is easy to see</span>
+                                </label>
+                                <label style="display:flex; align-items:flex-start; gap:6px; font-weight:500; margin-top:10px;" title="Leave contaminant protein groups (accession starts with Cont_ / CON__) out of the plot. The selection and the checklist stay unchanged, so unchecking brings them back.">
+                                    <input type="checkbox" id="rowProfileExcludeContam" onchange="onRowProfileOptionsChanged()" style="margin-top:2px;">
+                                    <span>Exclude all Cont — drop contaminant proteins (Cont_ / CON__) from the plot on the right</span>
                                 </label>
                                 <div id="rowProfilePlotNote" class="row-profile-status" style="margin-top:10px;">
                                     Tip: Search and select rows above, then click "Plot selected rows".
@@ -1616,6 +1621,7 @@
                         <button type="button" class="table-sub-tab clustering-sub-tab" data-action="switchClusteringSubTab('tsne')" data-clustering-subtab="tsne">t-SNE</button>
                         <button type="button" class="table-sub-tab clustering-sub-tab" data-action="switchClusteringSubTab('umap')" data-clustering-subtab="umap">UMAP</button>
                         <button type="button" class="table-sub-tab clustering-sub-tab" data-action="switchClusteringSubTab('kmeans')" data-clustering-subtab="kmeans">K-means</button>
+                        <button type="button" class="table-sub-tab clustering-sub-tab" data-action="switchClusteringSubTab('som')" data-clustering-subtab="som" title="Self-organizing map: samples on a trained 2D lattice, map units grouped into clusters">SOM</button>
                     </div>
                     <div id="clusteringPanelHost"></div>
                 </div>
@@ -1658,8 +1664,8 @@
                                 <label for="heatmapColorscale">Color scale</label>
                                 <select id="heatmapColorscale" onchange="if(heatmapGenerated) updateHeatmapColorscaleOnly()">
                                     <option value="RdBlkGn">RdBlkGn (red–black–green)</option>
-                                    <option value="RdYlBu">RdYlBu (red–yellow–blue)</option>
-                                    <option value="Viridis" selected>Viridis</option>
+                                    <option value="RdYlBu" selected>RdYlBu (red–yellow–blue)</option>
+                                    <option value="Viridis">Viridis</option>
                                     <option value="Plasma">Plasma</option>
                                     <option value="Inferno">Inferno</option>
                                     <option value="Blues">Blues</option>
@@ -2530,6 +2536,170 @@
                                     <button type="button" class="example-btn" data-action="downloadKmeansCsv()" title="Download sample → cluster assignments as CSV">Export CSV</button>
                                 </div>
                                 <div id="kmAssignHost" class="table-preview" style="flex: 1; min-height: 0; overflow: auto; padding: 4px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SOM Tab: self-organizing map of samples (topology-preserving alternative to K-means) -->
+            <div id="somTab" class="tab-content">
+                <div class="tab-sidebar">
+                    <div class="sidebar-section">
+                        <button type="button" id="generateSOMBtn" data-action="generateSOM()" style="width: 100%; background: var(--md-btn-primary-bg); color: white; border-radius: 4px; cursor: pointer; font-weight: bold; margin-bottom: 12px;">
+                            Run SOM Clustering
+                        </button>
+                        <p style="font-size: 0.85em; color: var(--md-text-secondary); margin: 0 0 10px 0;">
+                            Trains a <strong>self-organizing map</strong> of the samples (columns): neighbouring map units hold similar samples, and the trained units are grouped into clusters.
+                        </p>
+                        <div class="pca-controls" style="flex-direction: column; align-items: flex-start; gap: 10px;">
+                            <label style="font-weight: bold;">Map size (units):</label>
+                            <div class="pca-controls" style="flex-direction: row; gap: 8px; width: 100%;">
+                                <div style="flex:1;">
+                                    <label>Columns:</label>
+                                    <input type="number" id="somGridX" value="" placeholder="Auto" min="2" max="20" step="1" onchange="if(somGenerated) updateSOM()" style="width: 100%;">
+                                </div>
+                                <div style="flex:1;">
+                                    <label>Rows:</label>
+                                    <input type="number" id="somGridY" value="" placeholder="Auto" min="2" max="20" step="1" onchange="if(somGenerated) updateSOM()" style="width: 100%;">
+                                </div>
+                            </div>
+                            <div style="font-size: 0.85em; color: var(--md-text-secondary); margin-top: -4px;">
+                                Auto sizes the lattice from the sample count; more units give a finer map and fewer samples per unit.
+                            </div>
+                            <label>Lattice:</label>
+                            <select id="somTopology" onchange="if(somGenerated) updateSOM()" style="width: 100%;">
+                                <option value="hex">Hexagonal (recommended)</option>
+                                <option value="rect">Rectangular</option>
+                            </select>
+
+                            <label style="margin-top: 12px; font-weight: bold;">Choose number of clusters (k):</label>
+                            <select id="somMetaMode" onchange="if(somGenerated) updateSOM()" style="width: 100%;">
+                                <option value="auto">Auto-select k (recommended)</option>
+                                <option value="fixed">Fixed k</option>
+                            </select>
+                            <label>Fixed k (when mode = Fixed):</label>
+                            <input type="number" id="somMetaK" value="4" min="2" max="8" step="1" onchange="if(somGenerated) updateSOM()" style="width: 100%;">
+                            <div style="font-size: 0.85em; color: var(--md-text-secondary); margin-top: -4px;">
+                                Auto clusters the trained map units by silhouette (k = 2 to 8); samples inherit the cluster of their nearest unit.
+                            </div>
+
+                            <label style="margin-top: 12px; font-weight: bold;">Training:</label>
+                            <label>Neighbourhood:</label>
+                            <select id="somNeighborhood" onchange="if(somGenerated) updateSOM()" style="width: 100%;" title="How neighbouring units are pulled toward a sample: Gaussian weights every unit within the radius, Bubble updates all units inside it equally.">
+                                <option value="gaussian">Gaussian (recommended)</option>
+                                <option value="bubble">Bubble</option>
+                            </select>
+                            <label>Initialization:</label>
+                            <select id="somInit" onchange="if(somGenerated) updateSOM()" style="width: 100%;" title="PCA plane spreads the initial units along the dominant data manifold; random seeding starts from random samples.">
+                                <option value="pca">PCA plane (recommended)</option>
+                                <option value="random">Random samples</option>
+                            </select>
+                            <div class="pca-controls" style="flex-direction: row; gap: 8px; width: 100%;">
+                                <div style="flex:1;">
+                                    <label>Learning rate:</label>
+                                    <input type="number" id="somAlpha" value="0.5" min="0.01" max="1" step="0.05" onchange="if(somGenerated) updateSOM()" style="width: 100%;">
+                                </div>
+                                <div style="flex:1;">
+                                    <label>Radius:</label>
+                                    <input type="number" id="somSigma" value="" placeholder="Auto" min="0.5" max="20" step="0.5" onchange="if(somGenerated) updateSOM()" style="width: 100%;" title="Neighbourhood radius in map units; blank = half the shorter map side.">
+                                </div>
+                            </div>
+                            <label>Epochs:</label>
+                            <input type="number" id="somEpochs" value="40" min="1" max="500" step="5" onchange="if(somGenerated) updateSOM()" style="width: 100%;" title="Passes over the samples; more epochs refine the map at the cost of time.">
+                            <label>Random seed:</label>
+                            <input type="number" id="somSeed" value="42" min="0" step="1" onchange="if(somGenerated) updateSOM()" style="width: 100%;" title="Fixed seed makes the map reproducible.">
+
+                            <label style="margin-top: 12px; font-weight: bold;">Sampling (speed):</label>
+                            <label>Max samples:</label>
+                            <input type="number" id="somMaxSamples" value="" placeholder="All" min="3" step="1" onchange="if(somGenerated) updateSOM()" style="width: 100%;">
+                            <label>Max features:</label>
+                            <input type="number" id="somMaxFeatures" value="" placeholder="All (recommended: 200-500)" min="1" step="1" onchange="if(somGenerated) updateSOM()" style="width: 100%;">
+                            <div style="font-size: 0.85em; color: var(--md-text-secondary); margin-top: -4px;">
+                                Training cost grows with samples x features x map units; cap features on very large matrices.
+                            </div>
+
+                            <label style="margin-top: 12px; font-weight: bold;">Data Preprocessing:</label>
+                            <label>
+                                <input type="checkbox" id="somApplyLog" checked onchange="if(somGenerated) updateSOM()">
+                                Log10 Transform
+                            </label>
+                            <label>
+                                <input type="checkbox" id="somApplyZScore" checked onchange="if(somGenerated) updateSOM()">
+                                Column-wise Z-score (per feature)
+                            </label>
+                            <label>
+                                <input type="checkbox" id="somApplyZScoreRow" onchange="if(somGenerated) updateSOM()">
+                                Row-wise Z-score (per sample)
+                            </label>
+                            <div style="font-size: 0.85em; color: var(--md-text-secondary); margin-top: -4px;">
+                                Standardizing features (column z-score) keeps high-abundance features from dominating the map.
+                            </div>
+
+                            <label style="margin-top: 12px; font-weight: bold;">Display:</label>
+                            <label>
+                                <input type="checkbox" id="somShowLabels" onchange="if(somGenerated) updateSOM()">
+                                Show sample labels
+                            </label>
+                            <label>
+                                <input type="checkbox" id="somShowLattice" checked onchange="if(somGenerated) updateSOM()">
+                                Show map units (dot size = samples)
+                            </label>
+                            <label>Plot width (px):</label>
+                            <input type="number" id="somWidth" value="" placeholder="Auto (fill panel)" min="300" max="3200" step="50" onchange="if(somGenerated) updateSOM()" style="width: 100%;">
+                            <label>Plot height (px):</label>
+                            <input type="number" id="somHeight" value="720" min="300" max="2000" step="50" onchange="if(somGenerated) updateSOM()" style="width: 100%;">
+                            <label>Main title (optional):</label>
+                            <input type="text" id="somTitle" value="" placeholder="Auto-generated if empty" onchange="if(somGenerated) updateSOM()" style="width: 100%;">
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-main-content">
+                    <div class="visualization-container">
+                        <div class="data-filter-inner-tabs-row pca-viz-tabs-row">
+                            <button type="button" class="data-filter-inner-tab pca-viz-tab active" data-som-viz-tab="map" data-action="switchSomVizTab('map')">SOM map</button>
+                            <button type="button" class="data-filter-inner-tab pca-viz-tab" data-som-viz-tab="umatrix" data-action="switchSomVizTab('umatrix')" title="U-matrix and hit counts: whether neighbouring units separate the samples">Map quality</button>
+                            <button type="button" class="data-filter-inner-tab pca-viz-tab" data-som-viz-tab="assignments" data-action="switchSomVizTab('assignments')">Assignments</button>
+                        </div>
+                        <div id="somSummary" class="info-box" style="display: none; margin: 8px 4px;"></div>
+                        <div class="pca-viz-panels">
+                            <div class="pca-viz-panel active" id="somVizPanelMap">
+                                <div class="nebula-graph-headrow" style="padding: 4px 4px 0;">
+                                    <h3 class="nebula-graph-head-title">Samples on the map lattice</h3>
+                                </div>
+                                <div id="somMapPlot" class="plot-container">
+                                    <div id="somPlaceholder" style="display: flex; align-items: center; justify-content: center; height: 100%; min-height: 400px; color: var(--md-text-secondary); font-size: 16px; text-align: center; padding: 40px;">
+                                        <div class="nebula-empty" style="text-align:left;">
+                                            <h3>SOM not run yet</h3>
+                                            <p>Train a self-organizing map of the samples, then read the clusters off the lattice.</p>
+                                            <div class="steps">
+                                                <div class="step"><b>01</b><span>Load a matrix in <b>Data Preparation</b>.</span></div>
+                                                <div class="step"><b>02</b><span>Choose the map size, k and preprocessing in the left sidebar.</span></div>
+                                                <div class="step"><b>03</b><span>Click <b>Run SOM Clustering</b> in the left sidebar.</span></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="pca-viz-panel" id="somVizPanelUMatrix">
+                                <div class="nebula-graph-headrow" style="padding: 4px 4px 0;">
+                                    <h3 class="nebula-graph-head-title">Map quality (how well neighbouring units separate)</h3>
+                                </div>
+                                <div class="nebula-graph-headrow" style="padding: 4px 4px 0;">
+                                    <h4 class="nebula-graph-head-title">U-matrix — mean distance between neighbouring units</h4>
+                                </div>
+                                <div id="somUMatrixPlot" class="plot-container" style="min-height: 360px;"></div>
+                                <div class="nebula-graph-headrow" style="padding: 4px 4px 0;">
+                                    <h4 class="nebula-graph-head-title">Sample density — samples per unit</h4>
+                                </div>
+                                <div id="somHitPlot" class="plot-container" style="min-height: 360px; margin-top: 12px;"></div>
+                            </div>
+                            <div class="pca-viz-panel" id="somVizPanelAssign">
+                                <div class="nebula-graph-headrow" style="padding: 4px 4px 0;">
+                                    <h3 class="nebula-graph-head-title">Cluster assignments</h3>
+                                    <button type="button" class="example-btn" data-action="downloadSomCsv()" title="Download sample → cluster / map unit assignments as CSV">Export CSV</button>
+                                </div>
+                                <div id="somAssignHost" class="table-preview" style="flex: 1; min-height: 0; overflow: auto; padding: 4px;"></div>
                             </div>
                         </div>
                     </div>
@@ -3832,8 +4002,8 @@
                 </div>
             </div>
             <!-- hybrid UI wiring (needs the DOM above; loads the core first) -->
-            <script src="js/hybrid_core.js?v=0.707"></script>
-            <script src="js/hybrid_tab.js?v=0.707"></script>
+            <script src="js/hybrid_core.js?v=0.716"></script>
+            <script src="js/hybrid_tab.js?v=0.716"></script>
             <script>
             (function(){
                 var map={table:'hybPanelTable',analysis:'hybPanelAnalysis',volcano:'hybPanelVolcano',hybridScatter:'hybPanelHybridScatter',diag:'hybPanelDiag'};
@@ -4554,7 +4724,7 @@
                     for (var i = 0; i < files.length; i++) {
                         await new Promise(function (resolve, reject) {
                             var s = document.createElement('script');
-                            s.src = 'js/' + files[i] + '?v=0.707';
+                            s.src = 'js/' + files[i] + '?v=0.716';
                             s.onload = resolve;
                             s.onerror = function () { reject(new Error('Failed to load ' + files[i])); };
                             document.head.appendChild(s);
@@ -4632,7 +4802,7 @@
         </div>
     </div>
 
-    <script src="js/scatter_label_optimize.js?v=0.707"></script>
+    <script src="js/scatter_label_optimize.js?v=0.716"></script>
     <script>
         let currentHeatmapSubTab = 'plotly';
         let currentDocumentSection = 'overview';
@@ -7984,7 +8154,7 @@ zmid: 0,
                 switchDataQcSubTab('upset');
                 return;
             }
-            if (tabName === 'heatmap' || tabName === 'clustergrammer' || tabName === 'pca' || tabName === 'tsne' || tabName === 'umap') {
+            if (tabName === 'heatmap' || tabName === 'clustergrammer' || tabName === 'pca' || tabName === 'tsne' || tabName === 'umap' || tabName === 'som') {
                 switchTab('clustering');
                 switchClusteringSubTab(tabName);
                 return;
@@ -8338,6 +8508,7 @@ zmid: 0,
                 umap: true,
                 outlier_score: true,
                 kmeans_clusters: true,
+                som_map: true,
                 diff_volcano: true,
                 diff_ma: true,
                 diff_group_heatmap: true,
@@ -8365,7 +8536,7 @@ zmid: 0,
             // actually been produced (its plot/SVG exists); capture then reads the retained
             // Plotly data or clones the rendered SVG, so no tab needs to be visible.
             const primaryFigures = {
-                row_profile: 1, pca_scree: 1, tsne: 1, umap: 1, outlier_score: 1, kmeans_clusters: 1,
+                row_profile: 1, pca_scree: 1, tsne: 1, umap: 1, outlier_score: 1, kmeans_clusters: 1, som_map: 1,
                 diff_volcano: 1, diff_ma: 1, diff_group_heatmap: 1,
                   saint_scatter: 1, saint_network: 1, enrichr_bar: 1, enrichr_bubble: 1, enrichr_heatmap: 1, gsea_enrichment: 1, gsva_heatmap: 1,
                 corr_pair_scatter: 1, corr_pair_qq: 1, corr_pair_bland: 1, corr_pair_refcorr: 1,
@@ -9098,14 +9269,14 @@ zmid: 0,
         function ensureClusteringPanelsMounted() {
             const host = document.getElementById('clusteringPanelHost');
             if (!host) return;
-            ['heatmapTab', 'clustergrammerTab', 'pcaTab', 'pcoaTab', 'tsneTab', 'umapTab', 'kmeansTab'].forEach((id) => {
+            ['heatmapTab', 'clustergrammerTab', 'pcaTab', 'pcoaTab', 'tsneTab', 'umapTab', 'kmeansTab', 'somTab'].forEach((id) => {
                 const panel = document.getElementById(id);
                 if (!panel) return;
                 if (panel.parentElement !== host) host.appendChild(panel);
             });
         }
         function switchClusteringSubTab(subTab) {
-            const allowed = new Set(['heatmap', 'clustergrammer', 'pca', 'pcoa', 'tsne', 'umap', 'kmeans']);
+            const allowed = new Set(['heatmap', 'clustergrammer', 'pca', 'pcoa', 'tsne', 'umap', 'kmeans', 'som']);
             currentClusteringSubTab = allowed.has(subTab) ? subTab : 'heatmap';
             ensureClusteringPanelsMounted();
             const showPanel = (id, show) => {
@@ -9121,6 +9292,7 @@ zmid: 0,
             showPanel('tsneTab', currentClusteringSubTab === 'tsne');
             showPanel('umapTab', currentClusteringSubTab === 'umap');
             showPanel('kmeansTab', currentClusteringSubTab === 'kmeans');
+            showPanel('somTab', currentClusteringSubTab === 'som');
             document.querySelectorAll('[data-clustering-subtab]').forEach((btn) => {
                 const on = btn.getAttribute('data-clustering-subtab') === currentClusteringSubTab;
                 btn.classList.toggle('active', on);
@@ -9148,6 +9320,8 @@ zmid: 0,
                     try { Plotly.Plots.resize('umapPlot'); } catch (_) {}
                 } else if (currentClusteringSubTab === 'kmeans' && window.KMeansAnalysis && window.KMeansAnalysis.isGenerated()) {
                     try { window.KMeansAnalysis.resize(); } catch (_) {}
+                } else if (currentClusteringSubTab === 'som' && window.SomAnalysis && window.SomAnalysis.isGenerated()) {
+                    try { window.SomAnalysis.resize(); } catch (_) {}
                 }
             }, 100);
         }
@@ -9177,6 +9351,33 @@ zmid: 0,
         }
         function downloadKmeansCsv() {
             if (window.KMeansAnalysis) window.KMeansAnalysis.downloadCsv();
+        }
+
+        // --- SOM clustering glue (heavy logic in js/som_analysis.js + js/som.worker.js).
+        //     currentData / metaData are lexical globals, so pass them in via context. ---
+        let somGenerated = false;
+        function somBuildContext() {
+            return {
+                currentData: currentData,
+                metaData: metaData,
+                TableDisplay: window.TableDisplay,
+                onGenerated: function (v) { somGenerated = !!v; }
+            };
+        }
+        function generateSOM() {
+            if (!currentData) { alert('Please load data first!'); return; }
+            if (!window.SomAnalysis) { console.error('SomAnalysis module not loaded'); return; }
+            window.SomAnalysis.generate(somBuildContext());
+        }
+        function updateSOM() {
+            if (!somGenerated || !window.SomAnalysis) return;
+            window.SomAnalysis.generate(somBuildContext());
+        }
+        function switchSomVizTab(which) {
+            if (window.SomAnalysis) window.SomAnalysis.switchVizTab(which);
+        }
+        function downloadSomCsv() {
+            if (window.SomAnalysis) window.SomAnalysis.downloadCsv();
         }
 
         function switchPcaVizTab(which) {
@@ -12718,8 +12919,8 @@ zmid: 0,
         function selectTopNRowsByRowSumForRowProfile() {
             if (!currentData || !Array.isArray(currentData.rowIds) || !currentDataMatrix) return;
             const input = document.getElementById('rowProfileTopNInput');
-            let n = input ? parseInt(String(input.value).trim(), 10) : 5;
-            if (!Number.isFinite(n) || n < 1) n = 5;
+            let n = input ? parseInt(String(input.value).trim(), 10) : 10;
+            if (!Number.isFinite(n) || n < 1) n = 10;
             const total = currentData.rowIds.length;
             if (total === 0) return;
             n = Math.min(n, total);
@@ -14510,7 +14711,7 @@ zmid: 0,
             if (plotTypeEl) plotTypeEl.value = 'stacked';
             updateRowProfileControlsForPlotType();
             const topNIn = document.getElementById('rowProfileTopNInput');
-            if (topNIn) topNIn.value = '5';
+            if (topNIn) topNIn.value = '10';
             selectTopNRowsByRowSumForRowProfile();
             if (rowProfileSelectedIndices.size === 0) return;
             rowProfileAutoPlotAppliedForMatrixSig = sig;
@@ -14528,9 +14729,21 @@ zmid: 0,
                 return;
             }
             // Preserve Set insertion order (quick "top N by sum" ranks by intensity; manual picks keep click order).
-            const selected = Array.from(rowProfileSelectedIndices);
-            if (selected.length === 0) {
+            const selectedAll = Array.from(rowProfileSelectedIndices);
+            if (selectedAll.length === 0) {
                 if (!silentMode) alert('Please select at least one row ID to plot.');
+                return;
+            }
+            // "Exclude all Cont": drop contaminant protein groups from the figure only.
+            // The checklist and the selection stay untouched, so unchecking brings them back.
+            const excludeContam = !!document.getElementById('rowProfileExcludeContam')?.checked;
+            const selected = excludeContam ? selectedAll.filter(idx => !isRowContaminant(idx)) : selectedAll;
+            const excludedContamCount = selectedAll.length - selected.length;
+            if (selected.length === 0) {
+                const noteEmpty = document.getElementById('rowProfilePlotNote');
+                const msg = `All ${selectedAll.length} selected row(s) are contaminant proteins (Cont_ / CON__) — uncheck "Exclude all Cont" to plot them.`;
+                if (noteEmpty) noteEmpty.textContent = msg;
+                if (!silentMode) alert(msg);
                 return;
             }
             const sampleIds = currentData.columnHeaders;
@@ -14683,7 +14896,8 @@ zmid: 0,
                     hovertemplate: '%{fullData.name}<br>%{x}<br>%{y:.2f}%<extra></extra>'
                 });
             }
-            const titleSuffix = selected.length > maxTraces ? ` (top ${maxTraces} of ${selected.length} by intensity)` : '';
+            const titleSuffix = (selected.length > maxTraces ? ` (top ${maxTraces} of ${selected.length} by intensity)` : '') +
+                (excludedContamCount > 0 ? ` · ${excludedContamCount} Cont excluded` : '');
             if (!skipTabNavigation) {
                 switchTab('dataQc');
                 switchDataQcSubTab('rowProfile', { skipRowProfileAuto: true });
@@ -14765,6 +14979,9 @@ zmid: 0,
                         noteEl.textContent = 'Note: log scale hides non-positive values (0/negative) as empty points/bars.';
                     } else {
                         noteEl.textContent = 'Tip: Search and select rows above, then click "Plot selected rows".';
+                    }
+                    if (excludedContamCount > 0) {
+                        noteEl.textContent += ` ${excludedContamCount} contaminant protein(s) (Cont_ / CON__) excluded from this plot — the selection itself is unchanged.`;
                     }
                 }
                 });
@@ -17902,7 +18119,7 @@ zmid: 0,
             if (!__batchEffectExampleLoading) {
                 __batchEffectExampleLoading = new Promise((resolve, reject) => {
                     const s = document.createElement('script');
-                    s.src = 'js/example_batch_effect_data.js?v=0.707';
+                    s.src = 'js/example_batch_effect_data.js?v=0.716';
                     s.onload = resolve;
                     s.onerror = () => reject(new Error('Failed to load example_batch_effect_data.js'));
                     document.head.appendChild(s);
@@ -18134,13 +18351,43 @@ zmid: 0,
             }
         })();
 
-        // Custom heatmap colorscale: green (low) -> black (middle) -> red (high)
-        const HEATMAP_SCALE_RDBLKGN = [[0, '#1a9850'], [0.5, '#000000'], [1, '#d73027']];
+        // Heatmap colour scales as explicit stop arrays.
+        // Plotly 2.27 only resolves a subset of the classic names: 'Plasma', 'Inferno',
+        // 'Turbo', 'Reds' and 'RdYlBu' are missing from its registry and silently fall back
+        // to one shared default ramp — five of the eleven options rendered identically.
+        // Defining every scale here keeps each option distinct, and lets the Clustergrammer
+        // view use the same multi-stop ramp instead of a two-colour approximation.
+        function heatmapStops(colors) {
+            const last = colors.length - 1;
+            return colors.map((c, i) => [last > 0 ? i / last : 0, c]);
+        }
+        const HEATMAP_COLORSCALES = {
+            RdBlkGn: [[0, '#1a9850'], [0.5, '#000000'], [1, '#d73027']],
+            RdYlBu: heatmapStops(['#313695', '#4575b4', '#74add1', '#abd9e9', '#e0f3f8', '#ffffbf', '#fee090', '#fdae61', '#f46d43', '#d73027', '#a50026']),
+            Viridis: heatmapStops(['#440154', '#482878', '#3e4989', '#31688e', '#26828e', '#1f9e89', '#35b779', '#6ece58', '#b5de2b', '#fde725']),
+            Plasma: heatmapStops(['#0d0887', '#41049d', '#6a00a8', '#8f0da4', '#b12a90', '#cc4778', '#e16462', '#f2844b', '#fca636', '#fcce25', '#f0f921']),
+            Inferno: heatmapStops(['#000004', '#1b0c41', '#4a0c6b', '#781c6d', '#a52c60', '#cf4446', '#ed6925', '#fb9b06', '#f7d13d', '#fcffa4']),
+            Blues: heatmapStops(['#f7fbff', '#deebf7', '#c6dbef', '#9ecae1', '#6baed6', '#4292c6', '#2171b5', '#08519c', '#08306b']),
+            Reds: heatmapStops(['#fff5f0', '#fee0d2', '#fcbba1', '#fc9272', '#fb6a4a', '#ef3b2c', '#cb181d', '#a50f15', '#67000d']),
+            Greens: heatmapStops(['#f7fcf5', '#e5f5e0', '#c7e9c0', '#a1d99b', '#74c476', '#41ab5d', '#238b45', '#006d2c', '#00441b']),
+            YlOrRd: heatmapStops(['#ffffcc', '#ffeda0', '#fed976', '#feb24c', '#fd8d3c', '#fc4e2a', '#e31a1c', '#bd0026', '#800026']),
+            Turbo: heatmapStops(['#30123b', '#4145ab', '#4675ed', '#39a2fc', '#1bcfd4', '#24eca6', '#61fc6c', '#a4fc3b', '#d1e834', '#f3c63a', '#fe9b2d', '#f36315', '#d93806', '#b11901', '#7a0402']),
+            Cividis: heatmapStops(['#00224e', '#123570', '#3b496c', '#575d6d', '#707173', '#8a8678', '#a59c74', '#c3b369', '#e1cc55', '#fee838'])
+        };
+        const HEATMAP_DEFAULT_SCALE = 'RdYlBu';
+
+        /** Stops for the current UI selection, flipped when "Reverse scale" is on. */
+        function getHeatmapStopsForUi(scaleName, reverse) {
+            const stops = HEATMAP_COLORSCALES[scaleName] || HEATMAP_COLORSCALES[HEATMAP_DEFAULT_SCALE];
+            if (!reverse) return stops;
+            return stops.map(s => [1 - s[0], s[1]]).sort((a, b) => a[0] - b[0]);
+        }
+
         function getHeatmapColorscaleFromStyleIds(styleIds) {
             const sid = (styleIds && styleIds.colorscale) ? styleIds.colorscale : 'heatmapColorscale';
             const sel = document.getElementById(sid);
-            const v = (sel && sel.value) ? sel.value : 'RdBlkGn';
-            return v === 'RdBlkGn' ? HEATMAP_SCALE_RDBLKGN : v;
+            const v = (sel && sel.value) ? sel.value : HEATMAP_DEFAULT_SCALE;
+            return HEATMAP_COLORSCALES[v] || HEATMAP_COLORSCALES[HEATMAP_DEFAULT_SCALE];
         }
         function getHeatmapColorscale() {
             return getHeatmapColorscaleFromStyleIds({ colorscale: 'heatmapColorscale', reverse: 'heatmapReversescale' });
@@ -18150,22 +18397,11 @@ zmid: 0,
         function getClustergrammerTileColors() {
             const scaleSel = document.getElementById('heatmapColorscale');
             const reverseSel = document.getElementById('heatmapReversescale');
-            const scale = (scaleSel && scaleSel.value) ? scaleSel.value : 'RdBlkGn';
+            const scale = (scaleSel && scaleSel.value) ? scaleSel.value : HEATMAP_DEFAULT_SCALE;
             const reverse = reverseSel && reverseSel.checked;
-            const scales = {
-                RdBlkGn: ['#d73027', '#1a9850'],
-                RdYlBu: ['#4575b4', '#d73027'],
-                Viridis: ['#fde725', '#440154'],
-                Plasma: ['#f0f921', '#0d0887'],
-                Inferno: ['#fca636', '#000004'],
-                Blues: ['#08306b', '#f7fbff'],
-                Reds: ['#67000d', '#fff5f0'],
-                Greens: ['#00441b', '#f7fcf5'],
-                YlOrRd: ['#800026', '#ffffcc'],
-                Turbo: ['#7fdc78', '#30123b'],
-                Cividis: ['#fdea45', '#00224e']
-            };
-            let [high, low] = scales[scale] || scales.RdBlkGn;
+            const stops = HEATMAP_COLORSCALES[scale] || HEATMAP_COLORSCALES[HEATMAP_DEFAULT_SCALE];
+            let high = stops[stops.length - 1][1];
+            let low = stops[0][1];
             if (reverse) [high, low] = [low, high];
             return [high, low];
         }
@@ -22874,17 +23110,11 @@ function onMatrixFormatChange() {
             
             const scaleSel = document.getElementById('heatmapColorscale');
             const reverseSel = document.getElementById('heatmapReversescale');
-            const scale = (scaleSel && scaleSel.value) ? scaleSel.value : 'RdBlkGn';
-            const reverse = reverseSel && reverseSel.checked;
-            
-            let stops;
-            if (scale === 'RdBlkGn') {
-                stops = reverse ? [[0, '#d73027'], [0.5, '#000000'], [1, '#1a9850']] : [[0, '#1a9850'], [0.5, '#000000'], [1, '#d73027']];
-            } else {
-                const tileColors = getClustergrammerTileColors();
-                const [high, low] = tileColors;
-                stops = reverse ? [[0, high], [1, low]] : [[0, low], [1, high]];
-            }
+            const scale = (scaleSel && scaleSel.value) ? scaleSel.value : HEATMAP_DEFAULT_SCALE;
+            const reverse = !!(reverseSel && reverseSel.checked);
+            // Full multi-stop ramp (not just the two endpoints), so every scale looks the
+            // same here as it does in the Plotly heatmap.
+            const stops = getHeatmapStopsForUi(scale, reverse);
             
             // Calculate normalized position with safety checks
             const t = range > 0 ? (value - actualMin) / range : 0.5;
@@ -23176,17 +23406,13 @@ function onMatrixFormatChange() {
             if (!grad) return;
             const scaleSel = document.getElementById('heatmapColorscale');
             const reverseSel = document.getElementById('heatmapReversescale');
-            const scale = (scaleSel && scaleSel.value) ? scaleSel.value : 'RdBlkGn';
-            const reverse = reverseSel && reverseSel.checked;
-            let stops;
-            if (scale === 'RdBlkGn') {
-                stops = reverse
-                    ? [[0, '#d73027'], [0.5, '#000000'], [1, '#1a9850']]
-                    : [[0, '#1a9850'], [0.5, '#000000'], [1, '#d73027']];
-            } else {
-                const [high, low] = tileColors;
-                stops = reverse ? [[0, high], [1, low]] : [[0, low], [1, high]];
-            }
+            const scale = (scaleSel && scaleSel.value) ? scaleSel.value : HEATMAP_DEFAULT_SCALE;
+            const reverse = !!(reverseSel && reverseSel.checked);
+            /* Use the same multi-stop ramp as the Plotly heatmap (subsampled when long so
+             * the SVG gradient does not carry dozens of stops). */
+            const fullStops = getHeatmapStopsForUi(scale, reverse);
+            const step = Math.max(1, Math.ceil(fullStops.length / 12));
+            const stops = fullStops.filter((_, i) => i % step === 0 || i === fullStops.length - 1);
             while (grad.firstChild) grad.removeChild(grad.firstChild);
             stops.forEach(([offset, color]) => {
                 const stop = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
@@ -28526,25 +28752,26 @@ function onMatrixFormatChange() {
     <script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script src="doc/docs_bundle.js"></script>
-    <script src="js/doc_viewer.js?v=0.707"></script>
-    <script src="js/heatmap_core.js?v=0.707"></script>
-    <script src="js/table_display.js?v=0.707"></script>
-<script src="js/stats_utils.js?v=0.707"></script>
-<script src="js/moderated_t.js?v=0.707"></script>
-    <script src="js/kmeans_analysis.js?v=0.707"></script>
-    <script src="js/gsea_analysis.js?v=0.707"></script>
-    <script src="js/gsva.worker.js?v=0.707"></script>
-    <script src="js/gsva_analysis.js?v=0.707"></script>
-    <script src="js/figure_popout_buttons.js?v=0.707"></script>
-    <script src="js/feature_name_mapping.js?v=0.707"></script>
-    <script src="js/enrichr_matrix_context.js?v=0.707"></script>
-    <script src="js/enrichr_results_parse.js?v=0.707"></script>
-    <script src="js/enrichr_plots.js?v=0.707"></script>
-    <script src="js/saint_algorithm.js?v=0.707"></script>
-    <script src="js/saint_embed.js?v=0.707"></script>
-    <script src="js/imputation.worker.js?v=0.707"></script>
-    <script src="js/missing_value_imputation.js?v=0.707"></script>
-    <script src="js/batch_effect.js?v=0.707"></script>
+    <script src="js/doc_viewer.js?v=0.716"></script>
+    <script src="js/heatmap_core.js?v=0.716"></script>
+    <script src="js/table_display.js?v=0.716"></script>
+<script src="js/stats_utils.js?v=0.716"></script>
+<script src="js/moderated_t.js?v=0.716"></script>
+    <script src="js/kmeans_analysis.js?v=0.716"></script>
+    <script src="js/som_analysis.js?v=0.716"></script>
+    <script src="js/gsea_analysis.js?v=0.716"></script>
+    <script src="js/gsva.worker.js?v=0.716"></script>
+    <script src="js/gsva_analysis.js?v=0.716"></script>
+    <script src="js/figure_popout_buttons.js?v=0.716"></script>
+    <script src="js/feature_name_mapping.js?v=0.716"></script>
+    <script src="js/enrichr_matrix_context.js?v=0.716"></script>
+    <script src="js/enrichr_results_parse.js?v=0.716"></script>
+    <script src="js/enrichr_plots.js?v=0.716"></script>
+    <script src="js/saint_algorithm.js?v=0.716"></script>
+    <script src="js/saint_embed.js?v=0.716"></script>
+    <script src="js/imputation.worker.js?v=0.716"></script>
+    <script src="js/missing_value_imputation.js?v=0.716"></script>
+    <script src="js/batch_effect.js?v=0.716"></script>
     <script>
         (function () {
             function tryLoadBundledSessionScript() {

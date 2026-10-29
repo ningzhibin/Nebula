@@ -1647,7 +1647,9 @@
             flex: 1;
             min-height: 0;
             flex-direction: column;
-            overflow: hidden;
+            /* Wrapped axis labels can make a figure taller than the panel; scroll it
+             * rather than clipping the labels. */
+            overflow: auto;
         }
         #enrichrSubPanelPlots .enrichr-plot-viz-panel.active {
             display: flex;
@@ -1688,6 +1690,9 @@
             border-radius: var(--md-radius-md);
             padding: 8px;
             box-sizing: border-box;
+            /* Long wrapped axis labels grow the figure past the panel; let the user scroll
+             * instead of clipping the labels. */
+            overflow: auto;
         }
 
         .enrichr-downstream-plot-host-wide {
@@ -2913,14 +2918,16 @@
 
         #pcaTab .pca-viz-tabs-row,
         #pcoaTab .pca-viz-tabs-row,
-        #kmeansTab .pca-viz-tabs-row {
+        #kmeansTab .pca-viz-tabs-row,
+        #somTab .pca-viz-tabs-row {
             margin-bottom: 8px;
             padding-left: 0;
             padding-right: 0;
         }
         #pcaTab .pca-viz-panels,
         #pcoaTab .pca-viz-panels,
-        #kmeansTab .pca-viz-panels {
+        #kmeansTab .pca-viz-panels,
+        #somTab .pca-viz-panels {
             flex: 1;
             min-height: 0;
             display: flex;
@@ -2929,7 +2936,8 @@
         }
         #pcaTab .pca-viz-panel,
         #pcoaTab .pca-viz-panel,
-        #kmeansTab .pca-viz-panel {
+        #kmeansTab .pca-viz-panel,
+        #somTab .pca-viz-panel {
             display: none;
             flex: 1;
             min-height: 0;
@@ -2937,7 +2945,8 @@
         }
         #pcaTab .pca-viz-panel.active,
         #pcoaTab .pca-viz-panel.active,
-        #kmeansTab .pca-viz-panel.active {
+        #kmeansTab .pca-viz-panel.active,
+        #somTab .pca-viz-panel.active {
             display: flex;
             flex-direction: column;
             flex: 1;
@@ -2945,13 +2954,15 @@
         }
         /* Bound the container so the active panel's own overflow:auto engages
            (otherwise the flex chain grows to fit the tall model panel). */
-        #kmeansTab .visualization-container {
+        #kmeansTab .visualization-container,
+        #somTab .visualization-container {
             min-height: 0;
             overflow: hidden;
         }
         /* Each panel scrolls internally when its content exceeds the viewport
            (cluster plot at fixed height, two stacked model plots, or a long table). */
-        #kmeansTab .pca-viz-panel.active {
+        #kmeansTab .pca-viz-panel.active,
+        #somTab .pca-viz-panel.active {
             overflow: auto;
         }
         #pcaVizPanelDetails .pca-details-content {
@@ -5474,11 +5485,16 @@
         #kmeansTab:has(#kmPlaceholder[style*="display: flex"]) #kmVizPanelAssign .nebula-graph-headrow,
         #kmeansTab:has(#kmPlaceholder[style*="display: flex"]) #kmElbowPlot,
         #kmeansTab:has(#kmPlaceholder[style*="display: flex"]) #kmSilhouettePlot,
+        #somTab:has(#somPlaceholder[style*="display: flex"]) #somVizPanelUMatrix .nebula-graph-headrow,
+        #somTab:has(#somPlaceholder[style*="display: flex"]) #somVizPanelAssign .nebula-graph-headrow,
+        #somTab:has(#somPlaceholder[style*="display: flex"]) #somUMatrixPlot,
+        #somTab:has(#somPlaceholder[style*="display: flex"]) #somHitPlot,
         .visualization-container:has(#umapPlaceholder[style*="display: flex"]) > .nebula-graph-headrow,
         .visualization-container:has(#tsnePlaceholder[style*="display: flex"]) > .nebula-graph-headrow,
         .visualization-container:has(#pcaPlaceholder[style*="display: flex"]) > .pca-viz-tabs-row,
         .visualization-container:has(#pcoaPlaceholder[style*="display: flex"]) > .pca-viz-tabs-row,
-        .visualization-container:has(#kmPlaceholder[style*="display: flex"]) > .pca-viz-tabs-row {
+        .visualization-container:has(#kmPlaceholder[style*="display: flex"]) > .pca-viz-tabs-row,
+        .visualization-container:has(#somPlaceholder[style*="display: flex"]) > .pca-viz-tabs-row {
             display: none;
         }
         /* Outliers empty state: hide the inner tab row while the placeholder
@@ -5507,7 +5523,8 @@
         #pcoaTab #pcoaVizPanel3d:has(#pcoaPlaceholder3d[style*="display: flex"]) #pcoaPlot3d.plot-container,
         #tsneTab .visualization-container:has(#tsnePlaceholder[style*="display: flex"]) #tsnePlot.plot-container,
         #umapTab .visualization-container:has(#umapPlaceholder[style*="display: flex"]) #umapPlot.plot-container,
-        #kmeansTab #kmVizPanelCluster:has(#kmPlaceholder[style*="display: flex"]) #kmClusterPlot.plot-container {
+        #kmeansTab #kmVizPanelCluster:has(#kmPlaceholder[style*="display: flex"]) #kmClusterPlot.plot-container,
+        #somTab #somVizPanelMap:has(#somPlaceholder[style*="display: flex"]) #somMapPlot.plot-container {
             padding: 0;
             background: transparent;
         }

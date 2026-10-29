@@ -101,6 +101,8 @@ pathway enrichment → export.
   distances.
 - **t-SNE** and **UMAP** — non-linear embeddings with group overlays.
 - **K-means** — sample clustering with silhouette/elbow model selection and an assignments table.
+- **SOM** — self-organizing map of the samples: a trained lattice with U-matrix and sample-density
+  diagnostics, auto or fixed cluster count, and an assignments table.
 
 ### 5 · Downstream analysis
 
@@ -178,7 +180,7 @@ Useful URL flags:
    values, and correct batch effects if needed.
 4. **Inspect quality** — *Data QC*: overall dashboard, row/column profiles, correlations,
    and set intersections.
-5. **Explore structure** — *Clustering*: heatmap, PCA/PCoA, t-SNE, UMAP, K-means.
+5. **Explore structure** — *Clustering*: heatmap, PCA/PCoA, t-SNE, UMAP, K-means, SOM.
 6. **Run statistics** — *Downstream*: differential analysis, then enrichment (Enrichr, GSEA,
    GSVA) or SAINT.
 7. **Report** — add figures to the *Report* tab and export a self-contained HTML file.
